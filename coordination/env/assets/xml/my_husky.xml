@@ -1,0 +1,147 @@
+<mujoco model="husky_robot">
+    <include file="./common/skybox.xml"/>
+    <include file="./common/visual.xml"/>
+    <include file="./common/materials.xml"/>
+    <include file="./common/camera.xml"/>
+
+    <compiler angle="radian" coordinate="local" meshdir="./MyTest" inertiafromgeom="true"/>
+
+    <option integrator="Euler" timestep="0.01"/>
+
+    <size njmax="500" nconmax="100" />
+    <asset>
+        <mesh name="base_link" file="base_link.stl" />
+        <mesh name="wheel" file="wheel.stl" />
+        <mesh name="top_chassis" file="top_chassis.stl" />
+        <mesh name="bumper" file="bumper.stl" />
+        <mesh name="top_plate" file="top_plate.stl" />
+    </asset>
+
+    <default>
+        <joint armature="1" damping="1" limited="false"/>
+        <!--<geom condim="3" density="5.0" friction="1 0.5 0.5" margin="0.01" material="self"/>
+             -->
+        <geom condim="4" density="50.0" friction="1 0.5 0.5" margin="0.01" material="self"/>
+        <motor ctrllimited="true" ctrlrange="-1 1"/>
+        <default class ="ground">
+            <geom material="grid" type="plane" contype="1" conaffinity="1"/>
+        </default>
+
+        <default class="wheel">
+            <geom rgba="0.231 0.231 0.231 1.0"></geom>
+        </default>
+        <default class="top_plate">        
+            <geom rgba="0.192 0.192 0.192 1.0"></geom>
+        </default>
+        <default class="rear_bumper">
+            <geom rgba="0.192 0.192 0.192 1.0"></geom>
+        </default>
+        <default class="front_bumper">
+            <geom rgba="0.4 0 0 1.0"></geom>
+        </default>
+        <default class="husky_body">
+            <geom rgba="0.996 0.941 0.412 1.0"></geom>
+        </default>
+
+
+    </default>
+
+    <worldbody>
+        <light pos="2.16 2 8" dir="0 -0.14834 -0.988936" castshadow="false" diffuse="0.9 0.9 0.9" />
+        <light pos="-4.84 -6 8" dir="0 -0.14834 -0.988936" castshadow="false" diffuse="0.9 0.9 0.9" />
+        <geom name="ground" class="ground" pos="0 0 0" size="20 20 1"/>
+
+        <body name="husky_robot" pos="-5 0 1">
+            <geom name="base_link_visual" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
+            <geom name="base_link_collision" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" type="box" />
+
+            <!--
+            <joint armature="0.0001" axis="1 0 0" damping="1e+11" name="" pos="0 0 0" type="slide"></joint>
+            <joint armature="0.0001" axis="0 1 0" damping="1e+11" name="robot0:slide1" pos="0 0 0" type="slide"></joint>
+            <joint armature="0.0001" axis="0 0 1" damping="1e+0" name="robot0:slide2" pos="0 0 0" type="slide"></joint> 
+            -->
+            
+            <joint name="whole_body" armature="1" damping="1" type="free" />
+
+            <inertial diaginertia="1.2869 1.2236 0.9868" mass="70.1294" pos="-0.0036 0 0.0014" quat="0.7605 -0.0133 -0.0061 0.6491"></inertial>
+
+            <!-- control the husky base -->
+            <!--
+            <joint name="base_x_slide_joint" type="slide" pos="0 0 0" axis="1 0 0" limited="true" range="-1 0.5" damping="15000"/>
+            <joint name="base_z_hinge_joint" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.57 0.57" damping="10000"/>
+            -->
+
+            <!-- Robot body -->           
+            <geom size="0.39496 0.28545 0.061875" pos="0 0 0.185625" type="box" />
+            <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="top_chassis" class="husky_body" />
+            <geom pos="0.48 0 0.091" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="front_bumper" />
+            <geom pos="-0.48 0 0.091" quat="1.32679e-06 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="rear_bumper"/>
+            <geom pos="0 0 0.225" type="mesh" contype="0" conaffinity="0" group="1" mesh="top_plate" class="top_plate"/>
+            <geom pos="0 0 0.225" type="mesh" mesh="top_plate" />
+
+            <body name="front_left_wheel_link" pos="0.256 0.2854 0.03282">
+                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="200.637" diaginertia="0.04411 0.02467 0.02467" />
+                <joint name="front_left_wheel" pos="0 0 0" axis="0 1 0" />
+                <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+            </body>
+            <body name="front_right_wheel_link" pos="0.256 -0.2854 0.03282">
+                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="200.637" diaginertia="0.04411 0.02467 0.02467" />
+                <joint name="front_right_wheel" pos="0 0 0" axis="0 1 0" />
+                <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+            </body>
+            <body name="rear_left_wheel_link" pos="-0.256 0.2854 0.03282">
+                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="200.637" diaginertia="0.04411 0.02467 0.02467" />
+                <joint name="rear_left_wheel" pos="0 0 0" axis="0 1 0" />
+                <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+            </body>
+            <body name="rear_right_wheel_link" pos="-0.256 -0.2854 0.03282">
+                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="200.637" diaginertia="0.04411 0.02467 0.02467" />
+                <joint name="rear_right_wheel" pos="0 0 0" axis="0 1 0" />
+                <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+            </body>
+        </body>
+
+        <!-- Box -->
+        <body name="box" pos = "0 0 1" euler="0 0 0">
+            <geom name="box_geom" pos = "0 0 0" rgba="0.8 0.2 0.2 0.5" size="0.3 2.0 0.3" type="box" mass="5.0" friction="0.2 0.5 0.5" group="1"/>
+            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
+        </body>
+    </worldbody>
+
+    <tendon>
+        <fixed name="left_differential">
+            <joint joint="front_left_wheel" coef="1"/>
+            <joint joint="rear_left_wheel" coef="1"/>
+        </fixed>
+        <fixed name="right_differential">
+            <joint joint="front_right_wheel" coef="1"/>
+            <joint joint="rear_right_wheel" coef="1"/>
+        </fixed>
+    </tendon>
+
+
+    <actuator>
+        <!--
+        <motor joint="front_left_wheel" ctrlrange="-3 3" ctrllimited="true"/>
+        <motor joint="front_right_wheel" ctrlrange="-3 3" ctrllimited="true"/>
+        <motor joint="rear_left_wheel" ctrlrange="-3 3" ctrllimited="true"/>
+        <motor joint="rear_right_wheel" ctrlrange="-3 3" ctrllimited="true"/>
+        -->
+
+        <!--
+        <velocity name="front_left_vel" joint="front_left_wheel" ctrlrange="-10 10" ctrllimited="true"/>
+        <velocity name="rear_left_vel"  joint="rear_left_wheel" ctrlrange="-10 10" ctrllimited="true"/>
+        <velocity name="front_right_vel" joint="front_right_wheel" ctrlrange="-10 10" ctrllimited="true"/>
+        <velocity name="rear_right_vel" joint="rear_right_wheel" ctrlrange="-10 10" ctrllimited="true"/>
+        -->
+        
+        <velocity name="left_vel"  tendon="left_differential" ctrllimited="true" ctrlrange="-10 10" gear="1" />
+        <velocity name="right_vel" tendon="right_differential" ctrllimited="true" ctrlrange="-10 10" gear="1" />
+
+    </actuator>
+    
+</mujoco>

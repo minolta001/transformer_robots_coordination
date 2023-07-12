@@ -1,0 +1,74 @@
+<mujoco model="husky_robot">
+    <include file="./common/skybox.xml"/>
+    <include file="./common/visual.xml"/>
+    <include file="./common/materials.xml"/>
+    <include file="./common/camera.xml"/>
+
+    <compiler angle="radian" coordinate="local" meshdir="./MyTest" inertiafromgeom="true"/>
+
+    <option integrator="RK4" timestep="0.01"/>
+
+    <size njmax="500" nconmax="100" />
+    <asset>
+        <mesh name="base_link" file="base_link.stl" />
+        <mesh name="wheel" file="wheel.stl" />
+        <mesh name="top_chassis" file="top_chassis.stl" />
+        <mesh name="bumper" file="bumper.stl" />
+        <mesh name="top_plate" file="top_plate.stl" />
+    </asset>
+
+    <default>
+        <joint armature="1" damping="1" limited="false"/>
+        <!--<geom condim="3" density="5.0" friction="1 0.5 0.5" margin="0.01" material="self"/>
+             -->
+        <geom condim="3" density="50.0" friction="1 0.5 0.5" margin="0.01" material="self"/>
+        <motor ctrllimited="true" ctrlrange="-1 1"/>
+        <default class ="ground">
+            <geom material="grid" type="plane" contype="1" conaffinity="1"/>
+        </default>
+    </default>
+  
+
+    <worldbody>
+        <light pos="2.16 2 8" dir="0 -0.14834 -0.988936" castshadow="false" diffuse="0.9 0.9 0.9" />
+        <light pos="-4.84 -6 8" dir="0 -0.14834 -0.988936" castshadow="false" diffuse="0.9 0.9 0.9" />
+        <geom name="ground" class="ground" pos="0 0 0" size="20 20 1"/>
+
+        <body name="test" pos="2 2 5"> 
+            <!-- Basic body -->
+            <geom name="base_link_visual" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" />
+            <geom name="base_link_collision" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" type="box" />
+
+            <!--
+            <joint armature="0.0001" axis="1 0 0" damping="1e+11" name="robot0:slide0" pos="0 0 0" type="slide"></joint>
+            <joint armature="0.0001" axis="0 1 0" damping="1e+11" name="robot0:slide1" pos="0 0 0" type="slide"></joint>
+            <joint armature="0.0001" axis="0 0 1" damping="1e+0" name="robot0:slide2" pos="0 0 0" type="slide"></joint>
+            -->
+            <joint type="free" stiffness="0" damping="1" frictionloss="0" armature="1" />
+
+            <!-- control the husky base
+            <joint name="base_x_slide_joint" type="slide" pos="0 0 0" axis="1 0 0" limited="true" range="-1 0.5" damping="15000"/>
+            <joint name="base_z_hinge_joint" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.57 0.57" damping="10000"/>
+            -->
+
+            <!-- Robot body -->           
+            <geom size="0.39496 0.28545 0.061875" pos="0 0 0.185625" type="box" />
+            <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="top_chassis" />
+            <geom pos="0.48 0 0.091" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" />
+            <geom pos="-0.48 0 0.091" quat="1.32679e-06 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" />
+            <geom pos="0 0 0.225" type="mesh" contype="0" conaffinity="0" group="1" mesh="top_plate" />
+            <geom pos="0 0 0.225" type="mesh" mesh="top_plate" />
+
+            <body name="front_left_wheel_link" pos="0.256 0.2854 0.03282">
+                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="200.637" diaginertia="0.04411 0.02467 0.02467" />
+                <joint name="front_left_wheel" pos="0 0 0" axis="0 1 0" />
+                <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" />
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+            </body>
+
+        </body>
+
+
+       
+    </worldbody>
+</mujoco>
