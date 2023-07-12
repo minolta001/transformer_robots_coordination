@@ -7,8 +7,8 @@ def register_environments():
 
     # Li Chen: single Husky forward environment
     register(
-        id='husky-forward-v1',
-        #entry_point='',
+        id='husky-forward-v0',
+        entry_point='env.husky.primitives.husky_forward:HuskyForwardEnv',
         kwargs={},
     )
 

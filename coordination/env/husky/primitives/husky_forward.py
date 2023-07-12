@@ -2,12 +2,13 @@ from collections import OrderedDict
 
 import numpy as np
 
-from env.ant.ant import AntEnv
+from env.husky.husky import HuskyEnv
+
 from env.transform_utils import up_vector_from_quat, forward_vector_from_quat, \
     l2_dist, cos_dist, right_vector_from_quat, sample_quat
 
 
-class AntForwardEnv(AntEnv):
+class HuskyForwardEnv(HuskyEnv):
     def __init__(self, **kwargs):
         self.name = 'husky_forward'
         super().__init__('husky_forward.xml', **kwargs)
