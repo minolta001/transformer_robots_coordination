@@ -67,6 +67,11 @@ class BaseEnv(gym.Env):
         self._frame_skip = self._env_config["frame_skip"]
         self.sim = mujoco_py.MjSim(model, nsubsteps=self._frame_skip)
         self.model = self.sim.model
+
+        """
+            For Husky, nq is 18, nv is 16
+        """
+
         self.data = self.sim.data
         self._viewer = None
 
@@ -107,12 +112,14 @@ class BaseEnv(gym.Env):
         return self.action_space.size
 
     def reset(self):
+
         self.sim.reset()
         if self.render_mode == 'human':
             self._viewer = self._get_viewer()
             self._viewer_reset()
         ob = self._reset()
         self._after_reset()
+
         return ob
 
     def _init_random(self, size):
@@ -247,6 +254,7 @@ class BaseEnv(gym.Env):
     def set_state(self, qpos, qvel):
         assert qpos.shape == (self.model.nq,) and qvel.shape == (self.model.nv,)
         old_state = self.sim.get_state()
+
         new_state = mujoco_py.MjSimState(old_state.time, qpos, qvel,
                                          old_state.act, old_state.udd_state)
         self.sim.set_state(new_state)

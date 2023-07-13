@@ -6,6 +6,7 @@ def register_environments():
     # register ant environments
 
     # Li Chen: single Husky forward environment
+
     register(
         id='husky-forward-v0',
         entry_point='env.husky.primitives.husky_forward:HuskyForwardEnv',

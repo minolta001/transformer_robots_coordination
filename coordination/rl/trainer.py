@@ -22,6 +22,7 @@ from util.mpi import mpi_sum
 from env import make_env, register_environments
 from env.action_spec import ActionSpec
 
+import gym
 
 def get_agent_by_name(algo):
     """
@@ -84,7 +85,15 @@ class Trainer(object):
         self._is_chef = config.is_chef
 
         # register environments
+        env_dict = gym.envs.registration.registry.env_specs.copy()
+
+        for env in env_dict:
+            del gym.envs.registration.registry.env_specs[env]
+        
+
+
         register_environments()
+        
 
         # create a new environment
         self._env = make_env(config.env, config)

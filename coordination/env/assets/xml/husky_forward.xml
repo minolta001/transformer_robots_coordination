@@ -61,7 +61,7 @@
             <joint armature="0.0001" axis="0 0 1" damping="1e+0" name="robot0:slide2" pos="0 0 0" type="slide"></joint> 
             -->
             
-            <joint name="whole_body" armature="1" damping="1" type="free" />
+            <joint name="husky_body" armature="1" damping="1" type="free" />
 
             <inertial diaginertia="1.2869 1.2236 0.9868" mass="70.1294" pos="-0.0036 0 0.0014" quat="0.7605 -0.0133 -0.0061 0.6491"></inertial>
 

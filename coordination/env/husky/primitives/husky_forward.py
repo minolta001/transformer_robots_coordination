@@ -122,3 +122,50 @@ class HuskyForwardEnv(HuskyEnv):
 
         return ob, reward, done, info
 
+    def _get_obs(self):
+        # Husky
+        qpos = self.data.qpos
+        qvel = self.data.qvel
+        qacc = self.data.qacc
+
+
+        # TODO: what are they?
+        print("\nFunction: _get_obs")
+        print(qpos)
+        print(qvel)
+        print(qacc)
+        input()
+
+        husky_pos = self._get_pos('husky_robot')
+
+        # box
+        box_pos = self._get_pos('box_geom')
+        #box_quat = self._get_quat('box')
+        box_forward = self._get_forward_vector('box_geom')
+
+        obs = OrderedDict([
+            (self.husky, np.concatenate([qpos[2:15], qvel[:14], qacc[:14]])),
+            (self.box, np.concatenate([box_pos - husky_pos, box_forward])),
+            #('shared_pos', np.concatenate([qpos[2:7], qvel[:6], qacc[:6]])),
+            #('lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
+        ])
+
+        def ravel(x):
+            obs[x] = obs[x].ravel()
+        map(ravel, obs.keys())
+
+        return obs
+
+    @property
+    def _init_qpos(self):
+        # 3 for (x, y, z), 4 for (x, y, z, w), and 2 for each leg
+        return np.array([0., 0., 0.58, 1., 0., 0., 0., 0., 1., 0., -1., 0., -1., 0., 1.,
+                         20., -1., 0.8, 1., 0., 0., 0.])
+
+        return np.array([])
+    
+    
+    
+
+
+
