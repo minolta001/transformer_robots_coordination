@@ -7,6 +7,8 @@ from env.husky.husky import HuskyEnv
 from env.transform_utils import up_vector_from_quat, forward_vector_from_quat, \
     l2_dist, cos_dist, right_vector_from_quat, sample_quat
 
+import mujoco_py
+
 
 class HuskyForwardEnv(HuskyEnv):
     def __init__(self, **kwargs):
@@ -23,7 +25,7 @@ class HuskyForwardEnv(HuskyEnv):
             'alive_reward': 0.,
             'quat_reward': 0,
             'die_penalty': 10,
-            'max_episode_steps': 200,
+            'max_episode_steps': 2000,
             'husky': 1,
             'direction': 'right',
             'init_randomness': 0.05,
@@ -36,8 +38,25 @@ class HuskyForwardEnv(HuskyEnv):
         # Env info
         self.husky = "husky_%d" % self._env_config['husky']
         self.box = "box_%d" % self._env_config['husky']
-        self.ob_shape = OrderedDict([(self.husky, 41), (self.box, 6)])
-        self.action_space.decompose(OrderedDict([(self.husky, 8)]))
+
+        '''
+            here define the size of observation space
+            husky has 29 in total:
+                9 from qpos (body and 4 wheels)
+                10 from qvel
+                10 from qacc
+
+            box has 6 in total:
+                3 from pos difference between box and husky
+                3 from forward vecto_perturb_actionr
+        '''
+        self.ob_shape = OrderedDict([(self.husky, 29), (self.box, 6)])
+        '''
+            Our husky model is differential drive, though it has 4 wheels.
+            So, the action space should be 2
+        '''
+        self.action_space.decompose(OrderedDict([(self.husky, 2)]))
+
         if self._env_config["direction"] == 'right':
             self.dx, self.dy = 1, 0
         if self._env_config["direction"] == 'left':
@@ -50,8 +69,11 @@ class HuskyForwardEnv(HuskyEnv):
     def _step(self, a):
         pos_before = self._get_pos('husky_geom')
         box_before = self._get_pos('box_geom')
+
         a = self._perturb_action(a)
+
         self.do_simulation(a)
+        #self.husky_simulation(a)
         pos_after = self._get_pos('husky_geom')
         box_after = self._get_pos('box_geom')
 
@@ -128,23 +150,18 @@ class HuskyForwardEnv(HuskyEnv):
         qvel = self.data.qvel
         qacc = self.data.qacc
 
-
-        # TODO: what are they?
-        print("\nFunction: _get_obs")
-        print(qpos)
-        print(qvel)
-        print(qacc)
-        input()
-
         husky_pos = self._get_pos('husky_robot')
-
         # box
         box_pos = self._get_pos('box_geom')
         #box_quat = self._get_quat('box')
         box_forward = self._get_forward_vector('box_geom')
 
+
+        # You should be able to find the observation space in this scenario
+        # Check _reset below to see what are in qpos
+        # The same way could be also applied to qvel and qacc
         obs = OrderedDict([
-            (self.husky, np.concatenate([qpos[2:15], qvel[:14], qacc[:14]])),
+            (self.husky, np.concatenate([qpos[2:11], qvel[:10], qacc[:10]])),
             (self.box, np.concatenate([box_pos - husky_pos, box_forward])),
             #('shared_pos', np.concatenate([qpos[2:7], qvel[:6], qacc[:6]])),
             #('lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
@@ -159,10 +176,88 @@ class HuskyForwardEnv(HuskyEnv):
     @property
     def _init_qpos(self):
         # 3 for (x, y, z), 4 for (x, y, z, w), and 2 for each leg
+        '''
         return np.array([0., 0., 0.58, 1., 0., 0., 0., 0., 1., 0., -1., 0., -1., 0., 1.,
                          20., -1., 0.8, 1., 0., 0., 0.])
+        '''
+        return np.array([-5., 0., 0.2, 0., 0.,
+                         0., 0., 0., 0., 0.,
+                         0., 0., 0., 0., 0., 
+                         0., 0., 0.])
 
-        return np.array([])
+    @property 
+    def _init_qvel(self):
+        return np.zeros(self.model.nv)
+    
+    def _reset(self):
+        #   IMPORTANT !!
+        '''
+            total number of joint: 18
+            The first 7 are husky_robot qpos
+            Then, follow by 4 qpos of 4 wheels
+            0 - 6: husky_robot qpos
+            7 - 10: wheel qpos
+            11 - 13: pos of box_geom
+            the rest of four should be 0, not sure what they are
+        ''' 
+        # total number of velocity: 16
+        
+        qpos = self._init_qpos + self._init_random(self.model.nq)
+        qvel = self._init_qvel + self._init_random(self.model.nv)
+
+        # DON'T PUT HUSKY TOO HIGH!
+        qpos[2] = 0.19
+        #qpos[3] = 0
+        qpos[4] = 0
+        qpos[5] = 0
+        
+        self.set_state(qpos, qvel)
+
+        self._reset_husky_box()
+
+        return self._get_obs()
+    
+    def _reset_husky_box(self):
+
+        qpos = self.data.qpos.ravel().copy()
+        qvel = self.data.qvel.ravel().copy()
+
+
+        # Initialize box
+        init_box_pos = np.asarray([0, 0, 0.8])
+        init_box_quat = sample_quat()
+        #init_box_quat = [1, 0, 0, 0]
+
+        # reset the box, reset pos and quat respectively
+        qpos[11:14] = init_box_pos
+        qpos[14:18] = init_box_quat
+
+        self._box_forward = forward_vector_from_quat(init_box_quat)
+
+        # Initialized Husky
+        x = np.random.uniform(low=-5.0, high=-3.0)
+        y = np.random.uniform(low=-5.0, high=5.0)
+        direction = self._env_config["direction"]
+        if direction == "right":
+            pass
+        elif direction == "left":
+            x = -x
+        elif direction == "up":
+            x, y = y, x
+        elif direction == "down":
+            x, y = y, -x
+
+        qpos[0] = x
+        qpos[1] = y
+        self._ant_pos = (x, y)
+
+        self.set_state(qpos, qvel)
+
+
+
+
+        
+
     
     
     

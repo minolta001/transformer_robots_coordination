@@ -139,6 +139,7 @@ class BaseEnv(gym.Env):
         self._fail = False
 
     def step(self, action):
+
         self._before_step()
         if isinstance(action, list):
             action = {key: val for ac_i in action for key, val in ac_i.items()}
@@ -241,7 +242,8 @@ class BaseEnv(gym.Env):
             maxs = self.action_space.maximum
             a = np.maximum(a, mins)
             a = np.minimum(a, maxs)
-            self.data.ctrl[:] = a
+            self.data.ctrl[:] = [5, 5]
+            print(self.data.ctrl)
             self.sim.forward()
             self.sim.step()
         except Exception as e:
@@ -250,6 +252,54 @@ class BaseEnv(gym.Env):
             logger.warn(traceback.format_exc())
             self.reset()
             self._fail = True
+
+    '''
+        Unlike ant robots, the servo of husky are velocity servo. We
+        don't control torque, we need to control velocity.
+        So, we need to rewrite simulation
+    '''
+    def husky_simulation(self, a):
+        try:
+            mins = self.action_space.minimum
+            maxs = self.action_space.maximum
+            a = np.maximum(a, mins)
+            a = np.minimum(a, maxs)
+
+            print(self.data.ctrl)
+            input()
+
+            '''
+            print(a)
+            print(self.data.qvel)
+            print(self.data.get_joint_qvel("front_left_wheel"))
+            print(self.data.get_joint_qvel("rear_left_wheel"))
+            print(self.data.get_joint_qvel("front_right_wheel"))
+            print(self.data.get_joint_qvel("rear_right_wheel"))
+            '''
+            prev_qvel = self.data.qvel
+            prev_qvel[6] = a[0] # apply velocity to front_left
+            prev_qvel[7] = a[0] # apply velocity to rear_left
+            prev_qvel[8] = a[1] # apply velocity to front_right
+            prev_qvel[9] = a[1] # apply velocity to rear_right
+            self.sim.data.qvel[6] = 5
+            self.sim.data.qvel[7] = 5
+            self.sim.data.qvel[8] = 5
+            self.sim.data.qvel[9] = 5
+
+            print(self.sim.data.qvel)
+            self.sim.forward()
+            self.sim.step()
+
+
+        except Exception as e:
+            logger.warn('[!] Warning: Simulation is unstable. The episode is terminated.')
+            logger.warn(e)
+            logger.warn(traceback.format_exc())
+            self.reset()
+            self._fail = True
+
+
+            
 
     def set_state(self, qpos, qvel):
         assert qpos.shape == (self.model.nq,) and qvel.shape == (self.model.nv,)

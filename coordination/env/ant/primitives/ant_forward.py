@@ -126,43 +126,33 @@ class AntForwardEnv(AntEnv):
         qacc = self.data.qacc
         ant_pos = self._get_pos('torso')
 
+        print(qpos)
+        print(qvel)
+        print(qacc)
+        input()
+
         # box
         box_pos = self._get_pos('box_geom')
         #box_quat = self._get_quat('box')
         box_forward = self._get_forward_vector('box_geom')
 
-        print(qpos)
-        print(qvel)
-        print(qacc)
+        ########## 
 
-
-        input()
         names = self.model.joint_names
         print(names)
-
         for name in names:
             print(name)
             print(self.sim.data.get_joint_qpos(name))
+
+        
         
         input()
 
         print(np.array([self.sim.data.get_joint_qvel(name) for name in names]))
 
         input() 
-
-        for joint in self.model.joint_names:
-            print(joint)
-            start_idx = mujoco_py.jnt_qposadr[self.model.joint_name2id(joint)]
-            end_idx = start_idx + self.model.jnt_numdim[self.model.joint_name2id(joint)]
-            print(f"(${start_idx}, ${end_idx})")
-
-        input()
-            
-            
-
         
-        
-
+        ########## 
 
         obs = OrderedDict([
             (self.ant, np.concatenate([qpos[2:15], qvel[:14], qacc[:14]])),
