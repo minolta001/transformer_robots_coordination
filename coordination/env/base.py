@@ -243,7 +243,6 @@ class BaseEnv(gym.Env):
             maxs = self.action_space.maximum
             a = np.maximum(a, mins)
             a = np.minimum(a, maxs)
-            print(a)
             self.data.ctrl[:] = a
             self.sim.forward()
             self.sim.step()

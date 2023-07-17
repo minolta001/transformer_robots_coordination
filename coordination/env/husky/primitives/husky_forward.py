@@ -58,13 +58,13 @@ class HuskyForwardEnv(HuskyEnv):
         self.action_space.decompose(OrderedDict([(self.husky, 2)]))
 
         if self._env_config["direction"] == 'right':
-            self.dx, self.dy = 8, 0
+            self.dx, self.dy = 1, 0
         if self._env_config["direction"] == 'left':
-            self.dx, self.dy = -8, 0
+            self.dx, self.dy = -1, 0
         if self._env_config["direction"] == 'up':
-            self.dx, self.dy = 0, 8
+            self.dx, self.dy = 0, 1
         if self._env_config["direction"] == 'down':
-            self.dx, self.dy = 0, -8
+            self.dx, self.dy = 0, -1
 
     def _step(self, a):
         pos_before = self._get_pos('husky_geom')
