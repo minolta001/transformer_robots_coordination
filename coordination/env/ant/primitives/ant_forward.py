@@ -126,10 +126,6 @@ class AntForwardEnv(AntEnv):
         qacc = self.data.qacc
         ant_pos = self._get_pos('torso')
 
-        print(qpos)
-        print(qvel)
-        print(qacc)
-        input()
 
         # box
         box_pos = self._get_pos('box_geom')
@@ -137,7 +133,7 @@ class AntForwardEnv(AntEnv):
         box_forward = self._get_forward_vector('box_geom')
 
         ########## 
-
+        '''
         names = self.model.joint_names
         print(names)
         for name in names:
@@ -151,7 +147,7 @@ class AntForwardEnv(AntEnv):
         print(np.array([self.sim.data.get_joint_qvel(name) for name in names]))
 
         input() 
-        
+        ''' 
         ########## 
 
         obs = OrderedDict([

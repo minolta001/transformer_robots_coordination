@@ -145,6 +145,7 @@ class BaseEnv(gym.Env):
             action = {key: val for ac_i in action for key, val in ac_i.items()}
         if isinstance(action, dict):
             action = np.concatenate([action[key] for key in self.action_space.shape.keys() if key in action])
+
         ob, reward, done, info = self._step(action)
         done, info, penalty = self._after_step(reward, done, info)
         return ob, reward + penalty, done, info
@@ -242,8 +243,8 @@ class BaseEnv(gym.Env):
             maxs = self.action_space.maximum
             a = np.maximum(a, mins)
             a = np.minimum(a, maxs)
-            self.data.ctrl[:] = [5, 5]
-            print(self.data.ctrl)
+            print(a)
+            self.data.ctrl[:] = a
             self.sim.forward()
             self.sim.step()
         except Exception as e:

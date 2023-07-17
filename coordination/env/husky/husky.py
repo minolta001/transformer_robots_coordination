@@ -6,7 +6,7 @@ class HuskyEnv(BaseEnv):
     def __init__(self, xml_path, **kwargs):
         super().__init__(xml_path, **kwargs)
         self._env_config.update({
-            "init_randomness": 0.1,
+            "init_randomness": 10,
             "init_random_rot": 0
         })
         self.reward_type = ["ctrl_reward"]    

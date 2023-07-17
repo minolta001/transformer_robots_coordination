@@ -25,10 +25,10 @@ class HuskyForwardEnv(HuskyEnv):
             'alive_reward': 0.,
             'quat_reward': 0,
             'die_penalty': 10,
-            'max_episode_steps': 2000,
+            'max_episode_steps': 500,
             'husky': 1,
             'direction': 'right',
-            'init_randomness': 0.05,
+            'init_randomness': 0.1,
             'diayn_reward': 0.1,
             "prob_perturb_action": 0.1,
             "perturb_action": 0.01,
@@ -58,13 +58,13 @@ class HuskyForwardEnv(HuskyEnv):
         self.action_space.decompose(OrderedDict([(self.husky, 2)]))
 
         if self._env_config["direction"] == 'right':
-            self.dx, self.dy = 1, 0
+            self.dx, self.dy = 8, 0
         if self._env_config["direction"] == 'left':
-            self.dx, self.dy = -1, 0
+            self.dx, self.dy = -8, 0
         if self._env_config["direction"] == 'up':
-            self.dx, self.dy = 0, 1
+            self.dx, self.dy = 0, 8
         if self._env_config["direction"] == 'down':
-            self.dx, self.dy = 0, -1
+            self.dx, self.dy = 0, -8
 
     def _step(self, a):
         pos_before = self._get_pos('husky_geom')
@@ -112,16 +112,29 @@ class HuskyForwardEnv(HuskyEnv):
         vel_reward = self._env_config["vel_reward"] * vel
         box_vel_reward = self._env_config["box_vel_reward"] * box_vel
         offset_reward = self._env_config["offset_reward"] * (1 - min(2, offset))
-        height_reward = -self._env_config["height_reward"] * np.abs(height - 0.6)
+        height_reward = -self._env_config["height_reward"] * np.abs(height - 1)
         alive_reward = self._env_config["alive_reward"]
         quat_reward = self._env_config["quat_reward"] * (quat_dist - 1)
         upright_reward = self._env_config["upright_reward"] * upright
 
+
         # fail
+        '''
         done = not np.isfinite(self.data.qpos).all() or \
             0.35 > height or height > 0.9
+        '''
+
+        if not np.isfinite(self.data.qpos).all():
+            done = True
+        elif 0.1 > height:  
+            done = True
+        elif height > 2:
+            done = True
+
         die_penalty = -self._env_config["die_penalty"] if done else 0
         #done = done or quat_dist < 0.9
+        
+
         done = done or abs(box_dist[0]) > 5.5 or abs(box_dist[1]) > 5.5
 
         self._reward = reward = vel_reward + height_reward + \
