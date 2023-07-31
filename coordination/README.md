@@ -135,10 +135,10 @@ python3 -m rl.main --env ant-forward-v0 --gpu 0 --prefix ant-2-left-n --env_args
  - Husky Push
 ```bash
 # With SBD
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-down-n --env_args husky-1/direction-down --seed 1 --diayn False --max_global_step 500000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-up-n --env_args husky-1/direction-up --seed 1 --diayn False --max_global_step 500000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-right-n --env_args husky-1/direction-right --seed 1 --diayn False --max_global_step 500000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-left-n --env_args husky-1/direction-left --seed 1 --diayn False --max_global_step 500000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-down-n --env_args husky-1/direction-down --seed 1 --diayn False --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-up-n --env_args husky-1/direction-up --seed 1 --diayn False --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-right-n --env_args husky-1/direction-right --seed 1 --diayn False --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-left-n --env_args husky-1/direction-left --seed 1 --diayn False --max_global_step 1000000
 
 ```
 

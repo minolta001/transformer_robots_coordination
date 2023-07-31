@@ -17,13 +17,13 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'vel_reward': 50,
+            'vel_reward': 30, #50
             'box_vel_reward': 20,
             'offset_reward': 1,
             'height_reward': 0.5,
-            'upright_reward': 0.5,
+            'upright_reward': 5,
             'alive_reward': 0.,
-            'quat_reward': 0,
+            'quat_reward': 0, # 0
             'die_penalty': 10,
             'max_episode_steps': 500,
             'husky': 1,
@@ -89,11 +89,13 @@ class HuskyForwardEnv(HuskyEnv):
         # velocity?
         vel = (pos_after[0] - pos_before[0]) * self.dx + \
             (pos_after[1] - pos_before[1]) * self.dy
+        
+        # 
 
         #offset = abs(pos_after[0] * self.dy) - abs(pos_before[0] * self.dy) + \
         #    abs(pos_after[1] * self.dx) - abs(pos_before[1] * self.dx)
-        offset = abs((pos_after[0] - self._ant_pos[0]) * self.dy) + \
-            abs((pos_after[1] - self._ant_pos[1]) * self.dx)
+        offset = abs((pos_after[0] - self._husky_pos[0]) * self.dy) + \
+            abs((pos_after[1] - self._husky_pos[1]) * self.dx)
 
         box_vel = 0
         box_vel = (box_after[0] - box_before[0]) * self.dx + \
@@ -141,7 +143,8 @@ class HuskyForwardEnv(HuskyEnv):
             ctrl_reward + alive_reward + offset_reward + die_penalty + \
             quat_reward + upright_reward
 
-        info = {"reward_vel": vel_reward,
+        info = {"Total Reward": reward,
+                "reward_vel": vel_reward,
                 "reward_box_vel": box_vel_reward,
                 "reward_offset": offset_reward,
                 "reward_ctrl": ctrl_reward,
@@ -262,7 +265,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         qpos[0] = x
         qpos[1] = y
-        self._ant_pos = (x, y)
+        self._husky_pos = (x, y)
 
         self.set_state(qpos, qvel)
 

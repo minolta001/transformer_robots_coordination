@@ -53,7 +53,7 @@
 
         <body name="husky_robot" pos="-5 0 1">
             <geom name="base_link_visual" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
-            <geom name="husky_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" type="box"/>
+            <geom name="husky_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 
             <!--
             <joint armature="0.0001" axis="1 0 0" damping="1e+11" name="" pos="0 0 0" type="slide"></joint>
@@ -72,36 +72,36 @@
             -->
 
             <!-- Robot body -->           
-            <geom size="0.39496 0.28545 0.061875" pos="0 0 0.185625" type="box" />
+            <geom size="0.39496 0.28545 0.061875" pos="0 0 0.185625" rgba="0 0 0 0" type="box" />
             <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="top_chassis" class="husky_body" />
             <geom pos="0.48 0 0.091" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="front_bumper" />
             <geom pos="-0.48 0 0.091" quat="1.32679e-06 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="rear_bumper"/>
             <geom pos="0 0 0.225" type="mesh" contype="0" conaffinity="0" group="1" mesh="top_plate" class="top_plate"/>
-            <geom pos="0 0 0.225" type="mesh" mesh="top_plate" />
+            <geom pos="0 0 0.225" type="mesh" mesh="top_plate" rgba="0 0 0 0"/>
 
             <body name="front_left_wheel_link" pos="0.256 0.2854 0.03282">
                 <!-- inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20.637" diaginertia="0.04411 0.02467 0.02467" /-->
                 <joint name="front_left_wheel" pos="0 0 0" axis="0 1 0" />
                 <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
-                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" rgba="0 0 0 0"/>
             </body>
             <body name="rear_left_wheel_link" pos="-0.256 0.2854 0.03282">
                 <!-- inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20.637" diaginertia="0.04411 0.02467 0.02467" /-->
                 <joint name="rear_left_wheel" pos="0 0 0" axis="0 1 0" />
                 <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
-                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" rgba="0 0 0 0"/>
             </body>
             <body name="front_right_wheel_link" pos="0.256 -0.2854 0.03282">
                 <!-- inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20.637" diaginertia="0.04411 0.02467 0.02467" / -->
                 <joint name="front_right_wheel" pos="0 0 0" axis="0 1 0" />
                 <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
-                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" rgba="0 0 0 0"/>
             </body>
            <body name="rear_right_wheel_link" pos="-0.256 -0.2854 0.03282">
                 <!-- inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20.637" diaginertia="0.04411 0.02467 0.02467" / -->
                 <joint name="rear_right_wheel" pos="0 0 0" axis="0 1 0" />
                 <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="wheel" class="wheel"/>
-                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" />
+                <geom size="0.17775 0.05715" quat="0.707107 0.707106 0 0" type="cylinder" rgba="0 0 0 0"/>
             </body>
         </body>
 
@@ -139,8 +139,8 @@
         <velocity name="rear_right_vel" joint="rear_right_wheel" ctrlrange="-10 10" ctrllimited="true"/>
         -->
 
-        <motor name="left_vel"  tendon="left_differential"  gear="20" />
-        <motor name="right_vel" tendon="right_differential"  gear="20" />
+        <motor name="left_vel"  tendon="left_differential"  gear="15" />
+        <motor name="right_vel" tendon="right_differential"  gear="15" />
 
 
     </actuator>
