@@ -71,6 +71,7 @@
             <joint name="base_z_hinge_joint" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.57 0.57" damping="10000"/>
             -->
 
+            <!-- Collision box are transparent-->
             <!-- Robot body -->           
             <geom size="0.39496 0.28545 0.061875" pos="0 0 0.185625" rgba="0 0 0 0" type="box" />
             <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="top_chassis" class="husky_body" />
