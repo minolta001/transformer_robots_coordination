@@ -138,3 +138,65 @@ def l2_dist(a, b):
 def cos_dist(a, b):
     return np.dot(a, b) / np.linalg.norm(a) / np.linalg.norm(b)
 
+# given two forward vector at two time steps
+# return > 0 if rotate right
+# return < 0 if rotate left
+# return 0 if move straight
+def rotate_direction(a, b):
+    rotate = np.cross(a, b)[2]
+    if(rotate > 0):
+        return 1
+    elif(rotate < 0):
+        return -1
+    else:   # moving straight
+        return 0
+
+# Given pos of the object, pos of the vehicle, and the forward vector of the vehicle, 
+# check if the heading of the vehicle is pointing toward the object
+# return 1 - normalized radian
+# The closer to 1, the more correct the heading
+def movement_heading_difference(ob_pos, car_pos, car_forward_vec):
+    direction_vec = ob_pos - car_pos
+    direction_vec_normalized = direction_vec / np.linalg.norm(direction_vec)
+    dot_product = np.dot(car_forward_vec, direction_vec_normalized)
+    
+    angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
+    return abs(1 - (angle_rad / math.pi))
+
+# Given forward vector of the object and the vehicle, check if their headings are parallel to each one
+# 
+def alignment_heading_difference(ob_forward_vec, car_forward_vec):
+    ob_forward_normalized = ob_forward_vec / np.linalg.norm(ob_forward_vec)
+    car_forward_nomalized = car_forward_vec / np.linalg.norm(car_forward_vec)
+
+    dot_product = np.dot(ob_forward_normalized, car_forward_nomalized)
+    angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
+
+    if(angle_rad < math.pi):
+        angle_diff = min(abs(angle_rad - math.pi), angle_rad)
+    else:
+        angle_diff = min(abs(angle_rad - math.pi), abs(2 * math.pi - angle_rad))
+
+    if(angle_diff > math.pi / 2 or angle_diff < 0):
+        print("\nangle_diff error!!")
+        return ValueError
+    return abs(1 - (angle_diff / math.pi / 2))
+
+
+# Given position before, position after and forward vector before,
+# return if the object move forward or backward
+# return 1 if forward, -1 if backward, 0 if perpendicular
+def forward_backward(pos_before, pos_after, forward_before):
+    displacement = pos_after - pos_before
+    displacement_normalized = displacement / np.linalg.norm(displacement)
+    
+    forward_normalized = forward_before / np.linalg.norm(forward_before)
+    dot_product = np.dot(displacement_normalized, forward_normalized)
+
+    if dot_product > 0:
+        return 1    # move forward
+    elif dot_product < 0:
+        return -1   # move backward
+    else:
+        return 0    # move perpendicular
+

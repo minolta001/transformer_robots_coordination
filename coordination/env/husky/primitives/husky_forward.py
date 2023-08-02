@@ -5,10 +5,11 @@ import numpy as np
 from env.husky.husky import HuskyEnv
 
 from env.transform_utils import up_vector_from_quat, forward_vector_from_quat, \
-    l2_dist, cos_dist, right_vector_from_quat, sample_quat
+    l2_dist, cos_dist, right_vector_from_quat, sample_quat, rotate_direction, \
+    alignment_heading_difference, movement_heading_difference, forward_backward
 
 import mujoco_py
-
+import math
 
 class HuskyForwardEnv(HuskyEnv):
     def __init__(self, **kwargs):
@@ -17,13 +18,15 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'vel_reward': 30, #50
-            'box_vel_reward': 20,
+            'linear_vel_reward': 30, #50
+            'angular_vel_reward': 30,
+            'box_linear_vel_reward': 20,
+            'box_angular_vel_reward': 20,
             'offset_reward': 1,
             'height_reward': 0.5,
             'upright_reward': 5,
             'alive_reward': 0.,
-            'quat_reward': 0, # 0
+            'quat_reward': 30, # 0
             'die_penalty': 10,
             'max_episode_steps': 500,
             'husky': 1,
@@ -32,6 +35,8 @@ class HuskyForwardEnv(HuskyEnv):
             'diayn_reward': 0.1,
             "prob_perturb_action": 0.1,
             "perturb_action": 0.01,
+            "alignment_reward": 50,
+            "move_heading_reward": 50
         })
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -61,14 +66,22 @@ class HuskyForwardEnv(HuskyEnv):
             self.dx, self.dy = 1, 0
         if self._env_config["direction"] == 'left':
             self.dx, self.dy = -1, 0
-        if self._env_config["direction"] == 'up':
+        if self._env_config["direction"] == 'forward':
             self.dx, self.dy = 0, 1
-        if self._env_config["direction"] == 'down':
+        if self._env_config["direction"] == 'backward':
             self.dx, self.dy = 0, -1
+
+        
 
     def _step(self, a):
         pos_before = self._get_pos('husky_geom')
         box_before = self._get_pos('box_geom')
+
+        husky_quat_before = self._get_quat('husky_geom')
+        husky_forward_vector_before = forward_vector_from_quat(husky_quat_before)
+        
+        box_quat_before = self._get_quat('box_geom')
+        box_forward_vector_before = forward_vector_from_quat(box_quat_before)
 
         a = self._perturb_action(a)
 
@@ -77,60 +90,69 @@ class HuskyForwardEnv(HuskyEnv):
         pos_after = self._get_pos('husky_geom')
         box_after = self._get_pos('box_geom')
 
+        husky_quat_after = self._get_quat('husky_geom')
+        husky_forward_vector_after = forward_vector_from_quat(husky_quat_after) 
+
         ob = self._get_obs()
         done = False
-        vel_reward = 0
-        height_reward = 0
         alive_reward = 0
         ctrl_reward = self._ctrl_reward(a)
 
-        height = self.data.qpos[2]
 
-        # velocity?
-        vel = (pos_after[0] - pos_before[0]) * self.dx + \
+        # husky linear velocity
+        '''
+        husky_linear_vel = (pos_after[0] - pos_before[0]) * self.dx + \
             (pos_after[1] - pos_before[1]) * self.dy
-        
-        # 
+        '''
+    
+        husky_linear_vel = math.sqrt((pos_after[0] - pos_before[0]) ** 2 + (pos_after[1] - pos_before[1]) ** 2)
+        husky_move_direction = forward_backward(pos_before, pos_after, husky_forward_vector_before)
 
-        #offset = abs(pos_after[0] * self.dy) - abs(pos_before[0] * self.dy) + \
-        #    abs(pos_after[1] * self.dx) - abs(pos_before[1] * self.dx)
+        # husky angular velocity 
+        husky_angular_vel = cos_dist(husky_forward_vector_before, husky_forward_vector_after)
+
+
+        # travel distance
         offset = abs((pos_after[0] - self._husky_pos[0]) * self.dy) + \
             abs((pos_after[1] - self._husky_pos[1]) * self.dx)
 
-        box_vel = 0
-        box_vel = (box_after[0] - box_before[0]) * self.dx + \
+        # box linear velocity
+        '''
+        box_linear_vel = (box_after[0] - box_before[0]) * self.dx + \
             (box_after[1] - box_before[1]) * self.dy
+        '''
+        box_linear_vel = math.sqrt((box_after[0] - box_before[0]) ** 2 + (box_after[1] - box_before[1]) ** 2)
 
+
+        # box orientation on z-axis
         box_forward = self._get_forward_vector('box_geom')
-        quat_dist = cos_dist(self._box_forward, box_forward)
+        # box angular velocity
+        box_angular_vel = cos_dist(self._box_forward, box_forward)
 
+
+        # distance between box and husky
         box_dist = box_after - pos_after
 
-        husky_quat = self._get_quat('husky_robot')
-        up = up_vector_from_quat(husky_quat)
-        upright = cos_dist(up, np.array([0, 0, 1]))
+        # reward components, for later use
+        husky_linear_vel_reward = self._env_config["linear_vel_reward"] * husky_linear_vel
+        husky_angular_vel_reward = self._env_config["angular_vel_reward"] * husky_angular_vel
 
-        # reward
-        vel_reward = self._env_config["vel_reward"] * vel
-        box_vel_reward = self._env_config["box_vel_reward"] * box_vel
-        offset_reward = self._env_config["offset_reward"] * (1 - min(2, offset))
-        height_reward = -self._env_config["height_reward"] * np.abs(height - 1)
+        box_linear_vel_reward = self._env_config["box_linear_vel_reward"] * box_linear_vel
+        box_angular_vel_reward = self._env_config["box_angular_vel_reward"] * box_angular_vel
+
+        #offset_reward = self._env_config["offset_reward"] * (1 - min(2, offset))
+
+        offset_reward = 0
         alive_reward = self._env_config["alive_reward"]
-        quat_reward = self._env_config["quat_reward"] * (quat_dist - 1)
-        upright_reward = self._env_config["upright_reward"] * upright
 
+        # If robot's heading is parallel with object's heading?
+        alignment_heading_reward = self._env_config["alignment_reward"] * alignment_heading_difference(box_forward, husky_forward_vector_after)
 
-        # fail
-        '''
-        done = not np.isfinite(self.data.qpos).all() or \
-            0.35 > height or height > 0.9
-        '''
+        # if robot is moving toward the object?
+        movement_heading_reward = self._env_config["move_heading_reward"] * movement_heading_difference(box_after, pos_after, husky_forward_vector_after)
 
+        # Failure check. Usually not.
         if not np.isfinite(self.data.qpos).all():
-            done = True
-        elif 0.1 > height:  
-            done = True
-        elif height > 2:
             done = True
 
         die_penalty = -self._env_config["die_penalty"] if done else 0
@@ -139,9 +161,45 @@ class HuskyForwardEnv(HuskyEnv):
 
         done = done or abs(box_dist[0]) > 5.5 or abs(box_dist[1]) > 5.5
 
-        self._reward = reward = vel_reward + height_reward + \
+
+        # Different reward functions for different primitive skills
+        skill = self._env_config["direction"]
+        
+
+        if(skill == "right"):
+            # encourage the robot to rotate correctly
+            husky_angular_vel_reward = husky_angular_vel_reward * rotate_direction(husky_forward_vector_before, 
+                                                                                   husky_forward_vector_after) 
+
+            reward = ctrl_reward + alive_reward + die_penalty + husky_angular_vel_reward \
+                + box_angular_vel_reward + alignment_heading_reward 
+
+        elif(skill == "left"):
+            husky_angular_vel_reward = (-husky_angular_vel_reward) * rotate_direction(husky_forward_vector_before, 
+                                                                                    husky_forward_vector_after)
+
+            reward = ctrl_reward + alive_reward + die_penalty + husky_angular_vel_reward \
+                + box_angular_vel_reward + alignment_heading_reward
+
+        elif(skill == "forward"):
+            husky_linear_vel_reward = husky_linear_vel_reward * husky_move_direction
+
+            reward = ctrl_reward + alive_reward + die_penalty + offset_reward + husky_linear_vel_reward \
+                + box_linear_vel_reward + box_angular_vel_reward + movement_heading_reward
+        else:   # backward
+            husky_linear_vel_reward = (-husky_linear_vel_reward) * husky_move_direction
+
+            reward = ctrl_reward + alive_reward + die_penalty + offset_reward + husky_linear_vel_reward \
+                + box_linear_vel_reward + box_angular_vel_reward + movement_heading_reward
+            
+            
+
+        '''
+        self._reward = reward = vel_reward + \
             ctrl_reward + alive_reward + offset_reward + die_penalty + \
-            quat_reward + upright_reward
+            quat_reward
+        '''
+        self._reward = reward
 
         info = {"Total Reward": reward,
                 "reward_vel": vel_reward,
@@ -196,7 +254,8 @@ class HuskyForwardEnv(HuskyEnv):
         return np.array([0., 0., 0.58, 1., 0., 0., 0., 0., 1., 0., -1., 0., -1., 0., 1.,
                          20., -1., 0.8, 1., 0., 0., 0.])
         '''
-        return np.array([-5., 0., 0.2, 0., 0.,
+
+        return np.array([-2., 0., 0.2, 0., 0.,
                          0., 0., 0., 0., 0.,
                          0., 0., 0., 0., 0., 
                          0., 0., 0.])
@@ -214,7 +273,7 @@ class HuskyForwardEnv(HuskyEnv):
             0 - 6: husky_robot qpos
             7 - 10: wheel qpos
             11 - 13: pos of box_geom
-            the rest of four should be 0, not sure what they are
+            14 - 17: quaterion of 
         ''' 
         # total number of velocity: 16
         
