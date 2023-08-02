@@ -164,7 +164,6 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Different reward functions for different primitive skills
         skill = self._env_config["direction"]
-        
 
         if(skill == "right"):
             # encourage the robot to rotate correctly
@@ -172,20 +171,21 @@ class HuskyForwardEnv(HuskyEnv):
                                                                                    husky_forward_vector_after) 
 
             reward = ctrl_reward + alive_reward + die_penalty + husky_angular_vel_reward \
-                + box_angular_vel_reward + alignment_heading_reward 
+                + alignment_heading_reward 
 
         elif(skill == "left"):
             husky_angular_vel_reward = (-husky_angular_vel_reward) * rotate_direction(husky_forward_vector_before, 
                                                                                     husky_forward_vector_after)
 
             reward = ctrl_reward + alive_reward + die_penalty + husky_angular_vel_reward \
-                + box_angular_vel_reward + alignment_heading_reward
+                + alignment_heading_reward
 
         elif(skill == "forward"):
             husky_linear_vel_reward = husky_linear_vel_reward * husky_move_direction
 
             reward = ctrl_reward + alive_reward + die_penalty + offset_reward + husky_linear_vel_reward \
                 + box_linear_vel_reward + box_angular_vel_reward + movement_heading_reward
+
         else:   # backward
             husky_linear_vel_reward = (-husky_linear_vel_reward) * husky_move_direction
 
@@ -202,17 +202,19 @@ class HuskyForwardEnv(HuskyEnv):
         self._reward = reward
 
         info = {"Total Reward": reward,
-                "reward_vel": vel_reward,
-                "reward_box_vel": box_vel_reward,
-                "reward_offset": offset_reward,
+                "reward: husky_linear": husky_linear_vel_reward,
+                "reward: husky_angular": husky_angular_vel_reward,
+                "reward: heading_alignment": alignment_heading_reward,
+                "reward: movement_heading": movement_heading_reward,
+
+                "reward: box_linear": box_linear_vel_reward,
+                "reward: box_angular": box_angular_vel_reward,
+
                 "reward_ctrl": ctrl_reward,
-                "reward_height": height_reward,
                 "reward_alive": alive_reward,
-                "reward_quat": quat_reward,
-                "reward_upright": upright_reward,
                 "penalty_die": die_penalty,
                 "box_forward": box_forward,
-                "ant_pos": pos_after,
+                "husky_pos": pos_after,
                 "box_ob": ob[self.box],
                 "success": self._success}
 
@@ -255,10 +257,8 @@ class HuskyForwardEnv(HuskyEnv):
                          20., -1., 0.8, 1., 0., 0., 0.])
         '''
 
-        return np.array([-2., 0., 0.2, 0., 0.,
-                         0., 0., 0., 0., 0.,
-                         0., 0., 0., 0., 0., 
-                         0., 0., 0.])
+        return np.array([-2., 0., 0.2, 0., 0., 0., 0., 0., 0., 0., 0., 
+                         0., 0., 0., 0., 0., 0., 0.])
 
     @property 
     def _init_qvel(self):
@@ -317,9 +317,9 @@ class HuskyForwardEnv(HuskyEnv):
             pass
         elif direction == "left":
             x = -x
-        elif direction == "up":
+        elif direction == "forward":
             x, y = y, x
-        elif direction == "down":
+        elif direction == "backward":
             x, y = y, -x
 
         qpos[0] = x
