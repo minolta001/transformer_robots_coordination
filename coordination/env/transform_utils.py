@@ -122,7 +122,7 @@ def right_vector_from_quat(quat):
     x = 1 - 2 * (qy * qy + qz * qz)
     y = 2 * (qx * qy - qw * qz)
     z = 2 * (qx * qz + qw * qy)#
-    return np.array([x, y, z])
+    return np.array([x, -y, z])
 
 
 def quat_dist(quat1, quat2):
@@ -175,7 +175,7 @@ def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b):
     dot_product = np.dot(suggested_vec_normalized, car_vec_normalized)
     
     angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
-    return 1 - (angle_rad / np.pi)
+    return (1 - (angle_rad / np.pi)) - 0.5
 
 # Given forward vector of the object and the vehicle, check if their headings are parallel to each one
 # NOTE: No matter forward or backward vector is parallel with the forward vector of the box, it is OK.
