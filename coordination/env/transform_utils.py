@@ -178,14 +178,27 @@ def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b):
     return 1 - (angle_rad / np.pi)
 
 # Given forward vector of the object and the vehicle, check if their headings are parallel to each one
-# 
+# NOTE: No matter forward or backward vector is parallel with the forward vector of the box, it is OK.
 def alignment_heading_difference(ob_forward_vec, car_forward_vec):
+    ob_forward_vec = ob_forward_vec[0:2]
+    car_forward_vec = car_forward_vec[0:2]
+
     ob_forward_normalized = ob_forward_vec / np.linalg.norm(ob_forward_vec)
     car_forward_nomalized = car_forward_vec / np.linalg.norm(car_forward_vec)
 
     dot_product = np.dot(ob_forward_normalized, car_forward_nomalized)
-    angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
+    angle_rad_forward = np.arccos(np.clip(dot_product, -1.0, 1.0))
+    
+    car_backward_nomalized = (-car_forward_vec) / np.linalg.norm(-car_forward_vec)
+    dot_product = np.dot(ob_forward_normalized, car_backward_nomalized)
+    angle_rad_backward = np.arccos(np.clip(dot_product, -1.0, 1.0))
 
+    # the minimum of max(1 - angle_rad_*) is 0.5 (perpendicular), the maximum is 1.0 (parallel).
+    # therefore, we reduce the value and re-scale it to (0, 1) range.
+    return (max(1 - angle_rad_forward/np.pi, 
+               1 - angle_rad_backward/np.pi) - 0.5) / 0.5
+
+    '''
     if(angle_rad < np.pi):
         angle_diff = min(abs(angle_rad - np.pi), angle_rad)
     else:
@@ -194,12 +207,11 @@ def alignment_heading_difference(ob_forward_vec, car_forward_vec):
     if(angle_diff > np.pi / 2 or angle_diff < 0):
         print("\nangle_diff error!!")
         return ValueError
-    return abs(1 - (angle_diff / np.pi / 2))
+    '''
 
 
-# Given position before, position after and forward vector before,
-# return if the object move forward or backward
-# return 1 if forward, -1 if backward, 0 if perpendicular
+
+# Give qvel of an object, check if the object is moving forward or backward
 def forward_backward(qvel):
     qvel = qvel[6:10]
     res = sum(qvel) / 4

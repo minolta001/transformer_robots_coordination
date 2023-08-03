@@ -28,7 +28,7 @@ class HuskyForwardEnv(HuskyEnv):
             'alive_reward': 0.,
             'quat_reward': 30, # 0
             'die_penalty': 10,
-            'max_episode_steps': 500,
+            'max_episode_steps': 2000,
             'husky': 1,
             'direction': 'right',
             'init_randomness': 0.1,
@@ -77,11 +77,18 @@ class HuskyForwardEnv(HuskyEnv):
         pos_before = self._get_pos('husky_geom')
         box_before = self._get_pos('box_geom')
 
+
+        '''
+        NOTE: THIS IS VERY IMPORTANT!
+
+        Use right_vector_from_quat to acquire forward vector of object and robots. The original forward_vector_from_quat takes the world map as the coordination, so y-axis is the actual forward direction.
+        '''
+
         husky_quat_before = self._get_quat('husky_robot')
-        husky_forward_vector_before = forward_vector_from_quat(husky_quat_before)
+        husky_forward_vector_before = right_vector_from_quat(husky_quat_before)
         
         box_quat_before = self._get_quat('box')
-        box_forward_vector_before = forward_vector_from_quat(box_quat_before)
+        box_forward_vector_before = right_vector_from_quat(box_quat_before)
 
         a = self._perturb_action(a)
 
@@ -92,7 +99,7 @@ class HuskyForwardEnv(HuskyEnv):
         box_quat_after = self._get_quat('box')
 
         husky_quat_after = self._get_quat('husky_robot')
-        husky_forward_vector_after = forward_vector_from_quat(husky_quat_after) 
+        husky_forward_vector_after = right_vector_from_quat(husky_quat_after) 
 
         ob = self._get_obs()
         done = False
@@ -127,8 +134,8 @@ class HuskyForwardEnv(HuskyEnv):
         box_linear_vel = l2_dist(box_after, box_before)
 
 
-        # box orientation on z-axis
-        box_forward = forward_vector_from_quat(box_quat_after)
+        # box orientation on z-axis     # box forward vector after
+        box_forward = right_vector_from_quat(box_quat_after)
         # box angular velocity
         box_angular_vel = cos_dist(self._box_forward, box_forward)
 
@@ -195,8 +202,6 @@ class HuskyForwardEnv(HuskyEnv):
                                                      "forward")
             
 
-            
-
             movement_heading_reward = self._env_config["move_heading_reward"] * move_coeff
 
             reward = ctrl_reward + alive_reward + die_penalty + offset_reward + husky_linear_vel_reward \
@@ -209,8 +214,6 @@ class HuskyForwardEnv(HuskyEnv):
                                                      pos_after,
                                                      husky_forward_vector_after,
                                                      "backward")
-
-
 
 
 
@@ -339,11 +342,14 @@ class HuskyForwardEnv(HuskyEnv):
         qpos[11:14] = init_box_pos
         qpos[14:18] = init_box_quat
 
-        self._box_forward = forward_vector_from_quat(init_box_quat)
+        self._box_forward = right_vector_from_quat(init_box_quat)
 
         # Initialized Husky
         x = np.random.uniform(low=-2.0, high=-1.0)
-        y = np.random.uniform(low=-1.0, high=1.0)
+        y = np.random.uniform(low=-0.5, high=0.5)
+
+
+        ''''
         direction = self._env_config["direction"]
         if direction == "right":
             pass
@@ -353,6 +359,7 @@ class HuskyForwardEnv(HuskyEnv):
             x, y = y, x
         elif direction == "backward":
             x, y = y, -x
+        '''
 
         qpos[0] = x
         qpos[1] = y
