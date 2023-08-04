@@ -29,7 +29,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'dist_reward': 200,
+            'dist_reward': 500,
             'linear_vel_reward': 2000, #50
             'angular_vel_reward': 100,
             'box_linear_vel_reward': 5000,
@@ -197,8 +197,6 @@ class HuskyForwardEnv(HuskyEnv):
 
             reward = reward \
                     + dist_husky_box_reward \
-                    + husky_linear_vel_reward \
-                    + husky_angular_vel_reward\
                     + movement_heading_reward
             
             # check if the husky is too close to the box
@@ -337,18 +335,18 @@ class HuskyForwardEnv(HuskyEnv):
 
 
         # Initialize box position 
-        init_box_pos = np.asarray([0, 0, 0.3])
+        init_box_pos = np.asarray([0, 0, 0.5])
         init_box_quat = np.array([0, 0, 0, 0])
 
         if(self._env_config["skill"] == "approach"):
             qpos[0] = x
             qpos[1] = y
-            init_box_quat = np.random.uniform(low = 0, high=2 * np.pi, size=4)
-            
+            init_box_quat = sample_quat()
+
         elif(self._env_config["skill"] == "align"):
             qpos[0] = -2
             qpos[1] = 0
-            init_box_quat = np.random.uniform(low = 0, high=2 * np.pi, size=4)
+            init_box_quat = sample_quat()
         
         elif(self._env_config["skill"] == "push"):
             qpos[0] = -2
