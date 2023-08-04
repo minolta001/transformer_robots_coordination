@@ -136,7 +136,13 @@ def l2_dist(a, b):
 
 
 def cos_dist(a, b):
-    return np.dot(a, b) / np.linalg.norm(a) / np.linalg.norm(b)
+    a_normalized = a / np.linalg.norm(a)
+    b_normalized = b / np.linalg.norm(b)
+
+    dot_product = np.dot(a_normalized, b_normalized)
+    angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
+
+    return angle_rad / np.pi
 
 # given two forward vector at two time steps
 # return > 0 if rotate right

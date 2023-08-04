@@ -18,10 +18,10 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'linear_vel_reward': 1000, #50
-            'angular_vel_reward': 50,
+            'linear_vel_reward': 2000, #50
+            'angular_vel_reward': 20,
             'box_linear_vel_reward': 5000,
-            'box_angular_vel_reward': 50,
+            'box_angular_vel_reward': 20,
             'offset_reward': 1,
             'height_reward': 0.5,
             'upright_reward': 5,
@@ -32,7 +32,7 @@ class HuskyForwardEnv(HuskyEnv):
             'husky': 1,
             'direction': 'right',
             'init_randomness': 0.1,
-            'diayn_reward': 0.1,
+            'diayn_reward': 0.3,
             "prob_perturb_action": 0.1,
             "perturb_action": 0.01,
             "alignment_reward": 80,
@@ -89,10 +89,13 @@ class HuskyForwardEnv(HuskyEnv):
         
         box_quat_before = self._get_quat('box')
         box_forward_vector_before = right_vector_from_quat(box_quat_before)
-
         a = self._perturb_action(a)
 
+
+        # Do a simulation
         self.do_simulation(a)
+
+
         #self.husky_simulation(a)
         pos_after = self._get_pos('husky_geom')
         box_after = self._get_pos('box_geom')
@@ -228,27 +231,54 @@ class HuskyForwardEnv(HuskyEnv):
         '''
         self._reward = reward
 
-        info = {"Current Skill": skill,
-                "Total Reward": reward,
-                "reward: husky_linear": husky_linear_vel_reward,
-                "reward: husky_angular": husky_angular_vel_reward,
-                "reward: heading_alignment": alignment_heading_reward,
-                "reward: movement_heading": movement_heading_reward,
-                "husky_forward or backward": husky_move_direction,
-                "husky_movement_direction_coeff": move_coeff,
-                "husky_alignment_coeff": align_coeff,
+        env_config = self._env_config
+        if env_config == "forward"  or env_config == "backward":
+            info = {"Current Skill": skill,
+                    "Total Reward": reward,
+                    "reward: husky_linear": husky_linear_vel_reward,
+                    "reward: husky_angular": husky_angular_vel_reward,
+                    "reward: heading_alignment": alignment_heading_reward,
+                    "reward: movement_heading": movement_heading_reward,
+                    "husky_forward or backward": husky_move_direction,
+                    "husky_movement_direction_coeff": move_coeff,
+                    "husky_alignment_coeff": align_coeff,
 
-                "reward: box_linear": box_linear_vel_reward,
-                "reward: box_angular": box_angular_vel_reward,
+                    "reward: box_linear": box_linear_vel_reward,
+                    "reward: box_angular": box_angular_vel_reward,
 
-                "reward_ctrl": ctrl_reward,
-                "reward_alive": alive_reward,
-                "penalty_die": die_penalty,
-                "box_forward": box_forward,
-                "husky_pos": pos_after,
-                "box_pos": box_after,
-                "box_ob": ob[self.box],
-                "success": self._success}
+                    "reward_ctrl": ctrl_reward,
+                    "reward_alive": alive_reward,
+                    "penalty_die": die_penalty,
+                    "box_forward": box_forward,
+                    "husky_pos": pos_after,
+                    "box_pos": box_after,
+                    "box_ob": ob[self.box],
+                    "success": self._success}
+
+        elif env_config == "left":
+            info = {"Current Skill": skill,
+                    "Total Reward": reward,
+
+                    "reward: husky_angular": husky_angular_vel_reward,
+                    "reward: heading_alignment": alignment_heading_reward,
+
+                    "husky_forward or backward": husky_move_direction,
+                    "husky_alignment_coeff": align_coeff,
+
+                    "reward: box_linear": box_linear_vel_reward,
+                    "reward: box_angular": box_angular_vel_reward,
+
+                    "reward_ctrl": ctrl_reward,
+                    "reward_alive": alive_reward,
+                    "penalty_die": die_penalty,
+                    "box_forward": box_forward,
+                    "husky_pos": pos_after,
+                    "box_pos": box_after,
+                    "box_ob": ob[self.box],
+                    "success": self._success}
+
+ 
+
 
         return ob, reward, done, info
 
@@ -331,7 +361,7 @@ class HuskyForwardEnv(HuskyEnv):
 
 
         # Initialize box
-        init_box_pos = np.asarray([0, 0, 0.8])
+        init_box_pos = np.asarray([0, 0, 0.3])
         init_box_quat = sample_quat()
         #init_box_quat = [1, 0, 0, 0]
 
