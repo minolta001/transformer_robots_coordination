@@ -11,6 +11,16 @@ from env.transform_utils import up_vector_from_quat, forward_vector_from_quat, \
 import mujoco_py
 import math
 
+
+'''
+    Primitve skill:
+        1. approach: husky approach to the center point of the box
+            - rewards: husky velocity, distance toward the box
+        2. push: husky push the box to move
+            - rewards: box linear velocity, box angular velocity
+        3. align: 
+'''
+
 class HuskyForwardEnv(HuskyEnv):
     def __init__(self, **kwargs):
         self.name = 'husky_forward'
@@ -124,9 +134,6 @@ class HuskyForwardEnv(HuskyEnv):
         husky_angular_vel = cos_dist(husky_forward_vector_before, husky_forward_vector_after)
 
 
-        # travel distance
-        offset = abs((pos_after[0] - self._husky_pos[0]) * self.dy) + \
-            abs((pos_after[1] - self._husky_pos[1]) * self.dx)
 
         # box linear velocity
         '''
@@ -181,17 +188,17 @@ class HuskyForwardEnv(HuskyEnv):
         # Different reward functions for different primitive skills
         skill = self._env_config["direction"]
 
+        rotate_direct = rotate_direction(husky_forward_vector_before, husky_forward_vector_after)
+
         if(skill == "right"):
             # encourage the robot to rotate correctly
-            husky_angular_vel_reward = husky_angular_vel_reward * rotate_direction(husky_forward_vector_before, 
-                                                                                   husky_forward_vector_after) 
+            husky_angular_vel_reward = husky_angular_vel_reward * rotate_direct
 
             reward = ctrl_reward + alive_reward + die_penalty + husky_angular_vel_reward \
                 + alignment_heading_reward 
 
         elif(skill == "left"):
-            husky_angular_vel_reward = (-husky_angular_vel_reward) * rotate_direction(husky_forward_vector_before, 
-                                                                                    husky_forward_vector_after)
+            husky_angular_vel_reward = (-husky_angular_vel_reward) * rotate_direct
 
             reward = ctrl_reward + alive_reward + die_penalty + husky_angular_vel_reward \
                 + alignment_heading_reward
@@ -232,52 +239,27 @@ class HuskyForwardEnv(HuskyEnv):
         self._reward = reward
 
         env_config = self._env_config
-        if env_config == "forward"  or env_config == "backward":
-            info = {"Current Skill": skill,
-                    "Total Reward": reward,
-                    "reward: husky_linear": husky_linear_vel_reward,
-                    "reward: husky_angular": husky_angular_vel_reward,
-                    "reward: heading_alignment": alignment_heading_reward,
-                    "reward: movement_heading": movement_heading_reward,
-                    "husky_forward or backward": husky_move_direction,
-                    "husky_movement_direction_coeff": move_coeff,
-                    "husky_alignment_coeff": align_coeff,
-
-                    "reward: box_linear": box_linear_vel_reward,
-                    "reward: box_angular": box_angular_vel_reward,
-
-                    "reward_ctrl": ctrl_reward,
-                    "reward_alive": alive_reward,
-                    "penalty_die": die_penalty,
-                    "box_forward": box_forward,
-                    "husky_pos": pos_after,
-                    "box_pos": box_after,
-                    "box_ob": ob[self.box],
-                    "success": self._success}
-
-        elif env_config == "left":
-            info = {"Current Skill": skill,
-                    "Total Reward": reward,
-
-                    "reward: husky_angular": husky_angular_vel_reward,
-                    "reward: heading_alignment": alignment_heading_reward,
-
-                    "husky_forward or backward": husky_move_direction,
-                    "husky_alignment_coeff": align_coeff,
-
-                    "reward: box_linear": box_linear_vel_reward,
-                    "reward: box_angular": box_angular_vel_reward,
-
-                    "reward_ctrl": ctrl_reward,
-                    "reward_alive": alive_reward,
-                    "penalty_die": die_penalty,
-                    "box_forward": box_forward,
-                    "husky_pos": pos_after,
-                    "box_pos": box_after,
-                    "box_ob": ob[self.box],
-                    "success": self._success}
-
- 
+        info = {"Current Skill": skill,
+                "Total Reward": reward,
+                "reward: husky_linear": husky_linear_vel_reward,
+                "reward: husky_angular": husky_angular_vel_reward,
+                "reward: movingment_heading": movement_heading_reward,
+                "reward: heading_alignment": alignment_heading_reward,
+                "----------": 0,
+                "husky_forward or backward": husky_move_direction,
+                "husky_movement_direction_coeff": move_coeff,
+                "husky_alignment_coeff": align_coeff,
+                "-----------": 0,
+                "reward: box_linear": box_linear_vel_reward,
+                "reward: box_angular": box_angular_vel_reward,
+                "reward_ctrl": ctrl_reward,
+                "reward_alive": alive_reward,
+                "penalty_die": die_penalty,
+                "box_forward": box_forward,
+                "husky_pos": pos_after,
+                "box_pos": box_after,
+                "box_ob": ob[self.box],
+                "success": self._success}
 
 
         return ob, reward, done, info
