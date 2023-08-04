@@ -132,6 +132,8 @@ def quat_dist(quat1, quat2):
 
 
 def l2_dist(a, b):
+    a = a[0:2]
+    b = b[0:2]
     return np.linalg.norm(a - b)
 
 
