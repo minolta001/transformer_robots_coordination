@@ -32,7 +32,7 @@ class HuskyForwardEnv(HuskyEnv):
             'dist_reward': 500,
             'linear_vel_reward': 2000, #50
             'angular_vel_reward': 100,
-            'box_linear_vel_reward': 5000,
+            'box_linear_vel_reward': 500000,
             'box_angular_vel_reward': 100,
             'offset_reward': 1,
             'height_reward': 0.5,
@@ -198,9 +198,8 @@ class HuskyForwardEnv(HuskyEnv):
             reward = reward \
                     + dist_husky_box_reward \
                     + movement_heading_reward
-            
             # check if the husky is too close to the box
-            done = done or abs(dist_husky_box < 0.5)
+            done = done or abs(dist_husky_box < 2.0)
 
         elif(skill == "align"):
             reward = reward \
@@ -208,11 +207,10 @@ class HuskyForwardEnv(HuskyEnv):
                     + alignment_heading_reward \
                     - husky_linear_vel_reward
             
-            done = done or align_coeff >= 0.95
 
         elif(skill == "push"):
             reward = reward \
-                    + husky_linear_vel_reward \
+                    + dist_husky_box_reward \
                     + box_linear_vel_reward \
                     + box_angular_vel_reward
 
