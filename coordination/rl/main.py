@@ -53,6 +53,7 @@ def run(config):
     if config.virtual_display is not None:
         os.environ["DISPLAY"] = config.virtual_display
 
+
     if config.gpu is not None:
         os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(config.gpu)
         assert torch.cuda.is_available()

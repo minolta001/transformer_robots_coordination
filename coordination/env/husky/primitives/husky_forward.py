@@ -32,7 +32,7 @@ class HuskyForwardEnv(HuskyEnv):
             'dist_reward': 500,
             'linear_vel_reward': 2000, #50
             'angular_vel_reward': 100,
-            'box_linear_vel_reward': 500000,
+            'box_linear_vel_reward': 50000,
             'box_angular_vel_reward': 100,
             'offset_reward': 1,
             'height_reward': 0.5,
@@ -211,8 +211,8 @@ class HuskyForwardEnv(HuskyEnv):
         elif(skill == "push"):
             reward = reward \
                     + dist_husky_box_reward \
-                    + box_linear_vel_reward \
-                    + box_angular_vel_reward
+                    + box_linear_vel_reward
+                    #+ box_angular_vel_reward
 
 
         self._reward = reward
