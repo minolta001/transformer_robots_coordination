@@ -4,7 +4,7 @@ import numpy as np
 
 from env.husky.husky import HuskyEnv
 from env.transform_utils import up_vector_from_quat, forward_vector_from_quat, \
-    l2_dist, cos_dist, sample_quat
+    l2_dist, cos_dist, sample_quat, right_vector_from_quat
 
 
 class HuskyPushEnv(HuskyEnv):
@@ -26,21 +26,21 @@ class HuskyPushEnv(HuskyEnv):
             'random_goal_pos': 0.01,
             #'random_goal_pos': 0.5,
             'dist_threshold': 0.5,
-            'quat_threshold': 0.9,
-            'husky_dist_reward': 50,
-            'goal_dist_reward': 200,
+            'quat_threshold': 0.3,
+            'husky_dist_reward': 200,
+            'goal_dist_reward': 500,
             'goal1_dist_reward': 2,
             'goal2_dist_reward': 2,
             'quat_reward': 10, # quat_dist usually between 0.95 ~ 1
             'height_reward': 0.5,
             'upright_reward': 0.5,
             'alive_reward': 0.,
-            'success_reward': 500,
+            'success_reward': 1000,
             'die_penalty': 10,
             'sparse_reward': 0,
             'init_randomness': 0.01,
             #'max_episode_steps': 400,
-            'max_episode_steps': 200,
+            'max_episode_steps': 500,
         }) 
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -73,34 +73,32 @@ class HuskyPushEnv(HuskyEnv):
         done = False
         ctrl_reward = self._ctrl_reward(a)
 
+        '''
         goal_forward = forward_vector_from_quat(goal_quat)
         box_forward = forward_vector_from_quat(box_quat)
         box_forward_before = forward_vector_from_quat(box_quat_before)
+        '''
+    
+        goal_forward = right_vector_from_quat(goal_quat)
+        box_forward = right_vector_from_quat(box_quat)
+        box_forward_before = right_vector_from_quat(box_quat_before)
 
+        # goal 1
         goal1_dist = l2_dist(goal1_pos, box1_pos)
         goal1_dist_before = l2_dist(goal1_pos, box1_pos_before)
+
+        # goal 2
         goal2_dist = l2_dist(goal2_pos, box2_pos)
         goal2_dist_before = l2_dist(goal2_pos, box2_pos_before)
+
+        # goal overall
         goal_dist = l2_dist(goal_pos, box_pos)
         goal_dist_before = l2_dist(goal_pos, box_pos_before)
         goal_quat = cos_dist(goal_forward, box_forward)
         goal_quat_before = cos_dist(goal_forward, box_forward_before)
 
-        #ant1_height = self.data.qpos[2]
-        #ant2_height = self.data.qpos[17]
-
         husky1_quat = self._get_quat('husky_robot_1')
-
-        #husky1_up = up_vector_from_quat(husky1_quat)
-
-        # upright : check if the robot is "fliped", not very useful for our mobile vehicles
-
-        # husky1_upright = cos_dist(husky1_up, np.array([0, 0, 1]))
-
         husky2_quat = self._get_quat('husky_robot_2')
-
-        #husky2_up = up_vector_from_quat(husky2_quat)
-        # ant2_upright = cos_dist(ant2_up, np.array([0, 0, 1]))
 
         # husky 1 distance toward box_1, husky 2 distance toward box_2
         husky1_dist = l2_dist(husky1_pos_before[:2], box1_pos_before[:2]) - l2_dist(husky1_pos[:2], box1_pos[:2])
@@ -112,20 +110,24 @@ class HuskyPushEnv(HuskyEnv):
         success_reward = 0
 
         # if not push, then calculate the distance the robot has been moving forward to the target object, the more, the better
+        # If not push, then it is Primitive Skill: Approach
         husky1_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist if not self._husky1_push else 0
         husky2_dist_reward = self._env_config["husky_dist_reward"] * husky2_dist if not self._husky2_push else 0
 
+
+        # Check the distance between box and goal
         #goal1_dist_reward = self._env_config["goal1_dist_reward"] * (goal1_dist_before - goal1_dist)
         #goal2_dist_reward = self._env_config["goal2_dist_reward"] * (goal2_dist_before - goal2_dist)
         goal1_dist_reward = self._env_config["goal1_dist_reward"] * 1 if goal1_dist < self._env_config["dist_threshold"] else 0
         goal2_dist_reward = self._env_config["goal2_dist_reward"] * 1 if goal2_dist < self._env_config["dist_threshold"] else 0
         goal_dist_reward = self._env_config["goal_dist_reward"] * (goal_dist_before - goal_dist)
 
-        #TODO: 1 - a vector?
+        # Note: goal_quat is the cost_dist between goal and box 
+        # NOTE: why "-"? doesn't make sense
+        '''
         quat_reward = -self._env_config["quat_reward"] * (1 - goal_quat)
-        print(goal_quat)
-        print(quat_reward)
-        input()
+        '''
+        quat_reward = self._env_config[("quat_reward")] * (1 - goal_quat)
 
 
         #quat_reward = self._env_config["quat_reward"] * (goal_quat - goal_quat_before) if goal_pos[0] >= box_pos[0] else 0
@@ -137,7 +139,7 @@ class HuskyPushEnv(HuskyEnv):
 
         if goal1_dist < self._env_config["dist_threshold"] and \
                 goal2_dist < self._env_config["dist_threshold"] and \
-                goal_quat > self._env_config["quat_threshold"]:
+                goal_quat < self._env_config["quat_threshold"]:
             self._success_count += 1
             success_reward = 10
             if self._success_count >= 1:
@@ -186,7 +188,7 @@ class HuskyPushEnv(HuskyEnv):
         return ob, reward, done, info
 
     def _get_obs(self):
-        # ant
+        # husky
         qpos = self.data.qpos
         qvel = self.data.qvel
         qacc = self.data.qacc
@@ -196,16 +198,17 @@ class HuskyPushEnv(HuskyEnv):
         # box
         box_pos1 = self._get_pos('box_geom1')
         box_pos2 = self._get_pos('box_geom2')
+
         #box_quat1 = self._get_quat('box')
         #box_quat2 = self._get_quat('box')
-        box_forward1 = self._get_forward_vector('box_geom1')
-        box_forward2 = self._get_forward_vector('box_geom2')
+
+        box_forward1 = self._get_right_vector('box_geom1')
+        box_forward2 = self._get_right_vector('box_geom2')
 
         # goal
         goal_pos1 = self._get_pos('goal_geom1')
         goal_pos2 = self._get_pos('goal_geom2')
 
-        #TODO: Why (x, y) of huskys are ignored? 
         obs = OrderedDict([
             #('ant_1_shared_pos', np.concatenate([qpos[:7], qvel[:6], qacc[:6]])),
             #('ant_1_lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
@@ -242,9 +245,9 @@ class HuskyPushEnv(HuskyEnv):
             
             The last 7 are for box 
         '''
-        return np.array([-2., 1, 0.58, 1., 0., 0., 0., 0., 0, 0., 0.,
-                         -2., -1, 0.58, 1., 0., 0., 0., 0., 0., 0., 0.,
-                         0., 0., 0.58, 1., 0., 0., 0.])
+        return np.array([-4., 1, 0.58, 0., 0., 0., 0., 0., 0, 0., 0.,
+                         -4., -1, 0.58, 0., 0., 0., 0., 0., 0., 0., 0.,
+                         0., 0., 0.58, 0., 0., 0., 0.])
 
     @property
     def _init_qvel(self):
@@ -259,15 +262,15 @@ class HuskyPushEnv(HuskyEnv):
 
         self.set_state(qpos, qvel)
 
-        self._reset_ant_box()
+        self._reset_husky_box()
 
-        self._ant1_push = False
-        self._ant2_push = False
+        self._husky1_push = False
+        self._husky2_push = False
         self._success_count = 0
 
         return self._get_obs()
 
-    def _reset_ant_box(self):
+    def _reset_husky_box(self):
         qpos = self.data.qpos.ravel().copy()
         qvel = self.data.qvel.ravel().copy()
 
@@ -278,17 +281,17 @@ class HuskyPushEnv(HuskyEnv):
         qpos[22:25] = init_box_pos
         qpos[25:29] = init_box_quat
 
-        # Initialize ant
+        # Initialize husky
         #qpos[0:2] = [-4, 2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_ant_pos"]
         #qpos[15:17] = [-4, -2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_ant_pos"]
-        qpos[0:2] = [-2, 2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
-        qpos[11:13] = [-2, -2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
+        qpos[0:2] = [-4, 1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
+        qpos[11:13] = [-4, -1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
         #qpos[0:2] = [-2 + np.random.uniform(-1, 1) * self._env_config["random_ant_pos"], 2]
         #qpos[15:17] = [-2 + np.random.uniform(-1, 1) * self._env_config["random_ant_pos"], -2]
 
         # Initialize goal
         #x = 4.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        x = 2 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
+        x = 3 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
         goal_pos = np.asarray([x, y, z])
