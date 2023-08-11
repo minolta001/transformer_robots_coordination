@@ -104,8 +104,8 @@ class HuskyPushEnv(HuskyEnv):
         husky1_dist = l2_dist(husky1_pos_before[:2], box1_pos_before[:2]) - l2_dist(husky1_pos[:2], box1_pos[:2])
         husky2_dist = l2_dist(husky2_pos_before[:2], box2_pos_before[:2]) - l2_dist(husky2_pos[:2], box2_pos[:2])
 
-        if l2_dist(husky1_pos[:2], box1_pos[:2]) < 2.0: self._husky1_push = True
-        if l2_dist(husky2_pos[:2], box2_pos[:2]) < 2.0: self._husky2_push = True
+        if l2_dist(husky1_pos[:2], box1_pos[:2]) < 1.0: self._husky1_push = True
+        if l2_dist(husky2_pos[:2], box2_pos[:2]) < 1.0: self._husky2_push = True
 
         success_reward = 0
 

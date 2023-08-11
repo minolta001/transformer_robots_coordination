@@ -343,12 +343,12 @@ class HuskyForwardEnv(HuskyEnv):
 
         elif(self._env_config["skill"] == "align"):
             qpos[0] = -2
-            qpos[1] = 0
+            qpos[1] = y
             init_box_quat = sample_quat()
         
         elif(self._env_config["skill"] == "push"):
             qpos[0] = -2
-            qpos[1] = 0
+            qpos[1] = y
             
         # reset the box, reset pos and quat respectively
         qpos[11:14] = init_box_pos
