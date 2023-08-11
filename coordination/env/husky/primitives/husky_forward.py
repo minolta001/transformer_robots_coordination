@@ -44,7 +44,7 @@ class HuskyForwardEnv(HuskyEnv):
             'husky': 1,
             'skill': 'approach',
             'init_randomness': 0.1,
-            'diayn_reward': 0.3,
+            'diayn_reward': 0.1,
             "prob_perturb_action": 0.1,
             "perturb_action": 0.01,
             "alignment_reward": 100,

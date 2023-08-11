@@ -25,13 +25,13 @@ class HuskyPushEnv(HuskyEnv):
             'random_husky_pos': 0.01,
             'random_goal_pos': 0.01,
             #'random_goal_pos': 0.5,
-            'dist_threshold': 0.5,
+            'dist_threshold': 0.3,
             'quat_threshold': 0.3,
             'husky_dist_reward': 200,
             'goal_dist_reward': 500,
-            'goal1_dist_reward': 2,
-            'goal2_dist_reward': 2,
-            'quat_reward': 10, # quat_dist usually between 0.95 ~ 1
+            'goal1_dist_reward': 200,
+            'goal2_dist_reward': 200,
+            'quat_reward': 50, # quat_dist usually between 0.95 ~ 1
             'height_reward': 0.5,
             'upright_reward': 0.5,
             'alive_reward': 0.,
@@ -40,7 +40,7 @@ class HuskyPushEnv(HuskyEnv):
             'sparse_reward': 0,
             'init_randomness': 0.01,
             #'max_episode_steps': 400,
-            'max_episode_steps': 500,
+            'max_episode_steps': 1000 ,
         }) 
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -51,6 +51,7 @@ class HuskyPushEnv(HuskyEnv):
     def _step(self, a):
         husky1_pos_before = self._get_pos('husky_1_geom')
         husky2_pos_before = self._get_pos('husky_2_geom')
+
         box1_pos_before = self._get_pos('box_geom1')
         box2_pos_before = self._get_pos('box_geom2')
         box_pos_before = self._get_pos('box')
@@ -78,7 +79,8 @@ class HuskyPushEnv(HuskyEnv):
         box_forward = forward_vector_from_quat(box_quat)
         box_forward_before = forward_vector_from_quat(box_quat_before)
         '''
-    
+
+        goal_forward_before = right_vector_from_quat(goal_quat_before)    
         goal_forward = right_vector_from_quat(goal_quat)
         box_forward = right_vector_from_quat(box_quat)
         box_forward_before = right_vector_from_quat(box_quat_before)
@@ -109,18 +111,33 @@ class HuskyPushEnv(HuskyEnv):
 
         success_reward = 0
 
+        # Even husky is pushing, the distance is still a concern. Better not to ignore them. However, the reward should be calculated in another way
         # if not push, then calculate the distance the robot has been moving forward to the target object, the more, the better
         # If not push, then it is Primitive Skill: Approach
-        husky1_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist if not self._husky1_push else 0
-        husky2_dist_reward = self._env_config["husky_dist_reward"] * husky2_dist if not self._husky2_push else 0
+        #husky1_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist if not self._husky1_push else 0
+        #husky2_dist_reward = self._env_config["husky_dist_reward"] * husky2_dist if not self._husky2_push else 0
+        if self._husky1_push:
+            husky1_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist
+        else:
+            husky1_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky1_dist + 1e-10))  # add 1e-10 to avoid pure 0
+
+        if self._husky1_push:
+            husky2_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist
+        else:
+            husky2_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky2_dist + 1e-10))  # add 1e-10 to avoid pure 0
 
 
         # Check the distance between box and goal
         #goal1_dist_reward = self._env_config["goal1_dist_reward"] * (goal1_dist_before - goal1_dist)
         #goal2_dist_reward = self._env_config["goal2_dist_reward"] * (goal2_dist_before - goal2_dist)
-        goal1_dist_reward = self._env_config["goal1_dist_reward"] * 1 if goal1_dist < self._env_config["dist_threshold"] else 0
-        goal2_dist_reward = self._env_config["goal2_dist_reward"] * 1 if goal2_dist < self._env_config["dist_threshold"] else 0
-        goal_dist_reward = self._env_config["goal_dist_reward"] * (goal_dist_before - goal_dist)
+        #goal1_dist_reward = self._env_config["goal1_dist_reward"] * 1 if goal1_dist < self._env_config["dist_threshold"] else 0
+        #goal2_dist_reward = self._env_config["goal2_dist_reward"] * 1 if goal2_dist < self._env_config["dist_threshold"] else 0
+        #goal_dist_reward = self._env_config["goal_dist_reward"] * (goal_dist_before - goal_dist)
+
+        goal1_dist_reward = self._env_config["goal1_dist_reward"] * (1/goal1_dist + 1e-10)
+        goal2_dist_reward = self._env_config["goal2_dist_reward"] * (1/goal2_dist + 1e-10)
+        goal_dist_reward = self._env_config["goal_dist_reward"] * (1/goal_dist + 1e-10)
+
 
         # Note: goal_quat is the cost_dist between goal and box 
         # NOTE: why "-"? doesn't make sense
