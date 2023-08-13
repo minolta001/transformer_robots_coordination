@@ -276,6 +276,8 @@ class HuskyPushEnv(HuskyEnv):
 
         qpos[2] = 0.58
         qpos[13] = 0.58
+        qpos[3:7] = [0, 0, np.random.uniform(low=-1, high=1, size=1), np.random.uniform(low=-1, high=1, size=1)]
+        qpos[14:18] = [0, 0, np.random.uniform(low=-1, high=1, size=1), np.random.uniform(low=-1, high=1, size=1)]
 
         self.set_state(qpos, qvel)
 
