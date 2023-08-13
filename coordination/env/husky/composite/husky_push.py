@@ -80,7 +80,7 @@ class HuskyPushEnv(HuskyEnv):
         box_forward_before = forward_vector_from_quat(box_quat_before)
         '''
 
-        goal_forward_before = right_vector_from_quat(goal_quat_before)    
+        #goal_forward_before = right_vector_from_quat(goal_quat_before)    
         goal_forward = right_vector_from_quat(goal_quat)
         box_forward = right_vector_from_quat(box_quat)
         box_forward_before = right_vector_from_quat(box_quat_before)
