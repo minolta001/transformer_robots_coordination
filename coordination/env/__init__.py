@@ -14,6 +14,12 @@ def register_environments():
     )
 
     register(
+        id='husky-push-v0',
+        entry_point='env.husky.composite.husky_push:HuskyPushEnv',
+        kwargs={},
+    )
+
+    register(
         id='ant-forward-v0',
         entry_point='env.ant.primitives.ant_forward:AntForwardEnv',
         kwargs={},
