@@ -40,7 +40,7 @@ class HuskyPushEnv(HuskyEnv):
             'sparse_reward': 0,
             'init_randomness': 0.01,
             #'max_episode_steps': 400,
-            'max_episode_steps': 1000 ,
+            'max_episode_steps': 500 ,
         }) 
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -119,12 +119,12 @@ class HuskyPushEnv(HuskyEnv):
         if self._husky1_push:
             husky1_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist
         else:
-            husky1_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky1_dist + 1e-10))  # add 1e-10 to avoid pure 0
+            husky1_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky1_dist + 1))  # add 1e-10 to avoid pure 0
 
         if self._husky1_push:
             husky2_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist
         else:
-            husky2_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky2_dist + 1e-10))  # add 1e-10 to avoid pure 0
+            husky2_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky2_dist + 1))  # add 1e-10 to avoid pure 0
 
 
         # Check the distance between box and goal
@@ -134,9 +134,9 @@ class HuskyPushEnv(HuskyEnv):
         #goal2_dist_reward = self._env_config["goal2_dist_reward"] * 1 if goal2_dist < self._env_config["dist_threshold"] else 0
         #goal_dist_reward = self._env_config["goal_dist_reward"] * (goal_dist_before - goal_dist)
 
-        goal1_dist_reward = self._env_config["goal1_dist_reward"] * (1/goal1_dist + 1e-10)
-        goal2_dist_reward = self._env_config["goal2_dist_reward"] * (1/goal2_dist + 1e-10)
-        goal_dist_reward = self._env_config["goal_dist_reward"] * (1/goal_dist + 1e-10)
+        goal1_dist_reward = self._env_config["goal1_dist_reward"] * (1/goal1_dist + 1)
+        goal2_dist_reward = self._env_config["goal2_dist_reward"] * (1/goal2_dist + 1)
+        goal_dist_reward = self._env_config["goal_dist_reward"] * (1/goal_dist + 1)
 
 
         # Note: goal_quat is the cost_dist between goal and box 
@@ -276,8 +276,8 @@ class HuskyPushEnv(HuskyEnv):
 
         qpos[2] = 0.58
         qpos[13] = 0.58
-        qpos[3:7] = [0, 0, np.random.uniform(low=-1, high=1, size=1), np.random.uniform(low=-1, high=1, size=1)]
-        qpos[14:18] = [0, 0, np.random.uniform(low=-1, high=1, size=1), np.random.uniform(low=-1, high=1, size=1)]
+        qpos[3:7] = [np.random.uniform(low=-1, high=1, size=1), 0, 0, np.random.uniform(low=-1, high=1, size=1)]
+        qpos[14:18] = [np.random.uniform(low=-1, high=1, size=1), 0, 0, np.random.uniform(low=-1, high=1, size=1)]
 
         self.set_state(qpos, qvel)
 

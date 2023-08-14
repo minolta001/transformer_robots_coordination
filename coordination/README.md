@@ -135,14 +135,12 @@ python3 -m rl.main --env ant-forward-v0 --gpu 0 --prefix ant-2-left-n --env_args
  - Husky Push
 ```bash
 # With SBD
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-approach-n --env_args husky-1/skill-approach --seed 1 --max_global_step 2000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-align-n --env_args husky-1/skill-align --seed 1 --max_global_step 2000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-push-n --env_args husky-1/skill-push --seed 1 --max_global_step 2000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-2-approach-n --env_args husky-2/skill-approach --seed 1 --max_global_step 2000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-2-align-n --env_args husky-2/skill-align --seed 1 --max_global_step 2000000
-
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-push-n --env_args husky-1/skill-push --seed 1 --max_global_step 2000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-2-push-n --env_args husky-2/skill-push --seed 1 --max_global_step 2000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-approach-n --env_args husky-1/skill-approach --seed 1 --max_global_step 10000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-align-n --env_args husky-1/skill-align --seed 1 --max_global_step 10000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-1-push-n --env_args husky-1/skill-push --seed 1 --max_global_step 10000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-2-approach-n --env_args husky-2/skill-approach --seed 1 --max_global_step 10000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-2-align-n --env_args husky-2/skill-align --seed 1 --max_global_step 10000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix husky-2-push-n --env_args husky-2/skill-push --seed 1 --max_global_step 10000000
 
 
 ```
