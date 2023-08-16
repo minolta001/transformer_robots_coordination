@@ -17,7 +17,7 @@ class MlpActor(Actor):
         input_dim = sum(ob_space.values())
 
         # fc = fully connected layer
-        self.fc = MLP(config, input_dim, config.rl_hid_size, [config.rl_hid_size])
+        self.fc = MLP(config, input_dim, config.rl_hid_size, [config.rl_hid_size] * 3)  # was only 1
         self.fc_means = nn.ModuleDict()
         self.fc_log_stds = nn.ModuleDict()
 
@@ -59,7 +59,7 @@ class MlpCritic(Critic):
         if ac_space is not None:
             input_dim += ac_space.size
 
-        self.fc = MLP(config, input_dim, 1, [config.rl_hid_size] * 2)
+        self.fc = MLP(config, input_dim, 1, [config.rl_hid_size] * 5)   # was 2
 
     def forward(self, ob, ac=None):
         inp = list(ob.values())

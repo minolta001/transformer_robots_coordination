@@ -34,7 +34,7 @@ def argparser():
                         )
 
     # vanilla rl
-    parser.add_argument("--rl_hid_size", type=int, default=64)
+    parser.add_argument("--rl_hid_size", type=int, default=128)
     parser.add_argument("--activation", type=str, default="ReLU",
                         choices=["ReLU", "ELU", "Tanh"])
     parser.add_argument("--tanh_policy", type=str2bool, default=True)
