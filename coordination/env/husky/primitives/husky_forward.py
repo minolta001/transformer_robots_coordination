@@ -211,7 +211,8 @@ class HuskyForwardEnv(HuskyEnv):
         elif(skill == "push"):
             reward = reward \
                     + dist_husky_box_reward \
-                    + box_linear_vel_reward
+                    + box_linear_vel_reward \
+                    + alignment_heading_reward
                     #+ box_angular_vel_reward
 
 
