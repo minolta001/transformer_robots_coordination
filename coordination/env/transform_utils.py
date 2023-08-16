@@ -186,38 +186,39 @@ def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b):
     return (1 - (angle_rad / np.pi)) - 0.5
 
 # Given forward vector of the object and the vehicle, check if their headings are parallel to each one
-# NOTE: No matter forward or backward vector is parallel with the forward vector of the box, it is OK.
+# Only consider the heading faces toward the object. We don't want the tailing towards the object.
 def alignment_heading_difference(ob_forward_vec, car_forward_vec):
     ob_forward_vec = ob_forward_vec[0:2]
     car_forward_vec = car_forward_vec[0:2]
 
     ob_forward_normalized = ob_forward_vec / np.linalg.norm(ob_forward_vec)
-    car_forward_nomalized = car_forward_vec / np.linalg.norm(car_forward_vec)
+    car_forward_normalized = car_forward_vec / np.linalg.norm(car_forward_vec)
 
-    dot_product = np.dot(ob_forward_normalized, car_forward_nomalized)
+    dot_product = np.dot(ob_forward_normalized, car_forward_normalized)
     angle_rad_forward = np.arccos(np.clip(dot_product, -1.0, 1.0))
-    
+
+    # tell robot rotate to left or right
+    cross_product = ob_forward_normalized[0] * car_forward_normalized[1] - ob_forward_normalized[1] * car_forward_normalized[0]
+
+    if cross_product > 0:
+        direction = -1  # counter-clockwise
+    elif cross_product < 0:
+        direction = 1   # clockwise
+    else:
+        direction = 0   # aligned
+
+    '''
     car_backward_nomalized = (-car_forward_vec) / np.linalg.norm(-car_forward_vec)
     dot_product = np.dot(ob_forward_normalized, car_backward_nomalized)
     angle_rad_backward = np.arccos(np.clip(dot_product, -1.0, 1.0))
+    '''
 
-    # the minimum of max(1 - angle_rad_*) is 0.5 (perpendicular), the maximum is 1.0 (parallel).
-    # therefore, we reduce the value and re-scale it to (0, 1) range.
+    return (1 - angle_rad_forward/np.pi), direction
+
+    '''
     return (max(1 - angle_rad_forward/np.pi, 
                1 - angle_rad_backward/np.pi) - 0.5) / 0.5
-
     '''
-    if(angle_rad < np.pi):
-        angle_diff = min(abs(angle_rad - np.pi), angle_rad)
-    else:
-        angle_diff = min(abs(angle_rad - np.pi), abs(2 * np.pi - angle_rad))
-
-    if(angle_diff > np.pi / 2 or angle_diff < 0):
-        print("\nangle_diff error!!")
-        return ValueError
-    '''
-
-
 
 # Give qvel of an object, check if the object is moving forward or backward
 def forward_backward(qvel):

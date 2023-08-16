@@ -31,6 +31,7 @@ class HuskyPushEnv(HuskyEnv):
             'goal_dist_reward': 500,
             'goal1_dist_reward': 200,
             'goal2_dist_reward': 200,
+            'H_to_H_dist_penalty': 200,
             'quat_reward': 50, # quat_dist usually between 0.95 ~ 1
             'height_reward': 0.5,
             'upright_reward': 0.5,
@@ -106,9 +107,6 @@ class HuskyPushEnv(HuskyEnv):
         husky1_dist = l2_dist(husky1_pos_before[:2], box1_pos_before[:2]) - l2_dist(husky1_pos[:2], box1_pos[:2])
         husky2_dist = l2_dist(husky2_pos_before[:2], box2_pos_before[:2]) - l2_dist(husky2_pos[:2], box2_pos[:2])
 
-        if l2_dist(husky1_pos[:2], box1_pos[:2]) < 1.0: self._husky1_push = True
-        if l2_dist(husky2_pos[:2], box2_pos[:2]) < 1.0: self._husky2_push = True
-
         success_reward = 0
 
         # Even husky is pushing, the distance is still a concern. Better not to ignore them. However, the reward should be calculated in another way
@@ -116,16 +114,11 @@ class HuskyPushEnv(HuskyEnv):
         # If not push, then it is Primitive Skill: Approach
         #husky1_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist if not self._husky1_push else 0
         #husky2_dist_reward = self._env_config["husky_dist_reward"] * husky2_dist if not self._husky2_push else 0
-        if self._husky1_push:
-            husky1_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist
-        else:
-            husky1_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky1_dist + 1))  # add 1e-10 to avoid pure 0
 
-        if self._husky1_push:
-            husky2_dist_reward = self._env_config["husky_dist_reward"] * husky1_dist
-        else:
-            husky2_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky2_dist + 1))  # add 1e-10 to avoid pure 0
-
+        #husky1_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky1_dist + 1))  # add 1 to avoid pure 0
+        #husky2_dist_reward = self._env_config["husky_dist_reward"] * (1/(husky2_dist + 1))  # add 1 to avoid pure 0
+        husky1_dist_reward = -self._env_config["husky_dist_reward"] * husky1_dist
+        husky2_dist_reward = -self._env_config["husky_dist_reward"] * husky2_dist
 
         # Check the distance between box and goal
         #goal1_dist_reward = self._env_config["goal1_dist_reward"] * (goal1_dist_before - goal1_dist)
@@ -134,9 +127,20 @@ class HuskyPushEnv(HuskyEnv):
         #goal2_dist_reward = self._env_config["goal2_dist_reward"] * 1 if goal2_dist < self._env_config["dist_threshold"] else 0
         #goal_dist_reward = self._env_config["goal_dist_reward"] * (goal_dist_before - goal_dist)
 
-        goal1_dist_reward = self._env_config["goal1_dist_reward"] * (1/goal1_dist + 1)
-        goal2_dist_reward = self._env_config["goal2_dist_reward"] * (1/goal2_dist + 1)
-        goal_dist_reward = self._env_config["goal_dist_reward"] * (1/goal_dist + 1)
+        #goal1_dist_reward = self._env_config["goal1_dist_reward"] * (1/goal1_dist + 1)
+        #goal2_dist_reward = self._env_config["goal2_dist_reward"] * (1/goal2_dist + 1)
+        #goal_dist_reward = self._env_config["goal_dist_reward"] * (1/goal_dist + 1)
+
+        goal1_dist_reward = -self._env_config["goal1_dist_reward"] * goal1_dist
+        goal2_dist_reward = -self._env_config["goal2_dist_reward"] * goal2_dist
+        goal_dist_reward = -self._env_config["goal_dist_reward"] * goal_dist
+
+
+        '''
+            Penalty (not constraint)
+        '''
+        # Husky to husky distance penalty
+        HH_dist_penalty = (1 / (l2_dist(husky1_pos[:2], husky2_pos[:2]) + 1)) * self._env_config["H_to_H_dist_penalty"]
 
 
         # Note: goal_quat is the cost_dist between goal and box 
@@ -178,6 +182,8 @@ class HuskyPushEnv(HuskyEnv):
             self._reward = reward = husky1_dist_reward + husky2_dist_reward + \
                 goal_dist_reward + goal1_dist_reward + goal2_dist_reward + quat_reward + \
                 alive_reward + success_reward + ctrl_reward + die_penalty
+            
+
 
         info = {"success": self._success,
                 "reward_husky1_dist": husky1_dist_reward,
