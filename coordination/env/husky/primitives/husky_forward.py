@@ -42,7 +42,7 @@ class HuskyForwardEnv(HuskyEnv):
             'skill': 'approach',
             'init_randomness': 0.1,
             'diayn_reward': 0.1,
-            "prob_perturb_action": 0.05,    #0.1
+            "prob_perturb_action": 0.1,    #0.1
             "perturb_action": 0.01,
             "alignment_reward": 10,
             "move_heading_reward": 10,
@@ -117,10 +117,10 @@ class HuskyForwardEnv(HuskyEnv):
         # distance between husky and center point of the box 
         dist_husky_box = l2_dist(pos_after, box_after)
         # dist_husky_box_reward = 1 / (1 + dist_husky_box) * self._env_config["dist_reward"]
-        dist_husky_box_reward = (-dist_husky_box) * self._env_config["dist_reward"]
+        dist_husky_box_reward = (10 - dist_husky_box) * self._env_config["dist_reward"]
         # distance between box and goal
         dist_box_goal = l2_dist(goal_pos_after, box_after)
-        dist_box_goal_reward = (-dist_box_goal) * self._env_config["dist_reward"]
+        dist_box_goal_reward = (10 - dist_box_goal) * self._env_config["dist_reward"]
 
 
         '''
