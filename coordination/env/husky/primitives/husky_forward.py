@@ -355,7 +355,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Initialized Husky
         x = np.random.uniform(low=-5.0, high=-2.0)
-        y = np.random.uniform(low=-0.5, high=0.5)
+        y = np.random.uniform(low=-1, high=0.1)
 
 
         # Initialize box position 
@@ -373,7 +373,7 @@ class HuskyForwardEnv(HuskyEnv):
             init_box_quat = sample_quat()
         
         elif(self._env_config["skill"] == "push"):
-            qpos[0] = -2
+            qpos[0] = -1.5
             qpos[1] = y
             
         # reset the box, reset pos and quat respectively
