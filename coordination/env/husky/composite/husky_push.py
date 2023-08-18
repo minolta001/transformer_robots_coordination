@@ -28,9 +28,12 @@ class HuskyPushEnv(HuskyEnv):
             'dist_threshold': 0.3,
             'quat_threshold': 0.3,
             'husky_dist_reward': 10,
-            'goal_dist_reward': 200,
-            'goal1_dist_reward': 100,
-            'goal2_dist_reward': 100,
+
+            'goal_dist_reward': 20,
+            'goal1_dist_reward': 10,
+            'goal2_dist_reward': 10,
+
+
             'H_to_H_dist_penalty': 200,
             'quat_reward': 50, # quat_dist usually between 0.95 ~ 1
             'alive_reward': 0.,
@@ -119,19 +122,20 @@ class HuskyPushEnv(HuskyEnv):
         husky2_dist_reward = -self._env_config["husky_dist_reward"] * husky2_dist
 
         # Check the distance between box and goal
-        #goal1_dist_reward = self._env_config["goal1_dist_reward"] * (goal1_dist_before - goal1_dist)
-        #goal2_dist_reward = self._env_config["goal2_dist_reward"] * (goal2_dist_before - goal2_dist)
-        #goal1_dist_reward = self._env_config["goal1_dist_reward"] * 1 if goal1_dist < self._env_config["dist_threshold"] else 0
-        #goal2_dist_reward = self._env_config["goal2_dist_reward"] * 1 if goal2_dist < self._env_config["dist_threshold"] else 0
-        #goal_dist_reward = self._env_config["goal_dist_reward"] * (goal_dist_before - goal_dist)
-
-        #goal1_dist_reward = self._env_config["goal1_dist_reward"] * (1/goal1_dist + 1)
-        #goal2_dist_reward = self._env_config["goal2_dist_reward"] * (1/goal2_dist + 1)
-        #goal_dist_reward = self._env_config["goal_dist_reward"] * (1/goal_dist + 1)
-
         goal1_dist_reward = -self._env_config["goal1_dist_reward"] * goal1_dist
         goal2_dist_reward = -self._env_config["goal2_dist_reward"] * goal2_dist
         goal_dist_reward = -self._env_config["goal_dist_reward"] * goal_dist
+
+        '''
+            Reward
+        '''
+        # Distance and Difference between two Huskys
+        # Linear velocity differece
+        husky1_linear_vel = l2_dist(husky1_pos_before, husky1_pos)
+        husky2_lienar_vel = l2_dist(husky2_pos_before, husky2_pos)
+        vel_diff_reward = abs(husky1_linear_vel - husky2_lienar_vel) * self._env_config["vel_diff_reward"]
+
+
 
 
         '''
