@@ -13,7 +13,7 @@ class HuskyPushEnv(HuskyEnv):
         super().__init__('husky_push.xml', **kwargs)
 
         # Env info
-        self.ob_shape = OrderedDict([("husky_1", 29), ("husky_2", 29),
+        self.ob_shape = OrderedDict([("husky_1", 28), ("husky_2", 28),
                                      ("box_1", 6), ("box_2", 6),
                                      ("goal_1", 3), ("goal_2", 3)])
         
@@ -27,14 +27,12 @@ class HuskyPushEnv(HuskyEnv):
             #'random_goal_pos': 0.5,
             'dist_threshold': 0.3,
             'quat_threshold': 0.3,
-            'husky_dist_reward': 200,
-            'goal_dist_reward': 500,
-            'goal1_dist_reward': 200,
-            'goal2_dist_reward': 200,
+            'husky_dist_reward': 10,
+            'goal_dist_reward': 200,
+            'goal1_dist_reward': 100,
+            'goal2_dist_reward': 100,
             'H_to_H_dist_penalty': 200,
             'quat_reward': 50, # quat_dist usually between 0.95 ~ 1
-            'height_reward': 0.5,
-            'upright_reward': 0.5,
             'alive_reward': 0.,
             'success_reward': 1000,
             'die_penalty': 10,
@@ -237,8 +235,8 @@ class HuskyPushEnv(HuskyEnv):
             #('ant_1_lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
             #('ant_2_shared_pos', np.concatenate([qpos[15:22], qvel[14:22], qacc[14:22]])),
             #('ant_2_lower_body', np.concatenate([qpos[22:30], qvel[22:30], qacc[22:30]])),
-            ('husky_1', np.concatenate([qpos[2:11], qvel[:10], qacc[:10]])),
-            ('husky_2', np.concatenate([qpos[13:22], qvel[10:20], qacc[10:20]])),
+            ('husky_1', np.concatenate([qpos[3:11], qvel[:10], qacc[:10]])),
+            ('husky_2', np.concatenate([qpos[14:22], qvel[10:20], qacc[10:20]])),
             ('box_1', np.concatenate([box_pos1 - husky_pos1, box_forward1])),
             ('box_2', np.concatenate([box_pos2 - husky_pos2, box_forward2])),
             ('goal_1', goal_pos1 - box_pos1),

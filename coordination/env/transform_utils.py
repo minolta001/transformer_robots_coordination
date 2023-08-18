@@ -162,8 +162,10 @@ def rotate_direction(a, b):
 # Given pos of the object, pos of the vehicle, and the forward vector of the vehicle, 
 # check if the heading of the vehicle is pointing toward the object
 # Also, could also check if the tail of robot is pointing toward the object
+
 # return 1 - normalized radian
 # The closer to 1, the more correct the heading
+# The closer to 0, the angular difference is larger
 def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b):
     assert(len(ob_pos) == 3 and len(car_forward_vec) == len(ob_pos))
     ob_pos = ob_pos[0:2]
@@ -183,7 +185,7 @@ def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b):
     dot_product = np.dot(suggested_vec_normalized, car_vec_normalized)
     
     angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
-    return (1 - (angle_rad / np.pi)) - 0.5
+    return (1 - (angle_rad / np.pi))
 
 # Given forward vector of the object and the vehicle, check if their headings are parallel to each one
 # Only consider the heading faces toward the object. We don't want the tailing towards the object.
