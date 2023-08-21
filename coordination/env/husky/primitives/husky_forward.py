@@ -37,7 +37,7 @@ class HuskyForwardEnv(HuskyEnv):
             'box_goal_reward': 200,
             'alive_reward': 0.,
             'quat_reward': 30, # 0
-            'align_move_both_reward': 50,
+            'align_move_both_reward': 10,
             'die_penalty': 10,
             'max_episode_steps': 500,
             'husky': 1,
@@ -234,7 +234,7 @@ class HuskyForwardEnv(HuskyEnv):
                 reward = reward + self._env_config['bonus_reward']
                 reward = reward + align_coeff * self._env_config['alignment_reward']
 
-            if dist_box_goal < 0.3:
+            if dist_box_goal < 0.4:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
 
@@ -251,7 +251,7 @@ class HuskyForwardEnv(HuskyEnv):
                     + movement_heading_reward \
                     #+ box_angular_vel_reward
 
-            if align_coeff > 0.97 and move_coeff > 0.97:        # right direction, right position
+            if align_coeff > 0.92 and move_coeff > 0.92:        # right direction, right position
                 both_align = 1
                 reward = reward + self._env_config["align_move_both_reward"]
 
