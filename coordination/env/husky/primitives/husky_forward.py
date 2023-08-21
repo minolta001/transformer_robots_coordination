@@ -32,7 +32,7 @@ class HuskyForwardEnv(HuskyEnv):
             'dist_reward': 10,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
-            'box_linear_vel_reward': 50,
+            'box_linear_vel_reward': 800,  # because the velocity is too small, I have to make it big
             'box_angular_vel_reward': 20,
             'box_goal_reward': 200,
             'alive_reward': 0.,

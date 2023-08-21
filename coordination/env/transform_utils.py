@@ -166,7 +166,7 @@ def rotate_direction(a, b):
 # return 1 - normalized radian
 # The closer to 1, the more correct the heading
 # The closer to 0, the angular difference is larger
-def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b):
+def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b="forward"):
     assert(len(ob_pos) == 3 and len(car_forward_vec) == len(ob_pos))
     ob_pos = ob_pos[0:2]
     car_pos = car_pos[0:2]
@@ -221,6 +221,22 @@ def alignment_heading_difference(ob_forward_vec, car_forward_vec):
     return (max(1 - angle_rad_forward/np.pi, 
                1 - angle_rad_backward/np.pi) - 0.5) / 0.5
     '''
+
+
+'''
+    This function will check if two vectors are on the same line, and on the same direction.
+    
+    By drawing a suggested vector from origin point of vec1 to the one of vec2, we can calculate the angle error between each
+    vector and that line.  We measure this error with range 0 - 1. 0 means the vector is completely opposite to the
+    line direction, 1 means the vector direction is along with the suggested vector direction
+
+    Since we have two angle errors, we do averaging on them to get an average angle error.
+'''
+def right_vector_overlapping(vec_1, vec_2, pos_1, pos_2):
+    align_coeff_1, dir_1 = movement_heading_difference(pos_2, pos_1, vec_1, "forward")
+    align_coeff_2, dir_2 = movement_heading_difference(pos_2, pos_1, vec_2, "forward")
+    return (align_coeff_1 + align_coeff_2) / 2
+
 
 # Give qvel of an object, check if the object is moving forward or backward
 def forward_backward(qvel):

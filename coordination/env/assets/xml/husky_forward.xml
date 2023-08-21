@@ -145,8 +145,8 @@
         <velocity name="rear_right_vel" joint="rear_right_wheel" ctrlrange="-10 10" ctrllimited="true"/>
         -->
 
-        <motor ctrllimited="true" name="left_vel"  tendon="left_differential"  gear="8" />
-        <motor ctrllimited="true" name="right_vel" tendon="right_differential"  gear="8" />
+        <motor ctrllimited="true" name="left_vel"  tendon="left_differential"  gear="10" />
+        <motor ctrllimited="true" name="right_vel" tendon="right_differential"  gear="10" />
 
 
     </actuator>
