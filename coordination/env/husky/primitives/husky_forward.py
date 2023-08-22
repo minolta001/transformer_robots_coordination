@@ -127,6 +127,7 @@ class HuskyForwardEnv(HuskyEnv):
         dist_box_goal = l2_dist(goal_pos_after, box_after)
         dist_box_goal_reward = (-dist_box_goal) * self._env_config["dist_reward"]
 
+        ready_dist_husky_box_reward = 0
 
         '''
             Velocity Calculation
@@ -223,9 +224,29 @@ class HuskyForwardEnv(HuskyEnv):
             done = done or abs(dist_husky_box < 2.0)
 
         elif(skill == "align"):
-            if (17 / 18) < align_coeff:
-                reward = reward \
-                        + align_coeff * self._env_config['alignment_reward'] * 3
+            get_ready = 0
+
+            ready_dist_husky_box_reward = -abs(dist_husky_box - 1.5) * self._env_config['dist_reward']
+            move_coeff = movement_heading_difference(box_after, 
+                                                     pos_after, 
+                                                     husky_forward_vector_after, 
+                                                     "forward")
+            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff
+
+            if abs(dist_husky_box - 1.5) < 0.2:
+                reward = reward + self._env_config['bouns_reward']
+                reward = reward + align_coeff * self._env_config['alignment_reward']
+
+
+            reward = reward \
+                    + ready_dist_husky_box_reward \
+                    + movement_heading_reward \
+                    - box_linear_vel_reward
+
+            if align_coeff > 0.92 and move_coeff > 0.92 and abs(dist_box_goal - 1.5)  < 0.2:
+                get_ready = 1
+                reward = reward + self._env_config["align_move_both_reward"]
+                done = True
             
         elif(skill == "push"):
             both_align = 0  # 1 if both alignment and moving direction are closed to correct
@@ -307,6 +328,24 @@ class HuskyForwardEnv(HuskyEnv):
                 "box_ob": ob[self.box], 
                 "success": self._success
             }           
+    
+        if (skill == "align"):
+            info = {"Current Skill": skill,
+                    "reward: ready_pos_dist_reward": ready_dist_husky_box_reward,
+                    "reward: alignment reward": align_coeff * self._env_config['alignment_reward'],
+                    "reward: moving heading reward": movement_heading_reward,
+                    "reward: box_linear_vel_reward": -box_linear_vel_reward,
+                    "----------": 0,
+                    "husky_movement_heading_coeff": move_coeff,
+                    "husky_alignment_coeff": align_coeff,
+                    "align_and_ready": get_ready,
+                    "------------": 0,
+                    "dist_husky_box": dist_husky_box,
+                    "husky_pos": pos_after,
+                    "box_pos": box_after,
+                    "box_ob": ob[self.box], 
+                    "success": self._success
+            }
 
 
         return ob, reward, done, info
@@ -403,12 +442,12 @@ class HuskyForwardEnv(HuskyEnv):
         qvel = self.data.qvel.ravel().copy()
 
         # Initialized Husky
-        x = np.random.uniform(low=-5.0, high=-2.0)
-        y = np.random.uniform(low=-1, high=0.1)
+        x = np.random.uniform(low=-2.5, high=-1.0)
+        y = np.random.uniform(low=-1, high=1)
 
 
         # Initialize box position 
-        init_box_pos = np.asarray([0, 0, 0.5])
+        init_box_pos = np.asarray([0, 0, 0.3])
         init_box_quat = np.array([0, 0, 0, 0])
 
         if(self._env_config["skill"] == "approach"):
@@ -417,7 +456,7 @@ class HuskyForwardEnv(HuskyEnv):
             init_box_quat = sample_quat()
 
         elif(self._env_config["skill"] == "align"):
-            qpos[0] = -2
+            qpos[0] = x
             qpos[1] = y
             init_box_quat = sample_quat()
         
