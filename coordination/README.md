@@ -208,6 +208,10 @@ python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix Modular --seed 1 --meta ha
 python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard --subdiv ant_1,box_1-ant_1/ant_2,box_2-ant_2 --subdiv_skills rl.ant-forward-v0.ant-1-right-d.1,rl.ant-forward-v0.ant-1-left-d.1,rl.ant-forward-v0.ant-1-up-d.1,rl.ant-forward-v0.ant-1-down-d.1/rl.ant-forward-v0.ant-2-right-d.1,rl.ant-forward-v0.ant-2-left-d.1,rl.ant-forward-v0.ant-2-up-d.1,rl.ant-forward-v0.ant-2-down-d.1 --max_meta_len 5 --max_global_step 1000000
 ```
 
+# Husky composite push
+```bash
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills  rl.husky-forward-v0.h-1-push.test/rl.husky-forward-v0.h-2-push.test --max_meta_len 5 --max_global_step 2000000
+```
 
 ## Directories
 The structure of the repository:
