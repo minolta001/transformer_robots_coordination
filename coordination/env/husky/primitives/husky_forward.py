@@ -32,7 +32,7 @@ class HuskyForwardEnv(HuskyEnv):
             'dist_reward': 10,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
-            'box_linear_vel_reward': 800,  # because the velocity is too small, I have to make it big
+            'box_linear_vel_reward': 2000,  # because the velocity is too small, I have to make it big
             'box_angular_vel_reward': 20,
             'box_goal_reward': 200,
             'alive_reward': 0.,
@@ -251,7 +251,7 @@ class HuskyForwardEnv(HuskyEnv):
                     + movement_heading_reward \
                     #+ box_angular_vel_reward
 
-            if align_coeff > 0.92 and move_coeff > 0.92:        # right direction, right position
+            if align_coeff > 0.90 and move_coeff > 0.90:        # right direction, right position
                 both_align = 1
                 reward = reward + self._env_config["align_move_both_reward"]
 
@@ -298,7 +298,7 @@ class HuskyForwardEnv(HuskyEnv):
                 "----------": 0,
                 "husky_movement_heading_coeff": move_coeff,
                 "husky_alignment_coeff": align_coeff,
-                "align_move_both_>0.97": both_align,
+                "align_move_both_>0.90": both_align,
                 "------------": 0,
                 "dist_husky_box": dist_husky_box,
                 "dist_box_goal": dist_box_goal,
