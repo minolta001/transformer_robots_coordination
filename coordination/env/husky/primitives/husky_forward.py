@@ -234,7 +234,7 @@ class HuskyForwardEnv(HuskyEnv):
             movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff
 
             if abs(dist_husky_box - 1.5) < 0.2:
-                reward = reward + self._env_config['bouns_reward']
+                reward = reward + self._env_config['bonus_reward']
                 reward = reward + align_coeff * self._env_config['alignment_reward']
 
 
