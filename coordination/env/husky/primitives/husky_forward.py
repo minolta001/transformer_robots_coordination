@@ -239,12 +239,14 @@ class HuskyForwardEnv(HuskyEnv):
                                                      "forward")
             movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff
 
+            dist_husky_box_reward = -abs(dist_husky_box - 1.8) * self._env_config["dist_reward"]
+
             if abs(dist_husky_box - 1.8) < 0.5:
                 reward = reward + self._env_config['bonus_reward']
+                reward = reward + movement_heading_reward + align_coeff * self._env_config["alignment_reward"]
 
             reward = reward \
-                    + movement_heading_reward \
-                    + align_coeff * self._env_config["alignment_reward"] \
+                    + dist_husky_box_reward \
                     - box_linear_vel_reward
 
             if align_coeff > 0.95 and move_coeff > 0.95:
@@ -278,7 +280,7 @@ class HuskyForwardEnv(HuskyEnv):
 
             if align_coeff > 0.95 and move_coeff > 0.95:        # right direction, right position
                 both_align = 1
-                reward = reward + self._env_config["bonus"]
+                reward = reward + self._env_config["bonus_reward"]
 
         self._reward = reward
 
