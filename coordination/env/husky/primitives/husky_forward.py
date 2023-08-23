@@ -46,7 +46,7 @@ class HuskyForwardEnv(HuskyEnv):
             'diayn_reward': 0.1,
             "prob_perturb_action": 0.1,    #0.1
             "perturb_action": 0.01,
-            "alignment_reward": 20,
+            "alignment_reward": 10,
             "move_heading_reward": 20,
             "bonus_reward": 10
         })
@@ -182,7 +182,7 @@ class HuskyForwardEnv(HuskyEnv):
             done = True
 
         # if the husky is too far away from the husky
-        if abs(box_dist[0]) > 3 or abs(box_dist[1]) > 3:
+        if abs(box_dist[0]) > 5 or abs(box_dist[1]) > 5:
             done = True
 
         # if the husky heading is wrong
@@ -241,6 +241,7 @@ class HuskyForwardEnv(HuskyEnv):
 
             reward = reward \
                     + movement_heading_reward \
+                    + align_coeff * self._env_config["alignment_reward"] \
                     - box_linear_vel_reward
 
             if align_coeff > 0.92 and move_coeff > 0.92:
