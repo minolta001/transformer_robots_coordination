@@ -32,13 +32,13 @@ class HuskyForwardEnv(HuskyEnv):
             'dist_reward': 10,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
-            'box_linear_vel_reward': 2000,  # because the velocity is too small, I have to make it big
+            'box_linear_vel_reward': 1000,  # because the velocity is too small, I have to make it big
             'box_angular_vel_reward': 20,
             'box_goal_reward': 200,
             'alive_reward': 0.,
             'quat_reward': 30, # 0
             'align_move_both_reward': 10,
-            'die_penalty': 10,
+            'die_penalty': 20,
             'max_episode_steps': 500,
             'husky': 1,
             'skill': 'approach',
@@ -46,8 +46,8 @@ class HuskyForwardEnv(HuskyEnv):
             'diayn_reward': 0.1,
             "prob_perturb_action": 0.1,    #0.1
             "perturb_action": 0.01,
-            "alignment_reward": 20,
-            "move_heading_reward": 20,
+            "alignment_reward": 10,
+            "move_heading_reward": 10,
             "bonus_reward": 10
         })
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
@@ -185,6 +185,9 @@ class HuskyForwardEnv(HuskyEnv):
         if abs(box_dist[0]) > 3 or abs(box_dist[1]) > 3:
             done = True
 
+        if dist_box_goal > 5:
+            done = True
+
         # if the husky heading is wrong
         if move_coeff < 0.3:
             done = True        
@@ -236,14 +239,15 @@ class HuskyForwardEnv(HuskyEnv):
                                                      "forward")
             movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff
 
-            if abs(dist_husky_box - 1.8) < 0.2:
+            if abs(dist_husky_box - 1.8) < 0.5:
                 reward = reward + self._env_config['bonus_reward']
 
             reward = reward \
                     + movement_heading_reward \
+                    + align_coeff * self._env_config["alignment_reward"] \
                     - box_linear_vel_reward
 
-            if align_coeff > 0.92 and move_coeff > 0.92:
+            if align_coeff > 0.95 and move_coeff > 0.95:
                 get_ready = 1
                 reward = reward + self._env_config["align_move_both_reward"]
                 done = True
@@ -272,11 +276,9 @@ class HuskyForwardEnv(HuskyEnv):
                     + movement_heading_reward \
                     #+ box_angular_vel_reward
 
-            '''
-            if align_coeff > 0.92 and move_coeff > 0.92:        # right direction, right position
+            if align_coeff > 0.95 and move_coeff > 0.95:        # right direction, right position
                 both_align = 1
-                reward = reward + self._env_config["align_move_both_reward"]
-            '''
+                reward = reward + self._env_config["bonus"]
 
         self._reward = reward
 
@@ -322,7 +324,7 @@ class HuskyForwardEnv(HuskyEnv):
                 "----------": 0,
                 "husky_movement_heading_coeff": move_coeff,
                 "husky_alignment_coeff": align_coeff,
-                "align_move_both_>0.90": both_align,
+                "align_move_both_>0.95": both_align,
                 "------------": 0,
                 "dist_husky_box": dist_husky_box,
                 "dist_box_goal": dist_box_goal,
@@ -342,7 +344,7 @@ class HuskyForwardEnv(HuskyEnv):
                     "----------": 0,
                     "husky_movement_heading_coeff": move_coeff,
                     "husky_alignment_coeff": align_coeff,
-                    "align_and_ready": get_ready,
+                    "align_and_ready 0.95": get_ready,
                     "------------": 0,
                     "dist_husky_box": dist_husky_box,
                     "husky_pos": pos_after,
