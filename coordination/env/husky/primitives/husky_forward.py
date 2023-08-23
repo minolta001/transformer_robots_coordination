@@ -48,7 +48,7 @@ class HuskyForwardEnv(HuskyEnv):
             "perturb_action": 0.01,
             "alignment_reward": 10,
             "move_heading_reward": 10,
-            "bonus_reward": 10
+            "bonus_reward": 20
         })
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -258,6 +258,7 @@ class HuskyForwardEnv(HuskyEnv):
             if dist_husky_box < 1.2:    # husky is getting into a push-ready range
                 reward = reward + self._env_config['bonus_reward']
                 reward = reward + align_coeff * self._env_config['alignment_reward']
+                reward = reward + movement_heading_reward
 
             if dist_box_goal < 0.4:
                 reward = reward + self._env_config['box_goal_reward']
@@ -273,7 +274,6 @@ class HuskyForwardEnv(HuskyEnv):
                     + dist_husky_box_reward \
                     + dist_box_goal_reward \
                     + box_linear_vel_reward \
-                    + movement_heading_reward \
                     #+ box_angular_vel_reward
 
             if align_coeff > 0.95 and move_coeff > 0.95:        # right direction, right position
