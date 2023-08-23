@@ -47,11 +47,7 @@ class HuskyForwardEnv(HuskyEnv):
             "prob_perturb_action": 0.1,    #0.1
             "perturb_action": 0.01,
             "alignment_reward": 10,
-<<<<<<< HEAD
             "move_heading_reward": 10,
-=======
-            "move_heading_reward": 20,
->>>>>>> 4cdaf89f1d60b075f0127d853b4669fe1f691a46
             "bonus_reward": 10
         })
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
