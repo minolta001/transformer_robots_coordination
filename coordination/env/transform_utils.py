@@ -100,6 +100,18 @@ def forward_vector_from_quat(quat):
     z = 2 * (qy * qz - qw * qx)#
     return np.array([x, y, z])
 
+def Y_vector_from_quat(quat):
+    qw = quat[0]
+    qx = quat[1]
+    qy = quat[2]
+    qz = quat[3]
+
+    x = 2 * (qx * qy + qw * qz)#
+    y = 1 - 2 * (qx * qx + qz * qz)
+    z = 2 * (qy * qz - qw * qx)#
+    return np.array([x, y, z])
+
+
 
 def up_vector_from_quat(quat):
     qw = quat[0]
@@ -123,6 +135,18 @@ def right_vector_from_quat(quat):
     y = 2 * (qx * qy - qw * qz)
     z = 2 * (qx * qz + qw * qy)#
     return np.array([x, -y, z])
+
+def X_vector_from_quat(quat):
+    qw = quat[0]
+    qx = quat[1]
+    qy = quat[2]
+    qz = quat[3]
+
+    x = 1 - 2 * (qy * qy + qz * qz)
+    y = 2 * (qx * qy - qw * qz)
+    z = 2 * (qx * qz + qw * qy)#
+    return np.array([x, -y, z])
+
 
 
 def quat_dist(quat1, quat2):
@@ -237,6 +261,13 @@ def right_vector_overlapping(vec_1, vec_2, pos_1, pos_2):
     align_coeff_1 = movement_heading_difference(pos_1, pos_2, vec_1, "forward")
     align_coeff_2 = movement_heading_difference(pos_1, pos_2, vec_2, "forward")
     return (align_coeff_1 + align_coeff_2) / 2
+
+def Y_vector_overlapping(vec_1, vec_2, pos_1, pos_2):
+
+    align_coeff_1 = movement_heading_difference(pos_1, pos_2, vec_1, "forward")
+    align_coeff_2 = movement_heading_difference(pos_1, pos_2, vec_2, "forward")
+    return (align_coeff_1 + align_coeff_2) / 2
+
 
 
 # Give qvel of an object, check if the object is moving forward or backward

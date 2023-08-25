@@ -3,9 +3,9 @@ from collections import OrderedDict
 import numpy as np
 
 from env.husky.husky import HuskyEnv
-from env.transform_utils import up_vector_from_quat, forward_vector_from_quat, \
-    l2_dist, cos_dist, sample_quat, right_vector_from_quat, alignment_heading_difference, \
-    right_vector_overlapping, movement_heading_difference
+from env.transform_utils import up_vector_from_quat, Y_vector_from_quat, \
+    l2_dist, cos_dist, sample_quat, X_vector_from_quat, alignment_heading_difference, \
+    Y_vector_overlapping, movement_heading_difference
 
 
 class HuskyPushEnv(HuskyEnv):
@@ -87,9 +87,9 @@ class HuskyPushEnv(HuskyEnv):
         '''
 
         #goal_forward_before = right_vector_from_quat(goal_quat_before)    
-        goal_forward = right_vector_from_quat(goal_quat)
-        box_forward = right_vector_from_quat(box_quat)
-        box_forward_before = right_vector_from_quat(box_quat_before)
+        goal_forward = X_vector_from_quat(goal_quat)
+        box_forward = X_vector_from_quat(box_quat)
+        box_forward_before = X_vector_from_quat(box_quat_before)
 
         # goal 1
         goal1_dist = l2_dist(goal1_pos, box1_pos)
@@ -116,16 +116,16 @@ class HuskyPushEnv(HuskyEnv):
             PART 6: move heading of huskys
         ''' 
         # PART 1: Forward parallel between two Huskys (checking forward vector)
-        husky1_forward_vec = right_vector_from_quat(husky1_quat)
-        husky2_forward_vec = right_vector_from_quat(husky2_quat)
+        husky1_forward_vec = X_vector_from_quat(husky1_quat)
+        husky2_forward_vec = X_vector_from_quat(husky2_quat)
         huskys_forward_align_coeff, dir = alignment_heading_difference(husky1_forward_vec, husky2_forward_vec)
         huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config["alignment_reward"]
 
         # PART 2: Right vector overlapping between two Huskys (checking if two vectors are on the same line and same direction)
         # Actually, if Part 2 is gauranteed, then Part 1 is gauranteed
-        husky1_right_vec = forward_vector_from_quat(husky1_quat)
-        husky2_right_vec = forward_vector_from_quat(husky2_quat)
-        huskys_right_align_coeff = right_vector_overlapping(husky1_right_vec, husky2_right_vec, husky1_pos, husky2_pos)
+        husky1_right_vec = Y_vector_from_quat(husky1_quat)
+        husky2_right_vec = Y_vector_from_quat(husky2_quat)
+        huskys_right_align_coeff = Y_vector_overlapping(husky1_right_vec, husky2_right_vec, husky1_pos, husky2_pos)
         huskys_right_align_reward = huskys_right_align_coeff * self._env_config["alignment_reward"]
         
         # PART 3: Distance between two Huskys (to avoid Collision)
@@ -281,8 +281,8 @@ class HuskyPushEnv(HuskyEnv):
         goal_pos2 = self._get_pos('goal_geom2')
 
 
-        husky1_forward_vec = right_vector_from_quat(self._get_quat("husky_robot_1"))
-        husky2_forward_vec = right_vector_from_quat(self._get_quat("husky_robot_2"))
+        husky1_forward_vec = X_vector_from_quat(self._get_quat("husky_robot_1"))
+        husky2_forward_vec = X_vector_from_quat(self._get_quat("husky_robot_2"))
         husky1_move_coeff = movement_heading_difference(box_pos1, husky_pos1, husky1_forward_vec, "forward")
         husky2_move_coeff = movement_heading_difference(box_pos2, husky_pos2, husky2_forward_vec, "forward")
         husky1_align_coeff, direction1 = alignment_heading_difference(box_forward1, husky1_forward_vec)
@@ -376,7 +376,7 @@ class HuskyPushEnv(HuskyEnv):
 
         # Initialize goal
         #x = 4.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        x = 3 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
+        x = 4 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
 

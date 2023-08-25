@@ -14,7 +14,8 @@
         <mesh name="wheel" file="wheel.stl" />
         <mesh name="top_chassis" file="top_chassis.stl" />
         <mesh name="bumper" file="bumper.stl" />
-        <mesh name="top_plate" file="top_plate.stl" />
+        <mesh name="top_plate_1" file="top_plate.stl" />
+        <mesh name="top_plate_2" file="top_plate.stl" />
     </asset>
 
     <default>
@@ -32,6 +33,12 @@
         </default>
         <default class="top_plate">        
             <geom rgba="0.192 0.192 0.192 1.0"></geom>
+        </default>
+        <default class="top_plate_1">        
+            <geom rgba="0.8 1 0.2 1.0"></geom>
+        </default>
+        <default class="top_plate_2">        
+            <geom rgba="0.8 0.2 0.2 1.0"></geom>
         </default>
         <default class="rear_bumper">
             <geom rgba="0.192 0.192 0.192 1.0"></geom>
@@ -52,7 +59,7 @@
         <geom name="ground" class="ground" pos="0 0 0" size="20 20 1"/>
 
         <!-- Husky No.1 -->
-        <body name="husky_robot_1" pos="-2 1 0.5">
+        <body name="husky_robot_1" pos="-2 1 0.5" euler="0 0 0">
             <geom name="base_link_visual_1" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
             <geom name="husky_1_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 
@@ -78,8 +85,8 @@
             <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="top_chassis" class="husky_body" />
             <geom pos="0.48 0 0.091" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="front_bumper" />
             <geom pos="-0.48 0 0.091" quat="1.32679e-06 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="rear_bumper"/>
-            <geom pos="0 0 0.225" type="mesh" contype="0" conaffinity="0" group="1" mesh="top_plate" class="top_plate"/>
-            <geom pos="0 0 0.225" type="mesh" mesh="top_plate" rgba="0 0 0 0"/>
+            <geom pos="0 0 0.225" type="mesh" contype="0" conaffinity="0" group="1" mesh="top_plate_1" class="top_plate_1"/>
+            <geom pos="0 0 0.225" type="mesh" mesh="top_plate_1" rgba="0 0 0 0"/>
 
             <body name="husky_1_front_left_wheel_link" pos="0.256 0.2854 0.03282">
                 <!-- inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20.637" diaginertia="0.04411 0.02467 0.02467" /-->
@@ -108,7 +115,7 @@
         </body>
 
         <!-- Husky No.2 -->
-        <body name="husky_robot_2" pos="-2 -1 0.5">
+        <body name="husky_robot_2" pos="-2 -1 0.5" euler="0 0 0">
             <geom name="base_link_visual_2" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
             <geom name="husky_2_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 
@@ -134,8 +141,8 @@
             <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="top_chassis" class="husky_body" />
             <geom pos="0.48 0 0.091" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="front_bumper" />
             <geom pos="-0.48 0 0.091" quat="1.32679e-06 0 0 1" type="mesh" contype="0" conaffinity="0" group="1" mesh="bumper" class="rear_bumper"/>
-            <geom pos="0 0 0.225" type="mesh" contype="0" conaffinity="0" group="1" mesh="top_plate" class="top_plate"/>
-            <geom pos="0 0 0.225" type="mesh" mesh="top_plate" rgba="0 0 0 0"/>
+            <geom pos="0 0 0.225" type="mesh" contype="0" conaffinity="0" group="1" mesh="top_plate_2" class="top_plate_2"/>
+            <geom pos="0 0 0.225" type="mesh" mesh="top_plate_2" rgba="0 0 0 0"/>
 
             <body name="husky_2_front_left_wheel_link" pos="0.256 0.2854 0.03282">
                 <!-- inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20.637" diaginertia="0.04411 0.02467 0.02467" /-->
