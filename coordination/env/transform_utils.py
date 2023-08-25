@@ -233,8 +233,9 @@ def alignment_heading_difference(ob_forward_vec, car_forward_vec):
     Since we have two angle errors, we do averaging on them to get an average angle error.
 '''
 def right_vector_overlapping(vec_1, vec_2, pos_1, pos_2):
-    align_coeff_1, dir_1 = movement_heading_difference(pos_2, pos_1, vec_1, "forward")
-    align_coeff_2, dir_2 = movement_heading_difference(pos_2, pos_1, vec_2, "forward")
+
+    align_coeff_1 = movement_heading_difference(pos_1, pos_2, vec_1, "forward")
+    align_coeff_2 = movement_heading_difference(pos_1, pos_2, vec_2, "forward")
     return (align_coeff_1 + align_coeff_2) / 2
 
 

@@ -47,21 +47,35 @@ def get_subdiv_space(env, subdiv):
         clusters = [
             (cluster.split('-')[0].split(','), cluster.split('-')[1].split(',')) for cluster in clusters
         ]
+
     else:
         clusters = [(ob_space.keys(), ac_space.shape.keys())] 
 
     #cluster = ([ant_1, box_1], [ant_1])
     #ob_clusters = [[ant_1, box_1], [ant_2, box_2]]
     ob_clusters = [cluster[0] for cluster in clusters]
+
+
     #[ant_1, box_1, ant_2, box_2]
-    ob_keys = [item for sublist in ob_clusters for item in sublist]
+    #ob_keys = [item for sublist in ob_clusters for item in sublist]
+
+    ob_keys = []
+    for sublist in ob_clusters:
+        for item in sublist:
+            if item not in ob_keys:
+                ob_keys.append(item)
+
     # agent name with agent observation space. [(ant_1, ant_1 observation space)]
     ob_space = OrderedDict([
         (k, ob_space[k]) for k in ob_space.keys() if k in ob_keys])
 
-    ac_clusters = [cluster[1] for cluster in clusters]
-    ac_keys = [item for sublist in ac_clusters for item in sublist] 
-    
+    #ac_clusters = [cluster[1] for cluster in clusters]
+    ac_clusters = []
+    for cluster in clusters:
+        if cluster[1] not in ac_clusters:
+            ac_clusters.append(cluster[1])
+
+    ac_keys = [item for sublist in ac_clusters for item in sublist]
     # agent name with agent action space. [(ant_1, ant_1 action space)]
     # Box doesn't have action, so will not be included in the output array
     ac_decomposition = OrderedDict([(k, ac_space.shape[k]) for k in ac_keys])

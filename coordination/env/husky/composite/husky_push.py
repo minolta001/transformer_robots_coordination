@@ -20,7 +20,7 @@ class HuskyPushEnv(HuskyEnv):
                                      ("relative_info_1", 2), ("relative_info_2", 2)])
         
         
-        self.action_space.decompose(OrderedDict([("husky_1", 1), ("husky_2", 1)]))
+        self.action_space.decompose(OrderedDict([("husky_1", 2), ("husky_2", 2)]))
 
         # Env config
         self._env_config.update({
@@ -30,24 +30,23 @@ class HuskyPushEnv(HuskyEnv):
             'dist_threshold': 0.3,
             'quat_threshold': 0.3,
 
-            'dist_reward': 10,
+            'dist_reward': 20,
             'alignment_reward': 30,
             'goal_dist_reward': 20,
             'goal1_dist_reward': 10,
             'goal2_dist_reward': 10,
-            'move_heading_reward': 50,
-            'box_linear_vel_reward': 2000,
-            'success_reward': 50,
-            'bonus_reward': 10,
+            'move_heading_reward': 10,
+            'box_linear_vel_reward': 1000,
+            'success_reward': 200,
+            'bonus_reward': 20,
 
-            'H_to_H_dist_penalty': 200,
             'quat_reward': 50, # quat_dist usually between 0.95 ~ 1
-            'alive_reward': 0.,
-            'die_penalty': 10,
+            'alive_reward': 10,
+            'die_penalty': 50,
             'sparse_reward': 0,
             'init_randomness': 0.01,
             #'max_episode_steps': 400,
-            'max_episode_steps': 500 ,
+            'max_episode_steps': 1000,
         }) 
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -119,33 +118,33 @@ class HuskyPushEnv(HuskyEnv):
         # PART 1: Forward parallel between two Huskys (checking forward vector)
         husky1_forward_vec = right_vector_from_quat(husky1_quat)
         husky2_forward_vec = right_vector_from_quat(husky2_quat)
-        huskys_forward_align_coeff = alignment_heading_difference(husky1_forward_vec, husky2_forward_vec)
-        huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config("alignment_reward")
+        huskys_forward_align_coeff, dir = alignment_heading_difference(husky1_forward_vec, husky2_forward_vec)
+        huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config["alignment_reward"]
 
         # PART 2: Right vector overlapping between two Huskys (checking if two vectors are on the same line and same direction)
         # Actually, if Part 2 is gauranteed, then Part 1 is gauranteed
         husky1_right_vec = forward_vector_from_quat(husky1_quat)
         husky2_right_vec = forward_vector_from_quat(husky2_quat)
         huskys_right_align_coeff = right_vector_overlapping(husky1_right_vec, husky2_right_vec, husky1_pos, husky2_pos)
-        huskys_right_align_reward = huskys_right_align_coeff * self._env_config("alignment_reward")
+        huskys_right_align_reward = huskys_right_align_coeff * self._env_config["alignment_reward"]
         
         # PART 3: Distance between two Huskys (to avoid Collision)
         suggested_dist = l2_dist(box1_pos, box2_pos)
         huskys_dist = l2_dist(husky1_pos, husky2_pos)
-        huskys_dist_reward = -abs(suggested_dist - huskys_dist) * self._env_config("dist_reward")
+        huskys_dist_reward = -abs(suggested_dist - huskys_dist) * self._env_config["dist_reward"]
 
         # PART 4: Linear distance between one husky and one box
         husky1_box_dist = l2_dist(husky1_pos, box1_pos)
         husky2_box_dist = l2_dist(husky2_pos, box2_pos)
-        husky1_box_dist_reward = -husky1_box_dist * self._env_config("dist_reward")
-        husky2_box_dist_reward = -husky2_box_dist * self._env_config("dist_reward")
+        husky1_box_dist_reward = -husky1_box_dist * self._env_config["dist_reward"]
+        husky2_box_dist_reward = -husky2_box_dist * self._env_config["dist_reward"]
         huskys_box_dist_reward = husky1_box_dist_reward + husky2_box_dist_reward
         
         # PART 5: Linear distance between box and goal
         goal1_box_dist = l2_dist(goal1_pos, box1_pos)
         goal2_box_dist = l2_dist(goal2_pos, box2_pos)
-        goal1_box_dist_reward = -goal1_box_dist * self._env_config("dist_reward")
-        goal2_box_dist_reward = -goal2_box_dist * self._env_config("dist_reward")
+        goal1_box_dist_reward = -goal1_box_dist * self._env_config["dist_reward"]
+        goal2_box_dist_reward = -goal2_box_dist * self._env_config["dist_reward"]
         goal_box_dist_reward = goal1_box_dist_reward + goal2_box_dist_reward
 
         # PART 6: Movement heading of husky to box
@@ -158,8 +157,8 @@ class HuskyPushEnv(HuskyEnv):
         # PART 7: Box velocity
         box1_linear_vel =  l2_dist(box1_pos, box1_pos_before)
         box2_linear_vel =  l2_dist(box2_pos, box2_pos_before)
-        box1_linear_vel_reward = box1_linear_vel * self._env_config("box_linear_vel_reward")
-        box2_linear_vel_reward = box2_linear_vel * self._env_config("box_linear_vel_reward")
+        box1_linear_vel_reward = box1_linear_vel * self._env_config["box_linear_vel_reward"]
+        box2_linear_vel_reward = box2_linear_vel * self._env_config["box_linear_vel_reward"]
         box_linear_vel_reward = box1_linear_vel_reward + box2_linear_vel_reward
 
 
@@ -179,8 +178,8 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Bonus
         '''
-        if husky1_box_dist < 1.2 and husky2_box_dist < 1.2:
-            reward += self._env_config['bonus_reward']
+        if husky1_box_dist < 1.5 and husky2_box_dist < 1.5:
+            reward += (3 * self._env_config['bonus_reward'])
         if husky1_move_coeff > 0.92 and husky2_move_coeff > 0.92:
             reward += self._env_config['bonus_reward']
         if huskys_right_align_coeff > 0.92:
@@ -189,18 +188,20 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < 0.2:   # huskys are too close
+        if huskys_dist < 0.6 or huskys_dist > 3.0:   # huskys are too close or too far away 
             done = True
-        if husky1_move_coeff < 0.3 or husky2_move_coeff < 0.3:  # at least one husky faces to wrong direction
-            done = True
-        if husky1_box_dist > 5.0 or husky2_box_dist > 5.0: # husky is too far away from box
+        if husky1_box_dist > 6.0 or husky2_box_dist > 6.0: # husky is too far away from box
             done = True
         die_penalty = -self._env_config["die_penalty"] if done else 0
 
+        # give some bonus if pass all failure check
+        if done != True:
+            reward += self._env_config["alive_reward"]
 
         '''
             Success Check
         '''
+        success_reward = 0
         if goal1_dist < self._env_config["dist_threshold"] and \
                 goal2_dist < self._env_config["dist_threshold"]:        # if both goal1 and goal2 suffice, then overall goal should suffice
                 #and goal_quat < self._env_config["quat_threshold"]:
@@ -211,14 +212,13 @@ class HuskyPushEnv(HuskyEnv):
                 self._success = True
                 success_reward = self._env_config["success_reward"]
                 reward += success_reward
-            done = True
+                done = True
 
-        
-        
 
         if self._env_config['sparse_reward']:
             self._reward = reward = self._success == 1
         else:
+
             reward = reward \
                     + huskys_forward_align_reward \
                     + huskys_right_align_reward \
@@ -239,12 +239,13 @@ class HuskyPushEnv(HuskyEnv):
                 "reward: goal-box dist reward": goal_box_dist_reward,
                 "reward: move heading reward": huskys_move_heading_reward,
                 "reward: box velocity reward": box_linear_vel_reward,
-                "coeff: forward align coeff": huskys_forward_align_coeff,
-                "coeff: right align coeff": huskys_right_align_coeff,
+                "coeff: huskys forward align coeff": huskys_forward_align_coeff,
+                "coeff: huskys right align coeff": huskys_right_align_coeff,
                 "coeff: husky1 move heading coeff": husky1_move_coeff,
                 "coeff: husky2 move heading coeff": husky2_move_coeff,
                 "die_penalty": die_penalty,
                 "reward_success": success_reward,
+                "huskys_dist": huskys_dist,
                 "husky1_pos": husky1_pos,
                 "husky2_pos": husky2_pos,
                 "goal1_dist": goal1_dist,
@@ -327,8 +328,8 @@ class HuskyPushEnv(HuskyEnv):
             
             The last 7 are for box 
         '''
-        return np.array([-4., 1, 0.58, 0., 0., 0., 0., 0., 0, 0., 0.,
-                         -4., -1, 0.58, 0., 0., 0., 0., 0., 0., 0., 0.,
+        return np.array([-2., 1, 0.58, 0., 0., 0., 0., 0., 0, 0., 0.,
+                         -2., -1, 0.58, 0., 0., 0., 0., 0., 0., 0., 0.,
                          0., 0., 0.58, 0., 0., 0., 0.])
 
     @property
@@ -339,10 +340,10 @@ class HuskyPushEnv(HuskyEnv):
         qpos = self._init_qpos + self._init_random(self.model.nq)
         qvel = self._init_qvel + self._init_random(self.model.nv)
 
-        qpos[2] = 0.38
-        qpos[13] = 0.38
-        qpos[3:7] = [np.random.uniform(low=-1, high=1, size=1), 0, 0, np.random.uniform(low=-1, high=1, size=1)]
-        qpos[14:18] = [np.random.uniform(low=-1, high=1, size=1), 0, 0, np.random.uniform(low=-1, high=1, size=1)]
+        qpos[2] = 0.2
+        qpos[13] = 0.2
+        qpos[3:7] = [0, 0, 0, 0]
+        qpos[14:18] = [0, 0, 0, 0]
 
         self.set_state(qpos, qvel)
 
@@ -368,8 +369,8 @@ class HuskyPushEnv(HuskyEnv):
         # Initialize husky
         #qpos[0:2] = [-4, 2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_ant_pos"]
         #qpos[15:17] = [-4, -2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_ant_pos"]
-        qpos[0:2] = [-4, 1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
-        qpos[11:13] = [-4, -1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
+        qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
+        qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
         #qpos[0:2] = [-2 + np.random.uniform(-1, 1) * self._env_config["random_ant_pos"], 2]
         #qpos[15:17] = [-2 + np.random.uniform(-1, 1) * self._env_config["random_ant_pos"], -2]
 
@@ -378,10 +379,11 @@ class HuskyPushEnv(HuskyEnv):
         x = 3 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
+
         goal_pos = np.asarray([x, y, z])
-        #goal_quat = sample_quat()
+        goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
         self._set_pos('goal', goal_pos)
-        #self._set_quat('goal', goal_quat)
+        self._set_quat('goal', goal_quat)
 
         self.set_state(qpos, qvel)
 

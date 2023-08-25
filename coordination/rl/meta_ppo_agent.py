@@ -29,6 +29,13 @@ class MetaPPOAgent(BaseAgent):
             # subdiv = ob1,ob2-ac1/ob3,ob4-ac2/...
             clusters = config.subdiv.split('/')
             clusters = [cluster.split('-')[1].split(',') for cluster in clusters]
+
+            tmp_clusters = []
+            for cluster in clusters:
+                if cluster not in tmp_clusters:
+                    tmp_clusters.append(cluster)
+            clusters = tmp_clusters
+            
         else:
             clusters = [ob_space.keys()]
 

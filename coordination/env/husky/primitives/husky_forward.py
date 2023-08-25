@@ -69,8 +69,7 @@ class HuskyForwardEnv(HuskyEnv):
         '''
         self.ob_shape = OrderedDict([(self.husky, 31), 
                                      (self.box, 6),
-                                     ("goal", 3),
-                                     ("relative_info", 2)])
+                                     ])
         '''
             Our husky model is differential drive, though it has 4 wheels.
             So, the action space should be 2
@@ -387,8 +386,6 @@ class HuskyForwardEnv(HuskyEnv):
             (self.box, np.concatenate([box_pos - husky_pos, box_forward])),
             #('shared_pos', np.concatenate([qpos[2:7], qvel[:6], qacc[:6]])),
             #('lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
-            ('goal', goal_pos - box_pos),
-            ('relative_info', [move_coeff, align_coeff])
         ])
 
         def ravel(x):

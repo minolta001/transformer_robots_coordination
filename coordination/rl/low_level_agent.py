@@ -42,6 +42,7 @@ class LowLevelAgent(SACAgent):
         else:
             clusters = [(ob_space.keys(), ac_space.shape.keys())]
 
+
         if config.subdiv_skills:
             subdiv_skills = config.subdiv_skills.split('/')
             subdiv_skills = [
@@ -49,6 +50,7 @@ class LowLevelAgent(SACAgent):
             ]
         else:
             subdiv_skills = [['primitive']] * len(clusters)
+
 
         assert len(subdiv_skills) == len(clusters), \
             'subdiv_skills and clusters have different # subdivisions'
@@ -62,8 +64,12 @@ class LowLevelAgent(SACAgent):
         # load networks
         for cluster, skills in zip(self._clusters, self._subdiv_skills):
             ob_space = OrderedDict([(k, self._ob_space[k]) for k in cluster[0]])
+
+
             if self._config.diayn:
                 ob_space[','.join(cluster[0]) + '_diayn'] = self._config.z_dim
+
+
             ac_decomposition = OrderedDict([(k, self._ac_space.shape[k]) for k in cluster[1]])
             ac_size = sum(self._ac_space.shape[k] for k in cluster[1])
             ac_space = ActionSpec(ac_size, -1, 1)

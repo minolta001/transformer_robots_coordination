@@ -135,11 +135,11 @@ python3 -m rl.main --env ant-forward-v0 --gpu 0 --prefix ant-2-left-n --env_args
  - Husky Push
 ```bash
 # With SBD
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-1-push --env_args husky-1/skill-push --z_dim 2 --seed 1 --max_global_step 1000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-2-push --env_args husky-2/skill-push --z_dim 2 --seed 1 --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-1-push --env_args husky-1/skill-push --z_dim 5 --seed 1 --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-2-push --env_args husky-2/skill-push --z_dim 5 --seed 1 --max_global_step 1000000
 
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-1-align --env_args husky-1/skill-align --z_dim 2 --seed 1 --max_global_step 1000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-2-align --env_args husky-2/skill-align --z_dim 2 --seed 1 --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-1-align --env_args husky-1/skill-align --z_dim 5 --seed 1 --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-2-align --env_args husky-2/skill-align --z_dim 5 --seed 1 --max_global_step 1000000
 
 
 ```
@@ -211,7 +211,7 @@ python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard 
 
 # Husky composite push
 ```bash
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills  rl.husky-forward-v0.h-1-push.test/rl.husky-forward-v0.h-2-push.test --max_meta_len 5 --max_global_step 2000000
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills  rl.husky-forward-v0.h-1-push.1,rl.husky-forward-v0.h-1-align.1/rl.husky-forward-v0.h-2-push.1,rl.husky-forward-v0.h-2-align.1 --max_meta_len 5 --max_global_step 2000000
 ```
 
 ## Directories
