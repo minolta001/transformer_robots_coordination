@@ -104,7 +104,7 @@ class HuskyForwardEnv(HuskyEnv):
         box_after = self._get_pos('box_geom')
         goal_pos_after = self._get_pos('goal_geom')
         box_quat_after = self._get_quat('box')
-        goal_quat_after = self._get_quat('goal_geom')
+        goal_quat_after = self._get_quat('goal')
         
 
         husky_quat_after = self._get_quat('husky_robot')
