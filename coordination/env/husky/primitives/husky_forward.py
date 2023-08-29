@@ -36,7 +36,7 @@ class HuskyForwardEnv(HuskyEnv):
             'box_angular_vel_reward': 20,
             'box_goal_reward': 200,
             'alive_reward': 0.,
-            'quat_reward': 30, # 0
+            'quat_reward': 10, # 0
             'align_move_both_reward': 10,
             'die_penalty': 20,
             'max_episode_steps': 500,
@@ -104,9 +104,19 @@ class HuskyForwardEnv(HuskyEnv):
         box_after = self._get_pos('box_geom')
         goal_pos_after = self._get_pos('goal_geom')
         box_quat_after = self._get_quat('box')
+        goal_quat_after = self._get_quat('goal_geom')
+        
 
         husky_quat_after = self._get_quat('husky_robot')
         husky_forward_vector_after = right_vector_from_quat(husky_quat_after) 
+
+        # box orientation on z-axis     # box forward vector after
+        box_forward = right_vector_from_quat(box_quat_after)
+        # box angular velocity
+        box_angular_vel = cos_dist(self._box_forward, box_forward)
+        # goal forward vector
+        goal_forward = right_vector_from_quat(goal_quat_after)
+
 
         ob = self._get_obs()
         done = False
@@ -125,6 +135,9 @@ class HuskyForwardEnv(HuskyEnv):
         # distance between box and goal
         dist_box_goal = l2_dist(goal_pos_after, box_after)
         dist_box_goal_reward = (-dist_box_goal) * self._env_config["dist_reward"]
+        # quat distance between box and goal
+        quat_dist_box_goal = cos_dist(box_forward, goal_forward)
+        quat_dist_box_goal_reward = (-quat_dist_box_goal) * self._env_config["quat_reward"]
 
         ready_dist_husky_box_reward = 0
 
@@ -140,10 +153,7 @@ class HuskyForwardEnv(HuskyEnv):
         box_linear_vel = l2_dist(box_after, box_before)
 
 
-        # box orientation on z-axis     # box forward vector after
-        box_forward = right_vector_from_quat(box_quat_after)
-        # box angular velocity
-        box_angular_vel = cos_dist(self._box_forward, box_forward)
+
 
 
         # distance between box and husky
@@ -261,7 +271,7 @@ class HuskyForwardEnv(HuskyEnv):
                 reward = reward + align_coeff * self._env_config['alignment_reward']
                 reward = reward + movement_heading_reward
 
-            if dist_box_goal < 0.4:
+            if dist_box_goal < 0.4 and quat_dist_box_goal < 0.3:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
 
@@ -275,6 +285,7 @@ class HuskyForwardEnv(HuskyEnv):
                     + dist_husky_box_reward \
                     + dist_box_goal_reward \
                     + box_linear_vel_reward \
+                    + quat_dist_box_goal_reward
                     #+ box_angular_vel_reward
 
             if align_coeff > 0.95 and move_coeff > 0.95:        # right direction, right position
@@ -469,10 +480,21 @@ class HuskyForwardEnv(HuskyEnv):
         elif(self._env_config["skill"] == "push"):
             qpos[0] = -1.5
             qpos[1] = y
+
+            # reset the rotation of goal
+            goal_pos = np.asarray([2, 0, 0.38])
+            goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
+            self._set_pos('goal', goal_pos)
+            self._set_quat('goal', goal_quat)
+
+
             
         # reset the box, reset pos and quat respectively
         qpos[11:14] = init_box_pos
         qpos[14:18] = init_box_quat
+
+
+
 
         self._box_forward = right_vector_from_quat(init_box_quat)
 
