@@ -483,9 +483,9 @@ class HuskyForwardEnv(HuskyEnv):
 
             # reset the rotation of goal
             goal_pos = np.asarray([2, 0, 0.38])
-            goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
+            #goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
             self._set_pos('goal', goal_pos)
-            self._set_quat('goal', goal_quat)
+            #self._set_quat('goal', goal_quat)
 
 
             
