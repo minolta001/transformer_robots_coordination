@@ -376,7 +376,7 @@ class HuskyPushEnv(HuskyEnv):
 
         # Initialize goal
         #x = 4.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        x = 4 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
+        x = 1.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
 
