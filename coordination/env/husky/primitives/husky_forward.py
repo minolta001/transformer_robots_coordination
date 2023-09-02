@@ -271,7 +271,7 @@ class HuskyForwardEnv(HuskyEnv):
                 reward = reward + align_coeff * self._env_config['alignment_reward']
                 reward = reward + movement_heading_reward
 
-            if dist_box_goal < 0.4 and quat_dist_box_goal < 0.4:
+            if dist_box_goal < 0.2 and quat_dist_box_goal < 0.3:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
 
@@ -284,8 +284,8 @@ class HuskyForwardEnv(HuskyEnv):
             reward = reward \
                     + dist_husky_box_reward \
                     + dist_box_goal_reward \
-                    + box_linear_vel_reward \
-                    + quat_dist_box_goal_reward
+                    + quat_dist_box_goal_reward \
+                    #+ box_linear_vel_reward
                     #+ box_angular_vel_reward
 
             if align_coeff > 0.95 and move_coeff > 0.95:        # right direction, right position
@@ -482,7 +482,7 @@ class HuskyForwardEnv(HuskyEnv):
             qpos[1] = y
 
             # reset the rotation of goal
-            goal_pos = np.asarray([1.5, 0, 0.38])
+            goal_pos = np.asarray([3, 0, 0.38])
             #goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
             self._set_pos('goal', goal_pos)
             #self._set_quat('goal', goal_quat)
