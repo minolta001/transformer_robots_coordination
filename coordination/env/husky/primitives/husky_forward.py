@@ -328,7 +328,7 @@ class HuskyForwardEnv(HuskyEnv):
                 "Total Reward": reward,
                 "reward: dist_husky_box_reward": dist_husky_box_reward,
                 "reward: dist_box_goal_reward": dist_box_goal_reward,
-                "reward: box_linear_vel_reward": box_linear_vel_reward,
+                #"reward: box_linear_vel_reward": box_linear_vel_reward,
                 "reward: alignment reward": align_coeff * self._env_config['alignment_reward'],
                 "reward: moving heading reward": movement_heading_reward,
                 "reward: control reward": ctrl_reward,
