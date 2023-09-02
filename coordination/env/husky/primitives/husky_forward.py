@@ -122,7 +122,7 @@ class HuskyForwardEnv(HuskyEnv):
         done = False
         alive_reward = 0
         #ctrl_reward = self._ctrl_reward(a)
-        ctrl_reward = self._ctrl_reward(a) * 100
+        ctrl_reward = self._ctrl_reward(a) * 10
         
 
         '''
@@ -288,9 +288,6 @@ class HuskyForwardEnv(HuskyEnv):
                     #+ box_linear_vel_reward
                     #+ box_angular_vel_reward
 
-            if align_coeff > 0.95 and move_coeff > 0.95:        # right direction, right position
-                both_align = 1
-                reward = reward + self._env_config["bonus_reward"]
 
         self._reward = reward
 
@@ -336,7 +333,7 @@ class HuskyForwardEnv(HuskyEnv):
                 "----------": 0,
                 "husky_movement_heading_coeff": move_coeff,
                 "husky_alignment_coeff": align_coeff,
-                "align_move_both_>0.95": both_align,
+                #"align_move_both_>0.95": both_align,
                 "------------": 0,
                 "dist_husky_box": dist_husky_box,
                 "dist_box_goal": dist_box_goal,
