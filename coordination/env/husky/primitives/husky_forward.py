@@ -29,7 +29,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'dist_reward': 10,
+            'dist_reward': 30,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
             'box_linear_vel_reward': 1000,  # because the velocity is too small, I have to make it big
