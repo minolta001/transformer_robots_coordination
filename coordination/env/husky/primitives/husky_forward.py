@@ -29,7 +29,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'dist_reward': 30,
+            'dist_reward': 10,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
             'box_linear_vel_reward': 1000,  # because the velocity is too small, I have to make it big
@@ -48,7 +48,7 @@ class HuskyForwardEnv(HuskyEnv):
             "perturb_action": 0.01,
             "alignment_reward": 10,
             "move_heading_reward": 10,
-            "bonus_reward": 20
+            "bonus_reward": 5
         })
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -131,10 +131,10 @@ class HuskyForwardEnv(HuskyEnv):
         # distance between husky and center point of the box 
         dist_husky_box = l2_dist(pos_after, box_after)
         # dist_husky_box_reward = 1 / (1 + dist_husky_box) * self._env_config["dist_reward"]
-        dist_husky_box_reward = (20 - dist_husky_box) * self._env_config["dist_reward"]
+        dist_husky_box_reward = (5 - dist_husky_box) * self._env_config["dist_reward"]
         # distance between box and goal
         dist_box_goal = l2_dist(goal_pos_after, box_after)
-        dist_box_goal_reward = (20 - dist_box_goal) * self._env_config["dist_reward"]
+        dist_box_goal_reward = (5 - dist_box_goal) * self._env_config["dist_reward"]
         # quat distance between box and goal
         quat_dist_box_goal = cos_dist(box_forward, goal_forward)
         quat_dist_box_goal_reward = (1 - quat_dist_box_goal) * self._env_config["quat_reward"]
