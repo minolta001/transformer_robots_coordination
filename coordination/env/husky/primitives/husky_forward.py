@@ -29,7 +29,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'dist_reward': 10,
+            'dist_reward': 30,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
             'box_linear_vel_reward': 1000,  # because the velocity is too small, I have to make it big
@@ -266,10 +266,10 @@ class HuskyForwardEnv(HuskyEnv):
         elif(skill == "push"):
             both_align = 0  # 1 if both alignment and moving direction are closed to correct
 
-            if dist_husky_box < 1.2:    # husky is getting into a push-ready range
-                reward = reward + self._env_config['bonus_reward']
-                reward = reward + align_coeff * self._env_config['alignment_reward']
-                reward = reward + movement_heading_reward
+            #if dist_husky_box < 1.2:    # husky is getting into a push-ready range
+            reward = reward + self._env_config['bonus_reward']
+            reward = reward + align_coeff * self._env_config['alignment_reward']
+            reward = reward + movement_heading_reward
 
             if dist_box_goal < 0.2 and quat_dist_box_goal < 0.3:
                 reward = reward + self._env_config['box_goal_reward']
