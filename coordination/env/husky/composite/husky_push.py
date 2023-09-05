@@ -136,15 +136,22 @@ class HuskyPushEnv(HuskyEnv):
         # PART 4: Linear distance between one husky and one box
         husky1_box_dist = l2_dist(husky1_pos, box1_pos)
         husky2_box_dist = l2_dist(husky2_pos, box2_pos)
-        husky1_box_dist_reward = -husky1_box_dist * self._env_config["dist_reward"]
-        husky2_box_dist_reward = -husky2_box_dist * self._env_config["dist_reward"]
+
+
+        #husky1_box_dist_reward = -husky1_box_dist * self._env_config["dist_reward"]
+        #husky2_box_dist_reward = -husky2_box_dist * self._env_config["dist_reward"]
+        husky1_box_dist_reward = (5 - husky1_box_dist) * self._env_config["dist_reward"]
+        husky2_box_dist_reward = (5 - husky2_box_dist) * self._env_config["dist_reward"]
         huskys_box_dist_reward = husky1_box_dist_reward + husky2_box_dist_reward
         
         # PART 5: Linear distance between box and goal
         goal1_box_dist = l2_dist(goal1_pos, box1_pos)
         goal2_box_dist = l2_dist(goal2_pos, box2_pos)
-        goal1_box_dist_reward = -goal1_box_dist * self._env_config["dist_reward"]
-        goal2_box_dist_reward = -goal2_box_dist * self._env_config["dist_reward"]
+        #goal1_box_dist_reward = -goal1_box_dist * self._env_config["dist_reward"]
+        #goal2_box_dist_reward = -goal2_box_dist * self._env_config["dist_reward"]
+
+        goal1_box_dist_reward = (5 - goal1_box_dist) * self._env_config["dist_reward"]
+        goal2_box_dist_reward = (5 - goal2_box_dist) * self._env_config["dist_reward"]
         goal_box_dist_reward = goal1_box_dist_reward + goal2_box_dist_reward
 
         # PART 6: Movement heading of husky to box
@@ -188,7 +195,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < 0.6 or huskys_dist > 3.0:   # huskys are too close or too far away 
+        if huskys_dist < 1 or huskys_dist > 3.0:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 6.0 or husky2_box_dist > 6.0: # husky is too far away from box
             done = True
@@ -226,7 +233,8 @@ class HuskyPushEnv(HuskyEnv):
                     + huskys_box_dist_reward \
                     + goal_box_dist_reward \
                     + huskys_move_heading_reward \
-                    + box_linear_vel_reward
+
+                    #+ box_linear_vel_reward
             self._reward = reward
 
 
