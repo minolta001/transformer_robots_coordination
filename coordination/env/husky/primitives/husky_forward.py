@@ -29,12 +29,12 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'dist_reward': 30,
+            'dist_reward': 10,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
             'box_linear_vel_reward': 1000,  # because the velocity is too small, I have to make it big
             'box_angular_vel_reward': 20,
-            'box_goal_reward': 200,
+            'box_goal_reward': 500,
             'alive_reward': 0.,
             'quat_reward': 10, # 0
             'align_move_both_reward': 10,
@@ -271,7 +271,7 @@ class HuskyForwardEnv(HuskyEnv):
             reward = reward + align_coeff * self._env_config['alignment_reward']
             reward = reward + movement_heading_reward
 
-            if dist_box_goal < 0.2 and quat_dist_box_goal < 0.3:
+            if dist_box_goal < 0.3 and quat_dist_box_goal < 0.3:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
 
@@ -479,7 +479,7 @@ class HuskyForwardEnv(HuskyEnv):
             qpos[1] = y
 
             # reset the rotation of goal
-            goal_pos = np.asarray([3, 0, 0.38])
+            goal_pos = np.asarray([2, 0, 0.38])
             #goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
             self._set_pos('goal', goal_pos)
             #self._set_quat('goal', goal_quat)

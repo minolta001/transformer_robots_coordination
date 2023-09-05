@@ -384,12 +384,12 @@ class HuskyPushEnv(HuskyEnv):
 
         # Initialize goal
         #x = 4.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        x = 1.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
+        x = 2 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
 
         goal_pos = np.asarray([x, y, z])
-        goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
+        goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
         self._set_pos('goal', goal_pos)
         self._set_quat('goal', goal_quat)
 
