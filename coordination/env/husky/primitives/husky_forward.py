@@ -32,7 +32,7 @@ class HuskyForwardEnv(HuskyEnv):
             'dist_reward': 10,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
-            'box_linear_vel_reward': 1000,  # because the velocity is too small, I have to make it big
+            'box_linear_vel_reward': 100,  # because the velocity is too small, I have to make it big
             'box_angular_vel_reward': 20,
             'box_goal_reward': 500,
             'alive_reward': 0.,
@@ -285,7 +285,7 @@ class HuskyForwardEnv(HuskyEnv):
                     + dist_husky_box_reward \
                     + dist_box_goal_reward \
                     + quat_dist_box_goal_reward \
-                    #+ box_linear_vel_reward
+                    + box_linear_vel_reward
                     #+ box_angular_vel_reward
 
 
@@ -480,9 +480,9 @@ class HuskyForwardEnv(HuskyEnv):
 
             # reset the rotation of goal
             goal_pos = np.asarray([2, 0, 0.38])
-            #goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
+            goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
             self._set_pos('goal', goal_pos)
-            #self._set_quat('goal', goal_quat)
+            self._set_quat('goal', goal_quat)
 
 
             
