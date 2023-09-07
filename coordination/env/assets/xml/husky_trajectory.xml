@@ -180,15 +180,21 @@
         </body>
 
         <!-- Goal -->
-        <body name="goal" pos="2 0 0.3" euler="0 0 0">
+        <body name="goal" pos="18 0 0.3" euler="0 0 0">
             <geom name="goal_geom1" pos="0 1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
             <geom name="goal_geom2" pos="0 -1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
         </body>
 
+        <!-- Obstacle -->
+        <body name="obstacle" pos="8 0 0.3" euler="0 0 0">
+            <geom name="obstacle_geom" pos="0 0 0" rgba="0.25 0.25 0.25 1" size="1 1 0.3" type="box" mass="9999" friction="0.5 0.5 0.5"/>
+            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
+        </body>
+
 
         <!-- Checkpoint -->
-        <body name="checkpoint" pos="2 0 0.3" euler="0 0 0">
-            <geom name="checkpoint_geom" pos="0 0 0" rgba="0.8 0.2 0.2 0.5" size="0.3 0.3 0.3" type="box" conaffinity="0"contype="0"/>
+        <body name="checkpoint" pos="5 0 0.3" euler="0 0 0">
+            <geom name="checkpoint_geom" pos="0 0 0" rgba="0 0 1 0.5" size="0.3 0.3 0.3" type="sphere" conaffinity="0" contype="0"/>
         </body>
         
     </worldbody>
