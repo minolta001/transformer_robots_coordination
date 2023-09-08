@@ -30,7 +30,7 @@ class HuskyPushEnv(HuskyEnv):
             'dist_threshold': 0.2,
             'quat_threshold': 0.2,
 
-            'dist_reward': 20,
+            'dist_reward': 10,
             'alignment_reward': 30,
             'goal_dist_reward': 20,
             'goal1_dist_reward': 10,
@@ -102,8 +102,6 @@ class HuskyPushEnv(HuskyEnv):
         # goal overall
         goal_dist = l2_dist(goal_pos, box_pos)
         goal_dist_before = l2_dist(goal_pos, box_pos_before)
-        goal_quat = cos_dist(goal_forward, box_forward)
-        goal_quat_before = cos_dist(goal_forward, box_forward_before)
 
         husky1_quat = self._get_quat('husky_robot_1')
         husky2_quat = self._get_quat('husky_robot_2')
@@ -136,8 +134,6 @@ class HuskyPushEnv(HuskyEnv):
         # PART 4: Linear distance between one husky and one box
         husky1_box_dist = l2_dist(husky1_pos, box1_pos)
         husky2_box_dist = l2_dist(husky2_pos, box2_pos)
-
-
         #husky1_box_dist_reward = -husky1_box_dist * self._env_config["dist_reward"]
         #husky2_box_dist_reward = -husky2_box_dist * self._env_config["dist_reward"]
         husky1_box_dist_reward = (5 - husky1_box_dist) * self._env_config["dist_reward"]
@@ -169,7 +165,11 @@ class HuskyPushEnv(HuskyEnv):
         box_linear_vel_reward = box1_linear_vel_reward + box2_linear_vel_reward
 
 
-       
+        # PART 8: Cos distance between box and goal
+        goal_box_cos_dist = 1 - cos_dist(goal_forward, box_forward)
+        goal_box_cos_dist_reward = goal_box_cos_dist * self._env_config["quat_reward"]
+
+
         # Note: goal_quat is the cost_dist between goal and box 
         # NOTE: why "-"? doesn't make sense
         '''
@@ -233,6 +233,7 @@ class HuskyPushEnv(HuskyEnv):
                     + huskys_box_dist_reward \
                     + goal_box_dist_reward \
                     + huskys_move_heading_reward \
+                    + goal_box_cos_dist_reward
 
                     #+ box_linear_vel_reward
             self._reward = reward
@@ -246,7 +247,8 @@ class HuskyPushEnv(HuskyEnv):
                 "reward: husky-to-box dist reward": huskys_box_dist_reward,
                 "reward: goal-box dist reward": goal_box_dist_reward,
                 "reward: move heading reward": huskys_move_heading_reward,
-                "reward: box velocity reward": box_linear_vel_reward,
+                #"reward: box velocity reward": box_linear_vel_reward,
+                "reward: goal-to-box cos dist reward": goal_box_cos_dist_reward,
                 "coeff: huskys forward align coeff": huskys_forward_align_coeff,
                 "coeff: huskys right align coeff": huskys_right_align_coeff,
                 "coeff: husky1 move heading coeff": husky1_move_coeff,
@@ -258,6 +260,7 @@ class HuskyPushEnv(HuskyEnv):
                 "husky2_pos": husky2_pos,
                 "goal1_dist": goal1_dist,
                 "goal2_dist": goal2_dist,
+                "box_goal_cost_dist": goal_box_cos_dist,
                 "box1_ob": ob['box_1'],
                 "box2_ob": ob['box_2'],
                 "goal1_ob": ob['goal_1'],
@@ -384,7 +387,7 @@ class HuskyPushEnv(HuskyEnv):
 
         # Initialize goal
         #x = 4.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        x = 4 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
+        x = 3 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
 
