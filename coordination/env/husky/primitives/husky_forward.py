@@ -135,9 +135,12 @@ class HuskyForwardEnv(HuskyEnv):
         # distance between box and goal
         dist_box_goal = l2_dist(goal_pos_after, box_after)
         dist_box_goal_reward = (5 - dist_box_goal) * self._env_config["dist_reward"]
+
         # quat distance between box and goal
         quat_dist_box_goal = cos_dist(box_forward, goal_forward)
         quat_dist_box_goal_reward = (1 - quat_dist_box_goal) * self._env_config["quat_reward"]
+
+        
 
         ready_dist_husky_box_reward = 0
 
@@ -271,9 +274,19 @@ class HuskyForwardEnv(HuskyEnv):
             reward = reward + align_coeff * self._env_config['alignment_reward']
             reward = reward + movement_heading_reward
 
-            if dist_box_goal < 0.3 and quat_dist_box_goal < 0.3:
+            if dist_box_goal < 0.15 and quat_dist_box_goal < 0.15:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
+
+
+            # try to control huskys pushing velocity 
+            if (dist_box_goal) >= 0.3:   # encourge box moving when it is far away from the goal
+                reward = reward + box_linear_vel_reward
+            else:                        # when box is closed to the goal, then more control on the huskys rather than the box
+                if(husky_linear_vel < 0.005):
+                    reward = reward + 200
+                if(husky_linear_vel < 0.0005):
+                    reward = reward + 200
 
             move_coeff = movement_heading_difference(box_after, 
                                                      pos_after, 
@@ -284,8 +297,8 @@ class HuskyForwardEnv(HuskyEnv):
             reward = reward \
                     + dist_husky_box_reward \
                     + dist_box_goal_reward \
-                    + quat_dist_box_goal_reward \
-                    + box_linear_vel_reward
+                    #+ quat_dist_box_goal_reward \
+                    #+ box_linear_vel_reward
                     #+ box_angular_vel_reward
 
 
@@ -457,7 +470,7 @@ class HuskyForwardEnv(HuskyEnv):
         # Initialized Husky
         x = np.random.uniform(low=-2.5, high=-1.0)
         y = np.random.uniform(low=-0.5, high=0.5)
-
+        
 
         # Initialize box position 
         init_box_pos = np.asarray([0, 0, 0.3])
@@ -477,12 +490,13 @@ class HuskyForwardEnv(HuskyEnv):
         elif(self._env_config["skill"] == "push"):
             qpos[0] = -1.5
             qpos[1] = y
+            self._set_quat('husky_robot', sample_quat(low=-np.pi/12, high=np.np/12))
 
             # reset the rotation of goal
             goal_pos = np.asarray([2, 0, 0.38])
             goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
             self._set_pos('goal', goal_pos)
-            self._set_quat('goal', goal_quat)
+            #self._set_quat('goal', goal_quat)
 
 
             
