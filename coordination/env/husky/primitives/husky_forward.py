@@ -68,7 +68,7 @@ class HuskyForwardEnv(HuskyEnv):
                 3 from forward vecto_perturb_actionr
         '''
         self.ob_shape = OrderedDict([(self.husky, 31), 
-                                     (self.box, 6),
+                                     (self.box, 9),
                                      ])
         '''
             Our husky model is differential drive, though it has 4 wheels.
@@ -404,7 +404,7 @@ class HuskyForwardEnv(HuskyEnv):
         # The same way could be also applied to qvel and qacc
         obs = OrderedDict([
             (self.husky, np.concatenate([qpos[3:11], qvel[:10], qacc[:10], husky_forward_vec])),
-            (self.box, np.concatenate([box_pos - husky_pos, box_forward])),
+            (self.box, np.concatenate([box_pos - husky_pos, goal_pos - box_pos, box_forward])),
             #('shared_pos', np.concatenate([qpos[2:7], qvel[:6], qacc[:6]])),
             #('lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
         ])
@@ -490,7 +490,7 @@ class HuskyForwardEnv(HuskyEnv):
         elif(self._env_config["skill"] == "push"):
             qpos[0] = -1.5
             qpos[1] = y
-            self._set_quat('husky_robot', sample_quat(low=-np.pi/12, high=np.np/12))
+            self._set_quat('husky_robot', sample_quat(low=-np.pi/12, high=np.pi/12))
 
             # reset the rotation of goal
             goal_pos = np.asarray([2, 0, 0.38])
