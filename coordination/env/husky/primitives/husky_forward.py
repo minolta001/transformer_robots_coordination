@@ -271,14 +271,15 @@ class HuskyForwardEnv(HuskyEnv):
 
             #if dist_husky_box < 1.2:    # husky is getting into a push-ready range
             reward = reward + self._env_config['bonus_reward']
-            reward = reward + align_coeff * self._env_config['alignment_reward']
-            reward = reward + movement_heading_reward
+            #reward = reward + align_coeff * self._env_config['alignment_reward']
+            #reward = reward + movement_heading_reward
 
-            if dist_box_goal < 0.15 and quat_dist_box_goal < 0.15:
+            if dist_box_goal < 0.15:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
 
 
+            '''
             # try to control huskys pushing velocity 
             if (dist_box_goal) >= 0.3:   # encourge box moving when it is far away from the goal
                 reward = reward + box_linear_vel_reward
@@ -287,6 +288,8 @@ class HuskyForwardEnv(HuskyEnv):
                     reward = reward + 200
                 if(husky_linear_vel < 0.0005):
                     reward = reward + 200
+            '''
+            reward = reward + box_linear_vel_reward
 
             move_coeff = movement_heading_difference(box_after, 
                                                      pos_after, 
@@ -312,16 +315,14 @@ class HuskyForwardEnv(HuskyEnv):
                 "reward: husky_angular": husky_angular_vel_reward,
                 "reward: movingment_heading": movement_heading_reward,
                 #"reward: heading_alignment": alignment_heading_reward,
+                "reward: box_linear_reward": box_linear_vel_reward,
+                "reward: box_angular": box_angular_vel_reward,
                 "----------": 0,
                 "husky_forward or backward": husky_move_direction,
                 "husky_movement_direction_coeff": move_coeff,
                 "husky_alignment_coeff": align_coeff,
                 "-----------": 0,
-                "reward: box_linear": box_linear_vel_reward,
-                "reward: box_angular": box_angular_vel_reward,
-                "reward_ctrl": ctrl_reward,
-                "reward_alive": alive_reward,
-                "------------": 0,
+                                "------------": 0,
                 "penalty_die": die_penalty,
                 "box_forward": box_forward,
                 "dist_husky_box": dist_husky_box,
