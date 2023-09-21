@@ -186,12 +186,10 @@
         </body>
 
         
-        <!-- Obstacle
-        <body name="obstacle" pos="8 0 0.3" euler="0 0 0">
+        <body name="obstacle" pos="7 0 0.3" euler="0 0 0">
             <geom name="obstacle_geom" pos="0 0 0" rgba="0.25 0.25 0.25 1" size="1 1 0.3" type="box" mass="9999" friction="0.5 0.5 0.5"/>
             <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
-        -->
 
 
         <!-- cpt 1 -->
