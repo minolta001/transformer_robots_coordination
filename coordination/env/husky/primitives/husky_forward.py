@@ -29,10 +29,10 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Env config
         self._env_config.update({
-            'dist_reward': 10,
+            'dist_reward': 30,
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
-            'box_linear_vel_reward': 100,  # because the velocity is too small, I have to make it big
+            'box_linear_vel_reward': 1000,  # because the velocity is too small, I have to make it big
             'box_angular_vel_reward': 20,
             'box_goal_reward': 500,
             'alive_reward': 0.,
@@ -274,7 +274,10 @@ class HuskyForwardEnv(HuskyEnv):
             #reward = reward + align_coeff * self._env_config['alignment_reward']
             #reward = reward + movement_heading_reward
 
-            if dist_box_goal < 0.15:
+            if dist_box_goal < 0.4 and husky_linear_vel < 0.005:
+                reward = reward + 500
+
+            if dist_box_goal < 0.3:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
 
