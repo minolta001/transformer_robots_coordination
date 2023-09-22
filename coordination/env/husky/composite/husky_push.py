@@ -14,8 +14,8 @@ class HuskyPushEnv(HuskyEnv):
         super().__init__('husky_push.xml', **kwargs)
 
         # Env info
-        self.ob_shape = OrderedDict([("husky_1", 31), ("husky_2", 31),
-                                     ("box_1", 6), ("box_2", 6),
+        self.ob_shape = OrderedDict([("husky_1", 30), ("husky_2", 30),
+                                     ("box_1", 9), ("box_2", 9),
                                      ("goal_1", 3), ("goal_2", 3),
                                      ("relative_info_1", 2), ("relative_info_2", 2)])
         
@@ -142,8 +142,8 @@ class HuskyPushEnv(HuskyEnv):
         goal2_box_dist = l2_dist(goal2_pos, box2_pos)
         #goal1_box_dist_reward = -goal1_box_dist * self._env_config["dist_reward"]
         #goal2_box_dist_reward = -goal2_box_dist * self._env_config["dist_reward"]
-        goal1_box_dist_reward = (5 - goal1_box_dist) * self._env_config["goal_dist_reward"]
-        goal2_box_dist_reward = (5 - goal2_box_dist) * self._env_config["goal_dist_reward"]
+        goal1_box_dist_reward = (1 - goal1_box_dist) * self._env_config["goal_dist_reward"]
+        goal2_box_dist_reward = (1 - goal2_box_dist) * self._env_config["goal_dist_reward"]
         goal_box_dist_reward = goal1_box_dist_reward + goal2_box_dist_reward
 
 
@@ -336,10 +336,10 @@ class HuskyPushEnv(HuskyEnv):
             #('ant_1_lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
             #('ant_2_shared_pos', np.concatenate([qpos[15:22], qvel[14:22], qacc[14:22]])),
             #('ant_2_lower_body', np.concatenate([qpos[22:30], qvel[22:30], qacc[22:30]])),
-            ('husky_1', np.concatenate([qpos[3:11], qvel[:10], qacc[:10], husky1_forward_vec])),
-            ('husky_2', np.concatenate([qpos[14:22], qvel[10:20], qacc[10:20], husky2_forward_vec])),
-            ('box_1', np.concatenate([box_pos1 - husky_pos1, box_forward1])),
-            ('box_2', np.concatenate([box_pos2 - husky_pos2, box_forward2])),
+            ('husky_1', np.concatenate([qpos[4:11], qvel[:10], qacc[:10], husky1_forward_vec])),
+            ('husky_2', np.concatenate([qpos[15:22], qvel[10:20], qacc[10:20], husky2_forward_vec])),
+            ('box_1', np.concatenate([box_pos1 - husky_pos1, goal_pos1 - box_pos1,  box_forward1])),
+            ('box_2', np.concatenate([box_pos2 - husky_pos2, goal_pos2 - box_pos2, box_forward2])),
             ('goal_1', goal_pos1 - box_pos1),
             ('goal_2', goal_pos2 - box_pos2),
             ('relative_info_1', [husky1_move_coeff, husky1_align_coeff]),

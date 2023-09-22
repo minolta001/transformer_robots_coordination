@@ -269,6 +269,23 @@ def Y_vector_overlapping(vec_1, vec_2, pos_1, pos_2):
     return (align_coeff_1 + align_coeff_2) / 2
 
 
+# Given point a and b, calculate the quaternion to placed the checkpoint,
+# so its heading always points toward the next point
+def get_quaternion_to_next_cpt(pos_1, pos_2):
+    d_vec = pos_2 - pos_1
+    d_normalized = d_vec / np.linalg.norm(d_vec)
+    
+    ref = np.array([1, 0, 0])
+    axis = np.cross(ref, d_normalized)
+    axis_normalized = axis / np.linalg.norm(axis)
+
+    cos_theta = np.dot(ref, d_normalized)
+    theta = np.arccos(cos_theta)
+    
+    w = np.cos(theta / 2)
+    x, y, z = axis_normalized * np,
+    quaternion = np.array([w, x, y, z])
+    return quaternion
 
 # Give qvel of an object, check if the object is moving forward or backward
 def forward_backward(qvel):
