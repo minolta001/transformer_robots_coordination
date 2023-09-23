@@ -5,7 +5,7 @@ import numpy as np
 from env.husky.husky import HuskyEnv
 from env.transform_utils import up_vector_from_quat, Y_vector_from_quat, \
     l2_dist, cos_dist, sample_quat, X_vector_from_quat, alignment_heading_difference, \
-    Y_vector_overlapping, movement_heading_difference
+    Y_vector_overlapping, movement_heading_difference, get_quaternion_to_next_cpt
 
 
 # manually input checkpoints
@@ -34,7 +34,7 @@ class HuskyTrajectoryEnv(HuskyEnv):
             'random_goal_pos': 0.01,
             #'random_goal_pos': 0.5,
             'dist_threshold': 0.1,
-            'loose_dist_threshold': 0.4,
+            'loose_dist_threshold': 0.2,
             'goal_box_cos_dist_coeff_threshold': 0.95,
 
             'dist_reward': 10,
@@ -251,6 +251,16 @@ class HuskyTrajectoryEnv(HuskyEnv):
             
             
             # update the checkpoint position
+            if len(checkpoints) > 1:
+                (rx, ry) = checkpoints.pop(0)
+                (nrx, nry) = checkpoints[0]
+                pos_1 = np.array([rx, ry, 0])
+                pos_2 = np.array([nrx, nry, 0])
+                quaternion = get_quaternion_to_next_cpt(pos_1, pos_2)
+                self._set_pos('cpt_1', np.array([rx, ry, 0.3]))     # update cpt pos
+                self._set_quat('cpt_1', quaternion)                 # update cpt quat
+                
+            
             
             
                 
