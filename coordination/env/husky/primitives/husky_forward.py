@@ -289,15 +289,14 @@ class HuskyForwardEnv(HuskyEnv):
                 
 
             # try to control huskys pushing velocity 
-            if (dist_box_goal) >= 0.3:   # encourge box moving when it is far away from the goal
-                reward = reward + box_linear_vel_reward
-            else:                        # when box is closed to the goal, then more control on the huskys rather than the box
-                if(husky_linear_vel < 0.005):
-                    reward = reward + 200
-                if(husky_linear_vel < 0.0005):
-                    reward = reward + 200
+            reward = reward + box_linear_vel_reward
+                                  # when box is closed to the goal, then more control on the huskys rather than the box
+            if dist_box_goal < 0.1:
+                if(husky_linear_vel < 0.008):
+                    reward = reward + 2000
+                if(husky_linear_vel < 0.004):
+                    reward = reward + 2000
 
-            #reward = reward + box_linear_vel_reward
 
             move_coeff = movement_heading_difference(box_after, 
                                                      pos_after, 
