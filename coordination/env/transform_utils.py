@@ -273,17 +273,24 @@ def Y_vector_overlapping(vec_1, vec_2, pos_1, pos_2):
 # so its heading always points toward the next point
 def get_quaternion_to_next_cpt(pos_1, pos_2):
     d_vec = pos_2 - pos_1
+
     d_normalized = d_vec / np.linalg.norm(d_vec)
-    
+
     ref = np.array([1, 0, 0])
     axis = np.cross(ref, d_normalized)
+
+    if(np.linalg.norm(axis) < 1e-10):
+        quaternion = np.array([1.0, 0.0, 0.0, 0.0])
+        return quaternion
+
     axis_normalized = axis / np.linalg.norm(axis)
 
     cos_theta = np.dot(ref, d_normalized)
+
     theta = np.arccos(cos_theta)
-    
+
     w = np.cos(theta / 2)
-    x, y, z = axis_normalized * np,
+    x, y, z = axis_normalized * np.sin(theta / 2)
     quaternion = np.array([w, x, y, z])
     return quaternion
 

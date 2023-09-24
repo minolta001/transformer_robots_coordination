@@ -5,7 +5,11 @@ from gym.envs.registration import register
 def register_environments():
     # register ant environments
 
-    # Li Chen: single Husky forward environment
+    register(
+        id='husky-trajectory-v0',
+        entry_point='env.husky.composite.husky_trajectory:HuskyTrajectoryEnv',
+        kwargs={},
+    )
 
     register(
         id='husky-forward-v0',

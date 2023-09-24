@@ -281,21 +281,22 @@ class HuskyForwardEnv(HuskyEnv):
 
             if dist_box_goal < 0.05:
                 reward = reward + self._env_config['box_goal_reward']
-                done = True
 
             if dist_box_goal > 5:   # Fail
                 reward = reward - self._env_config['box_goal_reward']
                 done = True
                 
 
-            # try to control huskys pushing velocity 
+            # try to control huskys pushing velocity via rewarding box moving velocity
             reward = reward + box_linear_vel_reward
                                   # when box is closed to the goal, then more control on the huskys rather than the box
-            if dist_box_goal < 0.2:
-                if(husky_linear_vel < 0.004):
+            if dist_box_goal < 0.5:
+                if(box_linear_vel < 0.01):
                     reward = reward + 2000
-                if(husky_linear_vel < 0.002):
+                if(box_linear_vel < 0.005):
                     reward = reward + 2000
+                if(box_linear_vel > 0.01):
+                    reward = reward - 4000
 
 
             move_coeff = movement_heading_difference(box_after, 
@@ -310,6 +311,28 @@ class HuskyForwardEnv(HuskyEnv):
                     #+ quat_dist_box_goal_reward \
                     #+ box_linear_vel_reward
                     #+ box_angular_vel_reward
+
+        elif(skill == "wait"):  # let 
+            reward += self._env_config["bonus_reward"]
+            if dist_box_goal > 0.1:
+                reward = reward - self._env_config['box_goal_reward']
+            
+            reward = reward - box_linear_vel_reward
+
+            if(dist_box_goal < 0.1 and husky_linear_vel >= 0.005):
+                reward = reward - 2000
+                if(husky_linear_vel >= 0.01):
+                    reward = reward - 2000
+
+            # will husky rotate but not moving around? 
+            move_coeff = movement_heading_difference(box_after, 
+                                                     pos_after, 
+                                                     husky_forward_vector_after, 
+                                                     "forward")
+            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff * 2
+
+            reward = reward + movement_heading_reward
+
 
 
         self._reward = reward
@@ -377,6 +400,22 @@ class HuskyForwardEnv(HuskyEnv):
                     "align_and_ready 0.95": get_ready,
                     "------------": 0,
                     "dist_husky_box": dist_husky_box,
+                    "husky_pos": pos_after,
+                    "box_pos": box_after,
+                    "box_ob": ob[self.box], 
+                    "success": self._success
+            }
+        
+        if (skill == "wait"):
+            info = {"Current Skill": skill,
+                    "Total reward: ": reward,
+                    "reward: moving heading reward": movement_heading_reward,
+                    "----------": 0,
+                    "husky_movement_heading_coeff": move_coeff,
+                    "------------": 0,
+                    "dist_husky_box": dist_husky_box,
+                    "husky_linear_vel": husky_linear_vel,
+                    "box_linear_vel": box_linear_vel,
                     "husky_pos": pos_after,
                     "box_pos": box_after,
                     "box_ob": ob[self.box], 
@@ -501,16 +540,25 @@ class HuskyForwardEnv(HuskyEnv):
             self._set_quat('husky_robot', sample_quat(low=-np.pi/9, high=np.pi/9))
 
             # reset the rotation of goal
-            goal_pos = np.asarray([1, 0, 0.38])
+            goal_pos = np.asarray([1, 0, 0.3])
             goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
             self._set_pos('goal', goal_pos)
             #self._set_quat('goal', goal_quat)
 
-
-            
         # reset the box, reset pos and quat respectively
         qpos[11:14] = init_box_pos
         qpos[14:18] = init_box_quat
+        
+        if(self._env_config["skill"] == "wait"):
+            self._set_pos('husky_robot', np.array([x, y, 0.3]))
+            self._set_quat('husky_robot', sample_quat(low=-np.pi/2, high=np.pi/2)) 
+
+            goal_pos = np.asarray([1, 0, 0.3])
+            goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
+            self._set_pos('goal', goal_pos)
+            self._set_quat('goal', goal_quat)
+            self._set_pos('box', goal_pos)
+            self._set_quat('box', goal_quat)
 
 
 

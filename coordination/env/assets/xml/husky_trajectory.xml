@@ -243,10 +243,10 @@
         <velocity name="rear_right_vel" joint="rear_right_wheel" ctrlrange="-10 10" ctrllimited="true"/>
         -->
 
-        <motor name="husky_1_left_vel"  tendon="husky_1_left_wheels"  gear="8" />
-        <motor name="husky_1_right_vel" tendon="husky_1_right_wheels"  gear="8" />
-        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="8" />
-        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="8" />
+        <motor name="husky_1_left_vel"  tendon="husky_1_left_wheels"  gear="7" />
+        <motor name="husky_1_right_vel" tendon="husky_1_right_wheels"  gear="7" />
+        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="7" />
+        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="7" />
     </actuator>
     
 </mujoco>
