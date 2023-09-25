@@ -545,12 +545,12 @@ class HuskyForwardEnv(HuskyEnv):
             self._set_pos('goal', goal_pos)
             #self._set_quat('goal', goal_quat)
 
-        # reset the box, reset pos and quat respectively
-        qpos[11:14] = init_box_pos
-        qpos[14:18] = init_box_quat
+            # reset the box, reset pos and quat respectively
+            qpos[11:14] = init_box_pos
+            qpos[14:18] = init_box_quat
         
         if(self._env_config["skill"] == "wait"):
-            self._set_pos('husky_robot', np.array([x, y, 0.3]))
+            self._set_pos('husky_robot', np.array([x, y, 0.19]))
             self._set_quat('husky_robot', sample_quat(low=-np.pi/2, high=np.pi/2)) 
 
             goal_pos = np.asarray([1, 0, 0.3])
@@ -559,6 +559,9 @@ class HuskyForwardEnv(HuskyEnv):
             self._set_quat('goal', goal_quat)
             self._set_pos('box', goal_pos)
             self._set_quat('box', goal_quat)
+
+            qpos[11:14] = goal_pos
+            qpos[14:18] = goal_quat
 
 
 
