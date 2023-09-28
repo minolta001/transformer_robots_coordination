@@ -6,6 +6,12 @@ def register_environments():
     # register ant environments
 
     register(
+        id='husky-channel-v0',
+        entry_point='env.husky.composite.husky_channel:HuskyChannelEnv',
+        kwargs={},
+    )
+
+    register(
         id='husky-trajectory-v0',
         entry_point='env.husky.composite.husky_trajectory:HuskyTrajectoryEnv',
         kwargs={},

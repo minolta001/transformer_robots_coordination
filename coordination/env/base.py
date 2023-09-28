@@ -36,8 +36,8 @@ class BaseEnv(gym.Env):
             "init_randomness": 1e-5,
             "max_episode_steps": 500,
             "unstable_penalty": 100,
-            "screen_width": 500,
-            "screen_height": 500,
+            "screen_width": 350,
+            "screen_height": 450,
             "seed": 42
         }
 
