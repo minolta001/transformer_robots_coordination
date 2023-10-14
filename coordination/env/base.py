@@ -36,8 +36,8 @@ class BaseEnv(gym.Env):
             "init_randomness": 1e-5,
             "max_episode_steps": 500,
             "unstable_penalty": 100,
-            "screen_width": 350,
-            "screen_height": 450,
+            "screen_width": 720,
+            "screen_height": 720,
             "seed": 42
         }
 
@@ -228,6 +228,7 @@ class BaseEnv(gym.Env):
     def _get_viewer(self):
         if self._viewer is None:
             self._viewer = mujoco_py.MjViewer(self.sim)
+            
             self._viewer.cam.fixedcamid = self._camera_id
             self._viewer.cam.type = mujoco_py.generated.const.CAMERA_FIXED
             self._viewer_reset()
@@ -245,7 +246,10 @@ class BaseEnv(gym.Env):
             a = np.minimum(a, maxs)
             self.data.ctrl[:] = a
             self.sim.forward()
-            self.sim.step()
+
+            for _ in range(2):
+                self.sim.step()
+
         except Exception as e:
             logger.warn('[!] Warning: Simulation is unstable. The episode is terminated.')
             logger.warn(e)
@@ -254,6 +258,8 @@ class BaseEnv(gym.Env):
             self._fail = True
 
     '''
+        UNUSED!!! Not functional yet!!!
+
         Unlike ant robots, the servo of husky are velocity servo. We
         don't control torque, we need to control velocity.
         So, we need to rewrite simulation

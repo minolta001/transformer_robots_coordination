@@ -6,7 +6,7 @@
 
     <compiler angle="radian" coordinate="local" meshdir="./MyTest" inertiafromgeom="true"/>
 
-    <option integrator="RK4" timestep="0.01"/>
+    <option integrator="RK4" cone="elliptic" timestep="0.01"/>
 
     <size njmax="500" nconmax="100" />
     <asset>
@@ -63,7 +63,8 @@
 
 
         <!-- Husky No.1 -->
-        <body name="husky_robot_1" pos="-19 1 0.217" euler="0 0 0">
+        <!-- body name="husky_robot_1" pos="-19 1 0.25" euler="0 0 0" -->
+        <body name="husky_robot_1" pos="-7.788 -1.376 0.217" euler="0 0 -0.5487">
             <geom name="base_link_visual_1" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
             <geom name="husky_1_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 
@@ -119,7 +120,8 @@
         </body>
 
         <!-- Husky No.2 -->
-        <body name="husky_robot_2" pos="-19 -1 0.217" euler="0 0 0">
+        <!-- body name="husky_robot_2" pos="-19 -1 0.25" euler="0 0 0"-->
+        <body name="husky_robot_2" pos="-9.08 -3.312 0.217" euler="0 0 -0.5487">
             <geom name="base_link_visual_2" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
             <geom name="husky_2_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 
@@ -177,16 +179,17 @@
 
 
         <!-- Box -->
-        <body name="box" pos = "-18 0 0.3" euler="0 0 0">
+        <!-- body name="box" pos = "-18 0 0.3" euler="0 0 0" -->
+        <body name="box" pos="-7.819 -2.872 0.3" euler="0 0 -0.5487">
             <geom name="box_geom1" pos="0 1.0 0" rgba="0.8 1 0.2 1" size="0.3 1.0 0.3" type="box" mass="10.0" friction="0.2 0.5 0.5"/>
             <geom name="box_geom2" pos="0 -1.0 0" rgba="0.8 1 0.2 1" size="0.3 1.0 0.3" type="box" mass="10.0" friction="0.2 0.5 0.5"/>
             <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
 
         <!-- Goal -->
-        <body name="goal" pos="18 0 0.3" euler="0 0 0">
-            <geom name="goal_geom1" pos="0 1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-            <geom name="goal_geom2" pos="0 -1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
+        <body name="goal" pos="18 0 0.3" euler="0 0 0"> <!-- change goal color to transparent, temporaily-->
+            <geom name="goal_geom1" pos="0 1 0" rgba="0.2 0.8 0.2 0" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
+            <geom name="goal_geom2" pos="0 -1 0" rgba="0.2 0.8 0.2 0" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
         </body>
 
         <!-- Obstacle
@@ -260,9 +263,14 @@
         </body>
 
         <!-- cpt 1 -->
-        <body name="cpt_1" pos="-17.5 0 0.3" euler="0 0 0">
-            <geom name="cpt_1_geom1" pos="0 1 0" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-            <geom name="cpt_1_geom2" pos="0 -1 0" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
+        <!-- body name="cpt_1" pos="-17.5 0 0.3" euler="0 0 0" -->
+        <body name="cpt_1" pos="-7.819 -2.872 0.3" euler="0 0 -0.5487">
+            <body name="cpt_1_1" pos="0 1 0">
+                <geom name="cpt_1_geom1" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
+            </body>
+            <body name="cpt_1_2" pos="0 -1 0">
+                <geom name="cpt_1_geom2" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
+            </body>
         </body>
 
         <!-- Checkpoint
@@ -310,10 +318,10 @@
         <velocity name="rear_right_vel" joint="rear_right_wheel" ctrlrange="-10 10" ctrllimited="true"/>
         -->
 
-        <motor name="husky_1_left_vel"  tendon="husky_1_left_wheels"  gear="8" />
-        <motor name="husky_1_right_vel" tendon="husky_1_right_wheels"  gear="8" />
-        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="9" />
-        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="9" />
+        <motor name="husky_1_left_vel"  tendon="husky_1_left_wheels"  gear="5" />
+        <motor name="husky_1_right_vel" tendon="husky_1_right_wheels"  gear="5" />
+        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="7" />
+        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="7" />
     </actuator>
     
 </mujoco>

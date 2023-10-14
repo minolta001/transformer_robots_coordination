@@ -198,6 +198,13 @@ def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b="forwar
     car_forward_vec = car_forward_vec[0:2]
 
     direction_vec = ob_pos - car_pos
+
+    if np.linalg.norm(direction_vec) == 0.0:
+        direction_vec += np.finfo(float).eps
+    
+    if np.linalg.norm(car_forward_vec) == 0.0:
+        car_forward_vec += np.finfo(float).eps
+
     suggested_vec_normalized = direction_vec / np.linalg.norm(direction_vec)
 
     if f_or_b == "forward":
@@ -217,7 +224,15 @@ def alignment_heading_difference(ob_forward_vec, car_forward_vec):
     ob_forward_vec = ob_forward_vec[0:2]
     car_forward_vec = car_forward_vec[0:2]
 
-    ob_forward_normalized = ob_forward_vec / np.linalg.norm(ob_forward_vec)
+
+    if np.linalg.norm(ob_forward_vec) == 0.0:
+        ob_forward_vec += np.finfo(float).eps
+    
+    if np.linalg.norm(car_forward_vec) == 0.0:
+        car_forward_vec += np.finfo(float).eps
+    
+
+    ob_forward_normalized = ob_forward_vec / np.linalg.norm(ob_forward_vec) 
     car_forward_normalized = car_forward_vec / np.linalg.norm(car_forward_vec)
 
     dot_product = np.dot(ob_forward_normalized, car_forward_normalized)
@@ -233,18 +248,9 @@ def alignment_heading_difference(ob_forward_vec, car_forward_vec):
     else:
         direction = 0   # aligned
 
-    '''
-    car_backward_nomalized = (-car_forward_vec) / np.linalg.norm(-car_forward_vec)
-    dot_product = np.dot(ob_forward_normalized, car_backward_nomalized)
-    angle_rad_backward = np.arccos(np.clip(dot_product, -1.0, 1.0))
-    '''
 
     return (1 - angle_rad_forward/np.pi), direction
 
-    '''
-    return (max(1 - angle_rad_forward/np.pi, 
-               1 - angle_rad_backward/np.pi) - 0.5) / 0.5
-    '''
 
 
 '''
