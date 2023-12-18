@@ -263,7 +263,8 @@ class HuskyChannelEnv(HuskyEnv):
         rx, ry, nrx, nry = 0, 0, 0, 0
         quaternion = np.array([0, 0, 0, 0])
 
-        if(len(checkpoints) > 1 and (cpt_box_dist < 1 or goal_cpt_dist > goal_box_dist)):
+        #if(len(checkpoints) > 1 and (cpt_box_dist < 1 or goal_cpt_dist > goal_box_dist)):
+        if(len(checkpoints) > 1 and (cpt_box_dist < 1) and (goal_cpt_dist > 0.3)):
             (rx, ry) = checkpoints.pop(0)
             (nrx, nry) = checkpoints[0]
 
@@ -466,6 +467,7 @@ class HuskyChannelEnv(HuskyEnv):
         qpos = self.data.qpos.ravel().copy()
         qvel = self.data.qvel.ravel().copy()
 
+
         # Initialize box
         init_box_pos = np.asarray([-18, 0, 0.3])
         #init_box_quat = sample_quat(low=-np.pi/32, high=np.pi/32)
@@ -498,7 +500,7 @@ class HuskyChannelEnv(HuskyEnv):
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
         '''
-        x = 18
+        x = -8
         y = 0
         z = 0.3
         goal_pos = np.array([x, y, z])

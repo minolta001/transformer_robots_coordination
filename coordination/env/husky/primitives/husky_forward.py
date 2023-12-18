@@ -66,10 +66,20 @@ class HuskyForwardEnv(HuskyEnv):
             box has 6 in total:
                 3 from pos difference between box and husky
                 3 from forward vecto_perturb_actionr
-        '''
+
         self.ob_shape = OrderedDict([(self.husky, 30), 
                                      (self.box, 9),
                                      ])
+        '''
+
+
+        '''
+        2023/12/08 Current size of observation
+        '''
+        self.ob_shape = OrderedDict([(self.husky, 14),
+                                     (self.box, 9)])
+
+
         '''
             Our husky model is differential drive, though it has 4 wheels.
             So, the action space should be 2
@@ -97,7 +107,6 @@ class HuskyForwardEnv(HuskyEnv):
 
         # Do a simulation
         self.do_simulation(a)
-
 
         #self.husky_simulation(a)
         pos_after = self._get_pos('husky_geom')
@@ -130,19 +139,24 @@ class HuskyForwardEnv(HuskyEnv):
         '''
         # distance between husky and center point of the box 
         dist_husky_box = l2_dist(pos_after, box_after)
-        # dist_husky_box_reward = 1 / (1 + dist_husky_box) * self._env_config["dist_reward"]
-        dist_husky_box_reward = (2 - dist_husky_box) * self._env_config["dist_reward"]
+
+        #dist_husky_box_reward = (2 - dist_husky_box) * self._env_config["dist_reward"]
+
+        ########## this is quadratic potential field reward
+        # attractive force to husky_box dist reward
+        dist_husky_box_reward = 2 / dist_husky_box * self._env_config["dist_reward"]
+
         # distance between box and goal
         dist_box_goal = l2_dist(goal_pos_after, box_after)
-        dist_box_goal_reward = (2 - dist_box_goal) * self._env_config["dist_reward"]
+        #dist_box_goal_reward = (2 - dist_box_goal) * self._env_config["dist_reward"]
+        dist_box_goal_reward =  4 / dist_box_goal * self._env_config["dist_reward"]
 
         # quat distance between box and goal
+        # TODO: Unused
         quat_dist_box_goal = cos_dist(box_forward, goal_forward)
         quat_dist_box_goal_reward = (1 - quat_dist_box_goal) * self._env_config["quat_reward"]
 
-        
 
-        ready_dist_husky_box_reward = 0
 
         '''
             Velocity Calculation
@@ -156,18 +170,20 @@ class HuskyForwardEnv(HuskyEnv):
         box_linear_vel = l2_dist(box_after, box_before)
 
 
-
-
-
         # distance between box and husky
         box_dist = box_after - pos_after
 
         # reward components, for later use
+        # TODO: these three are Unused!
         husky_linear_vel_reward = self._env_config["linear_vel_reward"] * husky_linear_vel
         husky_angular_vel_reward = self._env_config["angular_vel_reward"] * husky_angular_vel
-
-        box_linear_vel_reward = self._env_config["box_linear_vel_reward"] * box_linear_vel
         box_angular_vel_reward = self._env_config["box_angular_vel_reward"] * (1- box_angular_vel)
+
+
+        # attractive force to Box Linear Reward
+        #box_linear_vel_reward = self._env_config["box_linear_vel_reward"] * (box_linear_vel)
+        box_linear_vel_reward = self._env_config["linear_vel_reward"] * (1 / abs(dist_box_goal - box_linear_vel * 5))
+
 
         alive_reward = self._env_config["alive_reward"]
 
@@ -185,7 +201,6 @@ class HuskyForwardEnv(HuskyEnv):
                                                     pos_after, 
                                                     husky_forward_vector_after, 
                                                     "forward")
-            
 
         '''
             Failure Check
@@ -220,53 +235,8 @@ class HuskyForwardEnv(HuskyEnv):
         '''
         reward = ctrl_reward + alive_reward + die_penalty
 
-        if(skill == "approach"):
-            # Check if the husky is moving toward the box
-            # If yes, give reward
-            if husky_move_direction == 1:
-                move_coeff = movement_heading_difference(box_after, 
-                                                     pos_after, 
-                                                     husky_forward_vector_after, 
-                                                     "forward")
-            elif husky_move_direction == -1:
-                move_coeff = movement_heading_difference(box_after, 
-                                                     pos_after, 
-                                                     husky_forward_vector_after, 
-                                                     "backward")
 
-            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff
-
-            reward = reward \
-                    + dist_husky_box_reward \
-                    + movement_heading_reward
-            # check if the husky is too close to the box
-            done = done or abs(dist_husky_box < 2.0)
-
-        elif(skill == "align"):
-            get_ready = 0
-
-            move_coeff = movement_heading_difference(box_after, 
-                                                     pos_after, 
-                                                     husky_forward_vector_after, 
-                                                     "forward")
-            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff
-
-            dist_husky_box_reward = -abs(dist_husky_box - 1.8) * self._env_config["dist_reward"]
-
-            if abs(dist_husky_box - 1.8) < 0.5:
-                reward = reward + self._env_config['bonus_reward']
-                reward = reward + movement_heading_reward + align_coeff * self._env_config["alignment_reward"]
-
-            reward = reward \
-                    + dist_husky_box_reward \
-                    - box_linear_vel_reward
-
-            if align_coeff > 0.95 and move_coeff > 0.95:
-                get_ready = 1
-                reward = reward + self._env_config["align_move_both_reward"]
-                done = True
-            
-        elif(skill == "push"):
+        if (skill == "push"):
             both_align = 0  # 1 if both alignment and moving direction are closed to correct
 
             #if dist_husky_box < 1.2:    # husky is getting into a push-ready range
@@ -279,8 +249,9 @@ class HuskyForwardEnv(HuskyEnv):
                 reward = reward + 500
             '''
 
-            if dist_box_goal < 0.05:
+            if dist_box_goal < 0.15:
                 reward = reward + self._env_config['box_goal_reward']
+                done = True
 
             if dist_box_goal > 5:   # Fail
                 reward = reward - self._env_config['box_goal_reward']
@@ -289,16 +260,7 @@ class HuskyForwardEnv(HuskyEnv):
 
             # try to control huskys pushing velocity via rewarding box moving velocity
             reward = reward + box_linear_vel_reward
-                                  # when box is closed to the goal, then more control on the huskys rather than the box
-            if dist_box_goal < 0.5:
-                if(box_linear_vel < 0.01):
-                    reward = reward + 2000
-                if(box_linear_vel < 0.005):
-                    reward = reward + 2000
-                if(box_linear_vel > 0.01):
-                    reward = reward - 4000
-
-
+        
             move_coeff = movement_heading_difference(box_after, 
                                                      pos_after, 
                                                      husky_forward_vector_after, 
@@ -308,9 +270,13 @@ class HuskyForwardEnv(HuskyEnv):
             reward = reward \
                     + dist_husky_box_reward \
                     + dist_box_goal_reward \
+                    + box_linear_vel_reward \
                     #+ quat_dist_box_goal_reward \
-                    #+ box_linear_vel_reward
                     #+ box_angular_vel_reward
+
+        
+        
+    
 
         elif(skill == "wait"):  # let 
             reward += self._env_config["bonus_reward"]
@@ -338,6 +304,7 @@ class HuskyForwardEnv(HuskyEnv):
         self._reward = reward
 
         env_config = self._env_config 
+
         info = {"Current Skill": skill,
                 "Total Reward": reward,
                 "reward: dist_husky_box_reward": dist_husky_box_reward,
@@ -429,13 +396,14 @@ class HuskyForwardEnv(HuskyEnv):
         # Husky
         qpos = self.data.qpos
         qvel = self.data.qvel
+
         qacc = self.data.qacc
 
         husky_pos = self._get_pos('husky_robot')
         # box
         box_pos = self._get_pos('box_geom')
         #box_quat = self._get_quat('box')
-        box_forward = self._get_forward_vector('box_geom')
+        box_forward = self._get_right_vector('box_geom')
 
         # goal
         goal_pos = self._get_pos('goal_geom')
@@ -449,12 +417,28 @@ class HuskyForwardEnv(HuskyEnv):
         # You should be able to find the observation space in this scenario
         # Check _reset below to see what are in qpos
         # The same way could be also applied to qvel and qacc
+        '''
         obs = OrderedDict([
             (self.husky, np.concatenate([qpos[4:11], qvel[:10], qacc[:10], husky_forward_vec])),
             (self.box, np.concatenate([box_pos - husky_pos, goal_pos - box_pos, box_forward])),
             #('shared_pos', np.concatenate([qpos[2:7], qvel[:6], qacc[:6]])),
             #('lower_body', np.concatenate([qpos[7:15], qvel[6:14], qacc[6:14]])),
         ])
+        '''
+
+
+        '''
+        Husky: height, quaternion, linear and angular velocity of robot
+        '''
+        husky_pos = self._get_pos("husky_robot")
+        husky_quat = self._get_quat("husky_robot")
+        husky_vel = self._get_vel("husky_body")
+
+        obs = OrderedDict([
+            (self.husky, np.concatenate([husky_pos[2:3], husky_quat, husky_vel, husky_forward_vec])), # 14
+            (self.box, np.concatenate([box_pos - husky_pos, goal_pos - box_pos, box_forward]))      # 9
+        ])
+
 
         def ravel(x):
             obs[x] = obs[x].ravel()

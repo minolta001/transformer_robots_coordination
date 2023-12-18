@@ -270,6 +270,7 @@ class HuskyTrajectoryEnv(HuskyEnv):
         # update the checkpoint position
         final_pos = self._get_pos('goal')       # the actual final goal!
         goal_cpt_dist = l2_dist(final_pos, goal_pos)
+        print(goal_cpt_dist)
         goal_box_dist = l2_dist(final_pos, box_pos)
 
         cpt_box_dist = l2_dist(goal_pos, box_pos)
@@ -316,8 +317,8 @@ class HuskyTrajectoryEnv(HuskyEnv):
             print(len(checkpoints), rx, ry)
         if(len(checkpoints) <= 1):
             print("Checkpoints ended")
-            self._set_pos('cpt_1', np.array([0, 0, 0.3]))     # update cpt pos
-            self._set_quat('cpt_1', np.array([0, 0, 0, 0]))  
+            #self._set_pos('cpt_1', np.array([0, 0, 0.3]))     # update cpt pos
+            #self._set_quat('cpt_1', np.array([0, 0, 0, 0]))  
         
         
         '''
@@ -538,8 +539,8 @@ class HuskyTrajectoryEnv(HuskyEnv):
         y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
         z = 0.3
         '''
-        x = 18
-        y = 0
+        x = 6
+        y = -7
         z = 0.3
         goal_pos = np.array([x, y, z])
         #goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
