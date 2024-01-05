@@ -252,12 +252,11 @@ class HuskyForwardEnv(HuskyEnv):
                 reward = reward + 500
             '''
 
-            if dist_box_goal < 0.15:
+            if dist_box_goal < 0.18:
                 reward = reward + self._env_config['box_goal_reward']
                 done = True
 
             if dist_box_goal > 5:   # Fail
-                reward = reward - self._env_config['box_goal_reward']
                 done = True
                 
 

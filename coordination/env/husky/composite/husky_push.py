@@ -111,30 +111,48 @@ class HuskyPushEnv(HuskyEnv):
             PART 6: move heading of huskys
         ''' 
         # PART 1: Forward parallel between two Huskys (checking forward vector)
+        # X_vector_from_quat is same as right_vector_from_quat, which is the actual forward vector of robot
         husky1_forward_vec = X_vector_from_quat(husky1_quat)
         husky2_forward_vec = X_vector_from_quat(husky2_quat)
         huskys_forward_align_coeff, dir = alignment_heading_difference(husky1_forward_vec, husky2_forward_vec)
-        huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config["alignment_reward"]
+        huskys_forward_align_reward = self._env_config["alignment_reward"] * np.exp(huskys_forward_align_coeff)
+        #huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config["alignment_reward"]
+
+
 
         # PART 2: Right vector overlapping between two Huskys (checking if two vectors are on the same line and same direction)
-        # Actually, if Part 2 is gauranteed, then Part 1 is gauranteedgoal_box_cos_dist
+        # if Part 2 is gauranteed, then Part 1 is gauranteed 
         husky1_right_vec = Y_vector_from_quat(husky1_quat)
         husky2_right_vec = Y_vector_from_quat(husky2_quat)
         huskys_right_align_coeff = Y_vector_overlapping(husky1_right_vec, husky2_right_vec, husky1_pos, husky2_pos)
-        huskys_right_align_reward = huskys_right_align_coeff * self._env_config["alignment_reward"]
-        
-        # PART 3: Distance between two Huskys (to avoid Collision)
-        suggested_dist = l2_dist(box1_pos, box2_pos)
-        huskys_dist = l2_dist(husky1_pos, husky2_pos)
-        huskys_dist_reward = -abs(suggested_dist - huskys_dist) * self._env_config["dist_reward"]
+        #huskys_right_align_reward = huskys_right_align_coeff * self._env_config["alignment_reward"]
+        huskys_right_align_reward = self._env_config["alignment_reward"] * np.exp(huskys_right_align_coeff)
 
-        # PART 4: Linear distance between one husky and one box
-        husky1_box_dist = l2_dist(husky1_pos, box1_pos)
-        husky2_box_dist = l2_dist(husky2_pos, box2_pos)
+
+        # PART 3: Distance between two Huskys (to avoid huskys collision)
+        suggested_dist = l2_dist(box1_pos, box2_pos)        # desired distance
+        huskys_dist = l2_dist(husky1_pos, husky2_pos)
+        
+        diff = abs(suggested_dist - huskys_dist)
+        if diff == 0:
+            diff = 1e-10
+        huskys_dist_reward = (suggested_dist) / diff * self._env_config["dist_reward"]
+        #huskys_dist_reward = -abs(suggested_dist - huskys_dist) * self._env_config["dist_reward"]
+
+
+        # PART 4: Linear distance between one husky and one box (Husky - Box)
+        husky1_box_dist = l2_dist(husky1_pos, box1_pos)     # husky1 to box1
+        husky2_box_dist = l2_dist(husky2_pos, box2_pos)     # husky2 to box2
         #husky1_box_dist_reward = -husky1_box_dist * self._env_config["dist_reward"]
         #husky2_box_dist_reward = -husky2_box_dist * self._env_config["dist_reward"]
-        husky1_box_dist_reward = (5 - husky1_box_dist) * self._env_config["dist_reward"]
-        husky2_box_dist_reward = (5 - husky2_box_dist) * self._env_config["dist_reward"]
+        #husky1_box_dist_reward = (5 - husky1_box_dist) * self._env_config["dist_reward"]
+        #husky2_box_dist_reward = (5 - husky2_box_dist) * self._env_config["dist_reward"]
+
+        '''
+            vector field based reward shaping
+        '''
+        husky1_box_dist_reward = 2 / husky1_box_dist * self._env_config(["dist_reward"])
+        husky2_box_dist_reward = 2 / husky2_box_dist * self._env_config(["dist_reward"])
         huskys_box_dist_reward = husky1_box_dist_reward + husky2_box_dist_reward
         
         # PART 5: Linear distance between box and goal
@@ -142,14 +160,19 @@ class HuskyPushEnv(HuskyEnv):
         goal2_box_dist = l2_dist(goal2_pos, box2_pos)
         #goal1_box_dist_reward = -goal1_box_dist * self._env_config["dist_reward"]
         #goal2_box_dist_reward = -goal2_box_dist * self._env_config["dist_reward"]
-        goal1_box_dist_reward = (1 - goal1_box_dist) * self._env_config["goal_dist_reward"]
-        goal2_box_dist_reward = (1 - goal2_box_dist) * self._env_config["goal_dist_reward"]
+        #goal1_box_dist_reward = (1 - goal1_box_dist) * self._env_config["goal_dist_reward"]
+        #goal2_box_dist_reward = (1 - goal2_box_dist) * self._env_config["goal_dist_reward"]
+
+        '''
+            vector field based reward shaping
+        '''
+        goal1_box_dist_reward = 4 / goal1_box_dist * self._env_config("dist_reward")
+        goal2_box_dist_reward = 4 / goal2_box_dist * self._env_config("dist_reward")
         goal_box_dist_reward = goal1_box_dist_reward + goal2_box_dist_reward
 
 
-
         # PART 6: Movement heading of husky to box
-        husky1_move_coeff = movement_heading_difference(box1_pos, husky1_pos, husky1_forward_vec,)
+        husky1_move_coeff = movement_heading_difference(box1_pos, husky1_pos, husky1_forward_vec)
         husky2_move_coeff = movement_heading_difference(box2_pos, husky2_pos, husky2_forward_vec)
         husky1_move_heading_reward = husky1_move_coeff * self._env_config["move_heading_reward"]
         husky2_move_heading_reward = husky2_move_coeff * self._env_config["move_heading_reward"]
@@ -158,8 +181,10 @@ class HuskyPushEnv(HuskyEnv):
         # PART 7: Box velocity
         box1_linear_vel =  l2_dist(box1_pos, box1_pos_before)
         box2_linear_vel =  l2_dist(box2_pos, box2_pos_before)
-        box1_linear_vel_reward = box1_linear_vel * self._env_config["box_linear_vel_reward"]
-        box2_linear_vel_reward = box2_linear_vel * self._env_config["box_linear_vel_reward"]
+        box1_linear_vel_reward = 
+
+        #box1_linear_vel_reward = box1_linear_vel * self._env_config["box_linear_vel_reward"]
+        #box2_linear_vel_reward = box2_linear_vel * self._env_config["box_linear_vel_reward"]
         box_linear_vel_reward = box1_linear_vel_reward + box2_linear_vel_reward
 
 
