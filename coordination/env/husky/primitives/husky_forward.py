@@ -350,16 +350,14 @@ class HuskyForwardEnv(HuskyEnv):
         if (skill == "push"):
             info = {"Current Skill": skill,
                 "Total Reward": reward,
-                "reward: dist_husky_box_reward": dist_husky_box_reward,
-                "reward: dist_box_goal_reward": dist_box_goal_reward,
-                "reward: box_linear_vel_reward": box_linear_vel_reward,
-                "reward: alignment reward": align_coeff * self._env_config['alignment_reward'],
-                "reward: moving heading reward": movement_heading_reward,
+                "reward: dist_husky_box": dist_husky_box_reward,
+                "reward: dist_box_goal": dist_box_goal_reward,
+                "reward: box_linear_vel": box_linear_vel_reward,
                 "reward: control reward": ctrl_reward,
                 #"reward: heading_alignment": alignment_heading_reward,
                 "----------": 0,
                 "husky_movement_heading_coeff": move_coeff,
-                "husky_alignment_coeff": align_coeff,
+                #"husky_alignment_coeff": align_coeff,
                 #"align_move_both_>0.95": both_align,
                 "------------": 0,
                 "dist_husky_box": dist_husky_box,
@@ -543,12 +541,7 @@ class HuskyForwardEnv(HuskyEnv):
         init_box_pos = np.asarray([0, 0, 0.3])
         init_box_quat = np.array([0, 0, 0, 0])
 
-        if(self._env_config["skill"] == "approach"):
-            qpos[0] = x
-            qpos[1] = y
-            init_box_quat = sample_quat()
-
-        elif(self._env_config["skill"] == "align"):
+        if(self._env_config["skill"] == "align"):
             qpos[0] = x
             qpos[1] = y
             #init_box_quat = sample_quat()
@@ -560,10 +553,14 @@ class HuskyForwardEnv(HuskyEnv):
             self._set_quat('husky_robot', sample_quat(low=-np.pi/9, high=np.pi/9))
 
             # reset the rotation of goal
-            goal_pos = np.asarray([1, 0, 0.3])
-            goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
+            
+            #goal_pos = np.asarray([1, 0, 0.3])
+
+            goal_pos = np.asarray([np.random.uniform(low=1, high=3), np.random.uniform(low=-1, high=1), 0.3])
+
+            goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
             self._set_pos('goal', goal_pos)
-            #self._set_quat('goal', goal_quat)
+            self._set_quat('goal', goal_quat)
 
             # reset the box, reset pos and quat respectively
             qpos[11:14] = init_box_pos
