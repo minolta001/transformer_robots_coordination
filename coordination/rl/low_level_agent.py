@@ -70,6 +70,7 @@ class LowLevelAgent(SACAgent):
                 ob_space[','.join(cluster[0]) + '_diayn'] = self._config.z_dim
 
 
+
             ac_decomposition = OrderedDict([(k, self._ac_space.shape[k]) for k in cluster[1]])
             ac_size = sum(self._ac_space.shape[k] for k in cluster[1])
             ac_space = ActionSpec(ac_size, -1, 1)
@@ -82,7 +83,7 @@ class LowLevelAgent(SACAgent):
                 skill_ob_norm = Normalizer(ob_space,
                                            default_clip_range=config.clip_range,
                                            clip_obs=config.clip_obs)
-
+                
                 if self._config.meta_update_target == 'HL':
                     path = os.path.join(config.subdiv_skill_dir, skill)
                     ckpt_path, ckpt_num = get_ckpt_path(path, None)

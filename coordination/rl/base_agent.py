@@ -20,8 +20,11 @@ class BaseAgent(object):
         return ob
 
     def act(self, ob, is_train=True):
+
         """ Returns action and the actor's activation given an observation @ob. """
         ob = self.normalize(ob)
+
+
         if hasattr(self, '_actor'):
             ac, activation = self._actor.act(ob, is_train=is_train)
         else:

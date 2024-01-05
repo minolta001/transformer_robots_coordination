@@ -58,7 +58,7 @@
     <worldbody>
         <light pos="2.16 2 8" dir="0 -0.14834 -0.988936" castshadow="false" diffuse="0.9 0.9 0.9" />
         <light pos="-4.84 -6 8" dir="0 -0.14834 -0.988936" castshadow="false" diffuse="0.9 0.9 0.9" />
-        <geom name="ground" class="ground" pos="0 0 0" size="20 20 1"/>
+        <geom name="ground" class="ground" pos="0 0 0" size="30 30 1"/>
 
 
 
@@ -183,11 +183,7 @@
             <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
 
-        <!-- Goal -->
-        <body name="goal" pos="-8 0 0.3" euler="0 0 0">
-            <geom name="goal_geom1" pos="0 1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-            <geom name="goal_geom2" pos="0 -1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-        </body>
+  
 
         <!-- Obstacle
         <body name="obstacle" pos="0 0 1" euler="0 0 0">
@@ -203,31 +199,12 @@
             <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
 
-        <!-- Shelf_F 2 --> 
-        <body name="shelf_f_2" pos="-15 4 0" euler="0 0 1.5708">
-            <geom name="shelf_f_2_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_2_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
+
 
         <!-- Shelf_F 4 --> 
         <body name="shelf_f_4" pos="-15 7 0" euler="0 0 1.5708">
             <geom name="shelf_f_4_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
             <geom name="shelf_f_4_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 3 --> 
-        <body name="shelf_f_3" pos="-6 4 0" euler="0 0 1.5708">
-            <geom name="shelf_f_3_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_3_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 5 --> 
-        <body name="shelf_f_5" pos="-6 7 0" euler="0 0 1.5708">
-            <geom name="shelf_f_5_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_5_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
             <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
 
@@ -259,11 +236,7 @@
             <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
 
-        <!-- cpt 1 -->
-        <body name="cpt_1" pos="-17.5 0 0.3" euler="0 0 0">
-            <geom name="cpt_1_geom1" pos="0 1 0" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-            <geom name="cpt_1_geom2" pos="0 -1 0" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-        </body>
+  
 
         <!-- Checkpoint
         <body name="checkpoint" pos="5 0 0.3" euler="0 0 0">

@@ -25,6 +25,7 @@ class SACAgent(BaseAgent):
         super().__init__(config, ob_space)
 
         self._ob_space = ob_space
+
         self._ac_space = ac_space
 
         self._target_entropy = -ac_space.size
@@ -87,6 +88,7 @@ class SACAgent(BaseAgent):
         }
 
     def load_state_dict(self, ckpt):
+
         self._log_alpha.data = torch.tensor(ckpt['log_alpha'], requires_grad=True,
                                             device=self._config.device)
         for _agent, agent_ckpt in zip(self._actors, ckpt['actor_state_dict']):

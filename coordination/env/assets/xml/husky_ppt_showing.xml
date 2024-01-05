@@ -16,8 +16,6 @@
         <mesh name="bumper" file="bumper.stl" />
         <mesh name="top_plate_1" file="top_plate.stl" />
         <mesh name="top_plate_2" file="top_plate.stl" />
-        <mesh name="shelfF_visual" file="aws_robomaker_warehouse_ShelfF_01_visual.stl" scale="0.005 0.005 0.005"/>
-        <mesh name="shelfF_collision" file="aws_robomaker_warehouse_ShelfF_01_collision.stl" scale="0.005 0.005 0.005" />
     </asset>
 
     <default>
@@ -60,10 +58,8 @@
         <light pos="-4.84 -6 8" dir="0 -0.14834 -0.988936" castshadow="false" diffuse="0.9 0.9 0.9" />
         <geom name="ground" class="ground" pos="0 0 0" size="20 20 1"/>
 
-
-
         <!-- Husky No.1 -->
-        <body name="husky_robot_1" pos="-19 1 0.25" euler="0 0 0">
+        <body name="husky_robot_1" pos="-2 1 0.5" euler="0 0 0">
             <geom name="base_link_visual_1" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
             <geom name="husky_1_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 
@@ -119,7 +115,7 @@
         </body>
 
         <!-- Husky No.2 -->
-        <body name="husky_robot_2" pos="-19 -1 0.25" euler="0 0 0">
+        <body name="husky_robot_2" pos="-3 -1 0.5" euler="0 0 0">
             <geom name="base_link_visual_2" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
             <geom name="husky_2_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 
@@ -177,100 +173,19 @@
 
 
         <!-- Box -->
-        <body name="box" pos = "-18 0 0.3" euler="0 0 0">
+        <body name="box" pos = "0 0 0.3" euler="0 0 0">
             <geom name="box_geom1" pos="0 1.0 0" rgba="0.8 1 0.2 1" size="0.3 1.0 0.3" type="box" mass="10.0" friction="0.2 0.5 0.5"/>
             <geom name="box_geom2" pos="0 -1.0 0" rgba="0.8 1 0.2 1" size="0.3 1.0 0.3" type="box" mass="10.0" friction="0.2 0.5 0.5"/>
             <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
 
         <!-- Goal -->
-        <body name="goal" pos="-8 0 0.3" euler="0 0 0">
+        <body name="goal" pos="3 0 0.3" euler="0 0 0.3">
             <geom name="goal_geom1" pos="0 1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
             <geom name="goal_geom2" pos="0 -1 0" rgba="0.2 0.8 0.2 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
         </body>
-
-        <!-- Obstacle
-        <body name="obstacle" pos="0 0 1" euler="0 0 0">
-            <geom name="obstacle_geom" pos="0 0 0" rgba="0.25 0.25 0.25 1" size="3 3 1" type="box" mass="9999" friction="0.5 0.5 0.5"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-        -->
-
-        <!-- Shelf_F 1 --> 
-        <body name="shelf_f_1" pos="0 0 0" euler="0 0 0">
-            <geom name="shelf_f_1_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_1_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 2 --> 
-        <body name="shelf_f_2" pos="-15 4 0" euler="0 0 1.5708">
-            <geom name="shelf_f_2_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_2_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 4 --> 
-        <body name="shelf_f_4" pos="-15 7 0" euler="0 0 1.5708">
-            <geom name="shelf_f_4_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_4_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 3 --> 
-        <body name="shelf_f_3" pos="-6 4 0" euler="0 0 1.5708">
-            <geom name="shelf_f_3_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_3_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 5 --> 
-        <body name="shelf_f_5" pos="-6 7 0" euler="0 0 1.5708">
-            <geom name="shelf_f_5_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_5_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 6 --> 
-        <body name="shelf_f_6" pos="-15 -4 0" euler="0 0 1.5708">
-            <geom name="shelf_f_6_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_6_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 7 --> 
-        <body name="shelf_f_7" pos="-15 -7 0" euler="0 0 1.5708">
-            <geom name="shelf_f_7_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_7_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 8 --> 
-        <body name="shelf_f_8" pos="-6 -4 0" euler="0 0 1.5708">
-            <geom name="shelf_f_8_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_8_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- Shelf_F 9 --> 
-        <body name="shelf_f_9" pos="-6 -7 0" euler="0 0 1.5708">
-            <geom name="shelf_f_9_visual" type="mesh" contype="0" conaffinity="0" group="1"  mesh="shelfF_visual" mass="9999" friction="0.5 0.5 0.5"/>
-            <geom name="shelf_f_9_collision" type="mesh" mesh="shelfF_collision" rgba="0 0 0 0"  pos="0 0 0"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
-        </body>
-
-        <!-- cpt 1 -->
-        <body name="cpt_1" pos="-17.5 0 0.3" euler="0 0 0">
-            <geom name="cpt_1_geom1" pos="0 1 0" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-            <geom name="cpt_1_geom2" pos="0 -1 0" rgba="0 0 1 0.5" size="0.3 1.0 0.3" type="box" conaffinity="0" contype="0"/>
-        </body>
-
-        <!-- Checkpoint
-        <body name="checkpoint" pos="5 0 0.3" euler="0 0 0">
-            <geom name="checkpoint_geom" pos="0 0 0" rgba="0 0 1 0.5" size="0.3 0.3 0.3" type="sphere" conaffinity="0" contype="0"/>
-        </body>
-        -->
         
+
     </worldbody>
 
     <tendon>
@@ -310,10 +225,10 @@
         <velocity name="rear_right_vel" joint="rear_right_wheel" ctrlrange="-10 10" ctrllimited="true"/>
         -->
 
-        <motor name="husky_1_left_vel"  tendon="husky_1_left_wheels"  gear="9" />
-        <motor name="husky_1_right_vel" tendon="husky_1_right_wheels"  gear="9" />
-        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="10" />
-        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="10" />
+        <motor name="husky_1_left_vel"  tendon="husky_1_left_wheels"  gear="8" />
+        <motor name="husky_1_right_vel" tendon="husky_1_right_wheels"  gear="8" />
+        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="8" />
+        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="8" />
     </actuator>
     
 </mujoco>

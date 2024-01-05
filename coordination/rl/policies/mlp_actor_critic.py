@@ -27,6 +27,7 @@ class MlpActor(Actor):
                 self.fc_log_stds.update({k: MLP(config, config.rl_hid_size, size)})
 
     def forward(self, ob):
+
         inp = list(ob.values())
         if len(inp[0].shape) == 1:
             inp = [x.unsqueeze(0) for x in inp]

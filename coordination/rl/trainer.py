@@ -24,6 +24,24 @@ from env.action_spec import ActionSpec
 
 import gym
 
+def str2dict(args_str):
+    args_dict = {}
+    args_list = args_str.split("/")
+    for args in args_list:
+        k, v = args.split('-')
+        v = v.strip()
+        if v in ['True', 'False']:
+            v_val = True if v == 'True' else False
+        elif v.startswith('[') and v.endswith(']'):
+            v_val = [float(val.strip()) for val in v[1:-1].split(',')]
+        else:
+            try:
+                v_val = float(v)
+            except:
+                v_val = v
+        args_dict.update({k: v_val})
+    return args_dict
+
 def get_agent_by_name(algo):
     """
     Returns SAC agent.
@@ -103,7 +121,6 @@ class Trainer(object):
 
         for env in env_dict:
             del gym.envs.registration.registry.env_specs[env]
-        
 
 
         register_environments()
@@ -112,6 +129,7 @@ class Trainer(object):
         # create a new environment
         self._env = make_env(config.env, config)
         ob_space, ac_space, clusters = get_subdiv_space(self._env, config.subdiv)
+
 
         # ---------- Primitive Skills ----------
         # get actor and critic networks
@@ -123,6 +141,7 @@ class Trainer(object):
         # ---------- Meta Policy ----------
         # build up networks
         self._meta_agent = MetaPPOAgent(config, ob_space)
+
         if config.meta:
             from rl.low_level_agent import LowLevelAgent
             self._agent = LowLevelAgent(
@@ -139,6 +158,8 @@ class Trainer(object):
             self._agent = get_agent_by_name(config.algo)(
                 config, ob_space, ac_space, actor, critic
             )
+        
+
 
         # build rollout runner
         self._runner = RolloutRunner(
@@ -205,8 +226,11 @@ class Trainer(object):
         if ckpt_path is not None:
             logger.warn('Load checkpoint %s', ckpt_path)
             ckpt = torch.load(ckpt_path)
+
+
             self._meta_agent.load_state_dict(ckpt['meta_agent'])
             self._agent.load_state_dict(ckpt['agent'])
+
 
             if self._config.is_train:
                 replay_path = os.path.join(self._config.log_dir, 'replay_%08d.pkl' % ckpt_num)

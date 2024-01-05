@@ -326,6 +326,11 @@ class BaseEnv(gym.Env):
             perturb = np.zeros(len(mins))
         return a + perturb
 
+
+
+    def _get_vel(self, joint_name):
+        return self.data.get_joint_qvel(joint_name)
+
     def _get_pos(self, name):
         if name in self.model.body_names:
             return self.data.get_body_xpos(name).copy()

@@ -118,6 +118,7 @@ class RolloutRunner(object):
             meta_rew = 0
             while not done and ep_len < max_step and meta_len < config.max_meta_len:
                 ll_ob = ob.copy()
+
                 if config.meta:
                     ac, ac_before_activation = pi.act(ll_ob, meta_ac, is_train=is_train)
                 else:
@@ -127,6 +128,7 @@ class RolloutRunner(object):
 
                 rollout.add({'ob': ll_ob, 'meta_ac': meta_ac, 'ac': ac, 'ac_before_activation': ac_before_activation})
                 saved_qpos.append(env.sim.get_state().qpos.copy())
+
 
                 ob, reward, done, info = env.step(ac)
 
