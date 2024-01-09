@@ -40,7 +40,7 @@ class HuskyForwardEnv(HuskyEnv):
             'quat_reward': 10, # 0
             'align_move_both_reward': 10,
             'die_penalty': 500,
-            'max_episode_steps': 500,
+            'max_episode_steps': 200, #was 500, will shorter episode be better?
             'husky': 1,
             'skill': 'approach',
             'init_randomness': 0.1,
@@ -185,8 +185,8 @@ class HuskyForwardEnv(HuskyEnv):
         #box_linear_vel_reward = self._env_config["box_linear_vel_reward"] * (box_linear_vel)
         #box_linear_vel_reward = self._env_config["linear_vel_reward"] * (1 / abs(dist_box_goal - box_linear_vel * 5))
         
-        box_linear_vel_reward = - self._env_config["linear_vel_reward"] * np.exp(abs(dist_box_goal / 2 - box_linear_vel))
-
+        box_linear_vel_reward = -self._env_config["linear_vel_reward"] * abs(dist_box_goal - box_linear_vel)
+        
 
         alive_reward = self._env_config["alive_reward"]
 
@@ -260,9 +260,6 @@ class HuskyForwardEnv(HuskyEnv):
                 done = True
                 
 
-            # try to control huskys pushing velocity via rewarding box moving velocity
-            reward = reward + box_linear_vel_reward
-        
             move_coeff = movement_heading_difference(box_after, 
                                                      pos_after, 
                                                      husky_forward_vector_after, 
@@ -287,7 +284,7 @@ class HuskyForwardEnv(HuskyEnv):
                                                      pos_after, 
                                                      husky_forward_vector_after, 
                                                      "forward")
-            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff
+            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff * 5
             
             reward = reward \
                     + dist_husky_box_reward \
