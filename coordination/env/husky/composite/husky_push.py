@@ -36,7 +36,7 @@ class HuskyPushEnv(HuskyEnv):
             'goal_dist_reward': 30,
             'goal1_dist_reward': 10,
             'goal2_dist_reward': 10,
-            'move_heading_reward': 10,
+            'move_heading_reward': 30,
             'linear_vel_reward': 50,
             'success_reward': 200,
             'bonus_reward': 20,
@@ -134,7 +134,7 @@ class HuskyPushEnv(HuskyEnv):
         huskys_dist = l2_dist(husky1_pos, husky2_pos)
         
         diff = abs(suggested_dist - huskys_dist)
-        huskys_dist_reward = -self._env_config["dist_reward"] * (diff ** 2) * 20
+        huskys_dist_reward = -self._env_config["dist_reward"] * (diff ** 2) * 10
 
 
         # PART 4: Linear distance between one husky and one box (Husky - Box)
