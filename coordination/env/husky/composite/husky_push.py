@@ -291,8 +291,6 @@ class HuskyPushEnv(HuskyEnv):
                 #"husky2_pos": husky2_pos,
                 "box1_ob": ob['box_1'],
                 "box2_ob": ob['box_2'],
-                "goal1_ob": ob['goal_1'],
-                "goal2_ob": ob['goal_2'],
                 }
 
         return ob, reward, done, info
