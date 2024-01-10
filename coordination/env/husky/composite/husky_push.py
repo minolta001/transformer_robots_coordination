@@ -318,7 +318,7 @@ class HuskyPushEnv(HuskyEnv):
 
         # box
         box_quat = self._get_quat('box') 
-        box_forward = right_vector_from_quat(box_quat)
+        box_forward = X_vector_from_quat(box_quat)
 
         box1_pos = self._get_pos('box_geom1')
         box2_pos = self._get_pos('box_geom2')
@@ -331,7 +331,7 @@ class HuskyPushEnv(HuskyEnv):
 
         # goal
         goal_quat = self._get_quat('goal')
-        goal_forward = right_vector_from_quat(goal_quat)
+        goal_forward = X_vector_from_quat(goal_quat)
 
         goal1_pos = self._get_pos('goal_geom1')
         goal2_pos = self._get_pos('goal_geom2')
