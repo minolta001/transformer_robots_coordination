@@ -349,10 +349,8 @@ class HuskyPushEnv(HuskyEnv):
             ('husky_2', np.concatenate([husky2_pos[2:3], husky2_quat, husky2_vel, husky2_forward_vec])),
             ('box_1', np.concatenate([box1_pos - husky1_pos, goal1_pos - box1_pos, box1_forward])),
             ('box_2', np.concatenate([box2_pos - husky2_pos, goal2_pos - box2_pos, box2_forward])),
-            ('relative_info', [husky1_move_coeff, husky2_move_coeff, 
-                                 husky1_align_coeff, husky2_align_coeff, 
-                                 huskys_dist, 
-                                 goal_box_cos_dist_coeff])
+            ('relative_info_1', [husky1_move_coeff, husky1_align_coeff, huskys_dist, goal_box_cos_dist_coeff]),
+            ('relative_info_2', [husky2_move_coeff, husky2_align_coeff, huskys_dist, goal_box_cos_dist_coeff])
         ])
 
 
