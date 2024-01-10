@@ -151,8 +151,8 @@ class HuskyPushEnv(HuskyEnv):
         '''
             vector field based reward shaping
         '''
-        husky1_box_dist_reward = 2 / husky1_box_dist * self._env_config(["dist_reward"])
-        husky2_box_dist_reward = 2 / husky2_box_dist * self._env_config(["dist_reward"])
+        husky1_box_dist_reward = 2 / husky1_box_dist * self._env_config("dist_reward")
+        husky2_box_dist_reward = 2 / husky2_box_dist * self._env_config("dist_reward")
         huskys_box_dist_reward = husky1_box_dist_reward + husky2_box_dist_reward
         
         # PART 5: Linear distance between box and goal
