@@ -32,7 +32,7 @@ class HuskyPushEnv(HuskyEnv):
             'goal_box_cos_dist_coeff_threshold': 0.95,
 
             'dist_reward': 10,
-            'alignment_reward': 50,
+            'alignment_reward': 80,
             'goal_dist_reward': 30,
             'goal1_dist_reward': 10,
             'goal2_dist_reward': 10,
@@ -133,11 +133,8 @@ class HuskyPushEnv(HuskyEnv):
         suggested_dist = l2_dist(box1_pos, box2_pos)        # desired distance
         huskys_dist = l2_dist(husky1_pos, husky2_pos)
         
-
         diff = abs(suggested_dist - huskys_dist)
-        if diff == 0:
-            diff = 1e-10
-        huskys_dist_reward = -self._env_config["dist_reward"] * (diff ** 2) / 2
+        huskys_dist_reward = -self._env_config["dist_reward"] * (diff ** 2) * 20
 
 
         # PART 4: Linear distance between one husky and one box (Husky - Box)
@@ -181,8 +178,8 @@ class HuskyPushEnv(HuskyEnv):
         # PART 7: Box velocity
         box1_linear_vel = l2_dist(box1_pos, box1_pos_before)
         box2_linear_vel = l2_dist(box2_pos, box2_pos_before)
-        box1_linear_vel_reward = -self._env_config["linear_vel_reward"] * ((goal1_box_dist - box1_linear_vel) ** 2)
-        box2_linear_vel_reward = -self._env_config["linear_vel_reward"] * ((goal2_box_dist - box2_linear_vel) ** 2)
+        box1_linear_vel_reward = -self._env_config["linear_vel_reward"] * (((goal1_box_dist - box1_linear_vel) ** 2) / 10)  # square make the final reward too big
+        box2_linear_vel_reward = -self._env_config["linear_vel_reward"] * (((goal2_box_dist - box2_linear_vel) ** 2) / 10)
 
         #box1_linear_vel_reward = box1_linear_vel * self._env_config["box_linear_vel_reward"]
         #box2_linear_vel_reward = box2_linear_vel * self._env_config["box_linear_vel_reward"]
@@ -214,7 +211,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < 1 or huskys_dist > suggested_dist + 1.5:   # huskys are too close or too far away 
+        if huskys_dist < (suggested_dist * 0.75)  or huskys_dist > suggested_dist + 1.5:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 6.0 or husky2_box_dist > 6.0: # husky is too far away from box 
             done = True
@@ -437,7 +434,7 @@ class HuskyPushEnv(HuskyEnv):
         #z = 0.3
         #goal_pos = np.asarray([x, y, z])
 
-        goal_pos = np.asarray([np.random.uniform(low=2, high=5), np.random.uniform(low=-1, high=1), 0.3])
+        goal_pos = np.asarray([np.random.uniform(low=1, high=5), np.random.uniform(low=-1, high=1), 0.3])
         goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
 
         self._set_pos('goal', goal_pos)
