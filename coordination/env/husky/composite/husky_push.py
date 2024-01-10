@@ -16,7 +16,8 @@ class HuskyPushEnv(HuskyEnv):
         # Env info
         self.ob_shape = OrderedDict([("husky_1", 14), ("husky_2", 14),
                                      ("box_1", 9), ("box_2", 9),
-                                     ("relative_info_1", 6)])
+                                     ("relative_info_1", 4),
+                                     ("relative_info_2", 4)])
         
         
         self.action_space.decompose(OrderedDict([("husky_1", 2), ("husky_2", 2)]))
