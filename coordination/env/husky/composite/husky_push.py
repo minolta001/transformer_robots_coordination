@@ -14,10 +14,9 @@ class HuskyPushEnv(HuskyEnv):
         super().__init__('husky_push.xml', **kwargs)
 
         # Env info
-        self.ob_shape = OrderedDict([("husky_1", 30), ("husky_2", 30),
+        self.ob_shape = OrderedDict([("husky_1", 14), ("husky_2", 14),
                                      ("box_1", 9), ("box_2", 9),
-                                     ("goal_1", 3), ("goal_2", 3),
-                                     ("relative_info_1", 2), ("relative_info_2", 2)])
+                                     ("relative_info_1", 6)])
         
         
         self.action_space.decompose(OrderedDict([("husky_1", 2), ("husky_2", 2)]))
@@ -348,14 +347,14 @@ class HuskyPushEnv(HuskyEnv):
         obs = OrderedDict([
             ('husky_1', np.concatenate([husky1_pos[2:3], husky1_quat, husky1_vel, husky1_forward_vec])),
             ('husky_2', np.concatenate([husky2_pos[2:3], husky2_quat, husky2_vel, husky2_forward_vec])),
-            ('box_1', np.concatenate([box1_pos - husky1_pos, goal1_pos - box1_pos, box1_forward])), 
+            ('box_1', np.concatenate([box1_pos - husky1_pos, goal1_pos - box1_pos, box1_forward])),
             ('box_2', np.concatenate([box2_pos - husky2_pos, goal2_pos - box2_pos, box2_forward])),
-            ('relative_info_1', [husky1_move_coeff, husky2_move_coeff, husky1_align_coeff, husky2_move_coeff, huskys_dist])
-
-
-            ('relative_info_1', [husky1_move_coeff, husky1_align_coeff]),
-            ('relative_info_2', [husky2_move_coeff, husky2_align_coeff])
+            ('relative_info', [husky1_move_coeff, husky2_move_coeff, 
+                                 husky1_align_coeff, husky2_align_coeff, 
+                                 huskys_dist, 
+                                 goal_box_cos_dist_coeff])
         ])
+
 
         def ravel(x):
             obs[x] = obs[x].ravel()
@@ -418,23 +417,31 @@ class HuskyPushEnv(HuskyEnv):
         qpos[22:25] = init_box_pos
         qpos[25:29] = init_box_quat
 
+        self._set_pos('box', init_box_pos)
+        self._set_quat('box', init_box_quat)
+
+
         # Initialize husky
         #qpos[0:2] = [-4, 2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_ant_pos"]
         #qpos[15:17] = [-4, -2] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_ant_pos"]
-        qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
-        qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * self._env_config["random_husky_pos"]
+        qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * 0.2
+        qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * 0.2
         #qpos[0:2] = [-2 + np.random.uniform(-1, 1) * self._env_config["random_ant_pos"], 2]
         #qpos[15:17] = [-2 + np.random.uniform(-1, 1) * self._env_config["random_ant_pos"], -2]
 
+        self._set_quat('husky_robot_1', sample_quat(low=-np.pi/9, high=np.pi/9))
+        self._set_quat('husky_robot_2', sample_quat(low=-np.pi/9, high=np.pi/9))
+
+
         # Initialize goal
         #x = 4.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        x = 1.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
-        z = 0.3
+        #x = 1.5 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
+        #y = 0 + np.random.uniform(-1, 1) * self._env_config["random_goal_pos"]
+        #z = 0.3
+        #goal_pos = np.asarray([x, y, z])
 
-        goal_pos = np.asarray([x, y, z])
-
-        goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
+        goal_pos = np.asarray([np.random.uniform(low=2, high=5), np.random.uniform(low=-1, high=1), 0.3])
+        goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
 
         self._set_pos('goal', goal_pos)
         self._set_quat('goal', goal_quat)
