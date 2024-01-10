@@ -222,7 +222,7 @@ class HuskyPushEnv(HuskyEnv):
 
         # give some bonus if pass all failure check
         if done != True:
-            reward += self._env_config["bonus"]
+            reward += self._env_config["alive_reward"]
 
         '''
             Success Check
