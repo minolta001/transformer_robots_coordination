@@ -24,26 +24,36 @@ from util.logger import logger
 from util.pytorch import get_ckpt_path
 import sys
 
+
+def husky_forward_kinematic(ac_L, ac_R):
+        linear_vel = (ac_L + ac_R)
+        angular_vel = (ac_R - ac_L) / 1.667     # the coefficient is tested on real robot
+        return linear_vel, angular_vel
+
+
 class collab_push():
     def __init__(self, args):
         rospy.init_node('husky_controller')
 
         # robot_1       Husky
-        self.robot_1_velocity_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
-
+        '''
         self.robot_1_pose = Pose()
         self.robot_1_pose_subscriber = rospy.Subscriber('/mocap_node/Robot_1/Odom', Odometry, self.robot_1_pose_callback)   # receive husky pose data from tracking system 
         self.box_1_pose = Pose()
         self.box_1_pose_subscriber = rospy.Subscriber('/mocap_node/Box1/Odom', Odometry, self.box_1_pose_callback)
+        '''
+        self.robot_1_velocity_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
 
-        # robot_2
+        # robot_2       Bunker
+        self.robot_2_velocity_publisher = rospy.Publisher('/smoother_cmd_vel', Twist, queue_size=10) # publish Twist message to Bunker
 
+        
 
         self.rate = rospy.Rate(20)
 
         #self.trainer = self.load_trainer(args)
 
-        self.husky_push()
+        self.bunker_push()
 
 
     def load_trainer(self, config):         # load meta agent and lower-level agent model
@@ -121,10 +131,43 @@ class collab_push():
     def box_1_pose_callback(self, data):
         self.box_1_pose = data.pose.pose
 
+    
+    def bunker_push(self):
+        time.sleep(5)
+        vel_msg_1 = Twist()     # husky
+        vel_msg_2 = Twist()     # bunker
+        start_time = time.time()
+        while not rospy.is_shutdown():
+            print("husky/bunker working")
+            if(time.time() - start_time < 4):
+                vel_msg_1.linear.x = 0.0
+                vel_msg_1.angular.z = 3
+                vel_msg_2.linear.x = 0.0
+                vel_msg_2.angular.z = 0.0
+                self.robot_1_velocity_publisher.publish(vel_msg_1)
+                self.robot_2_velocity_publisher.publish(vel_msg_2)
+            elif(time.time() - start_time > 4 and time.time() - start_time < 30):
+                vel_msg_1.linear.x = 0.0
+                vel_msg_1.angular.z = 0.3
+                vel_msg_2.linear.x = 0.0
+                vel_msg_2.angular.z = -0.3
+                self.robot_1_velocity_publisher.publish(vel_msg_1)
+                self.robot_2_velocity_publisher.publish(vel_msg_2)
+            else:
+                vel_msg_1.linear.x = 0
+                vel_msg_1.angular.z = 0
+                self.robot_1_velocity_publisher.publish(vel_msg_1)
+                vel_msg_2.linear.x = 0
+                vel_msg_2.angular.z = 0
+                self.robot_2_velocity_publisher.publish(vel_msg_2)
+ 
+            self.rate.sleep()
+
+
 
     def husky_push(self):
 
-        time.sleep(5)
+        time.sleep(2)
 
         vel_msg = Twist()
         robot_1_x = self.robot_1_pose.position.x 
