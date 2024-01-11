@@ -434,7 +434,7 @@ class HuskyPushEnv(HuskyEnv):
         #z = 0.3
         #goal_pos = np.asarray([x, y, z])
 
-        goal_pos = np.asarray([np.random.uniform(low=1, high=5), np.random.uniform(low=-1, high=1), 0.3])
+        goal_pos = np.asarray([np.random.uniform(low=-0.5, high=3), np.random.uniform(low=-2, high=2), 0.3])
         goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
 
         self._set_pos('goal', goal_pos)
