@@ -552,7 +552,7 @@ class HuskyForwardEnv(HuskyEnv):
             
             #goal_pos = np.asarray([1, 0, 0.3])
 
-            goal_pos = np.asarray([np.random.uniform(low=1, high=3), np.random.uniform(low=-2, high=2), 0.3])
+            goal_pos = np.asarray([np.random.uniform(low=0.5, high=3), np.random.uniform(low=-2, high=2), 0.3])
 
             goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
             self._set_pos('goal', goal_pos)
