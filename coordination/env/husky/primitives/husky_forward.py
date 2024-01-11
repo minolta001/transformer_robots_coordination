@@ -276,7 +276,7 @@ class HuskyForwardEnv(HuskyEnv):
         elif(skill == "slow"):  # encourage the robot push slowly when the object is near the goal
             reward = reward + self._env_config['bonus_reward']
             
-            if dist_box_goal > 1.2:   # box is far away from the goal. Fail.
+            if dist_box_goal > 2.06:   # box is far away from the goal. Fail.
                 reward = reward - self._env_config['box_goal_reward']
                 done = True
             
@@ -529,7 +529,7 @@ class HuskyForwardEnv(HuskyEnv):
         qvel = self.data.qvel.ravel().copy()
 
         # Initialized Husky
-        x = np.random.uniform(low=-2, high=-1.0)
+        x = np.random.uniform(low=-2, high=-0.5)
         y = np.random.uniform(low=-0.5, high=0.5)
         
 
@@ -544,7 +544,7 @@ class HuskyForwardEnv(HuskyEnv):
             qpos[3:7] = sample_quat()
         
         elif(self._env_config["skill"] == "push"):
-            qpos[0] = -1.5
+            qpos[0] = x
             qpos[1] = y
             self._set_quat('husky_robot', sample_quat(low=-np.pi/9, high=np.pi/9))
 
@@ -563,7 +563,7 @@ class HuskyForwardEnv(HuskyEnv):
             qpos[14:18] = init_box_quat
 
         elif(self._env_config["skill"] == "slow"):
-            qpos[0] = -1
+            qpos[0] = x
             qpos[1] = y
             self._set_quat('husky_robot', sample_quat(low=-np.pi/9, high=np.pi/9))
 

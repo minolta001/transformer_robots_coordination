@@ -111,7 +111,10 @@ class HuskyPushEnv(HuskyEnv):
             PART 6: move heading of huskys
         ''' 
         # PART 1: Forward parallel between two Huskys (checking forward vector)
-        # X_vector_from_quat is same as right_vector_from_quat, which is the actual forward vector of robot
+        # X_vector_from_quat is same as right_vector_from_quat, which is the actual forward vector of robot 
+        '''
+        Note: ignored in no_collab version
+        '''
         husky1_forward_vec = X_vector_from_quat(husky1_quat)
         husky2_forward_vec = X_vector_from_quat(husky2_quat)
         huskys_forward_align_coeff, dir = alignment_heading_difference(husky1_forward_vec, husky2_forward_vec)
@@ -119,9 +122,11 @@ class HuskyPushEnv(HuskyEnv):
         huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config["alignment_reward"]
 
 
-
         # PART 2: Right vector overlapping between two Huskys (checking if two vectors are on the same line and same direction)
-        # if Part 2 is gauranteed, then Part 1 is gauranteed 
+        # if Part 2 is gauranteed, then Part 1 is gauranteed
+        '''
+        Note: ignored in no_collab version
+        '''
         husky1_right_vec = Y_vector_from_quat(husky1_quat)
         husky2_right_vec = Y_vector_from_quat(husky2_quat)
         huskys_right_align_coeff = Y_vector_overlapping(husky1_right_vec, husky2_right_vec, husky1_pos, husky2_pos)
@@ -130,6 +135,9 @@ class HuskyPushEnv(HuskyEnv):
 
 
         # PART 3: Distance between two Huskys (to avoid huskys collision)
+        '''
+        Note: ignored in no_collab version
+        '''
         suggested_dist = l2_dist(box1_pos, box2_pos)        # desired distance
         huskys_dist = l2_dist(husky1_pos, husky2_pos)
         
@@ -211,8 +219,6 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (suggested_dist * 0.75)  or huskys_dist > suggested_dist + 1.5:   # huskys are too close or too far away 
-            done = True
         if husky1_box_dist > 6.0 or husky2_box_dist > 6.0: # husky is too far away from box 
             done = True
         die_penalty = -self._env_config["die_penalty"] if done else 0
@@ -252,12 +258,9 @@ class HuskyPushEnv(HuskyEnv):
             self._reward = reward = self._success == 1
         else:
             reward = reward \
-                    + huskys_forward_align_reward \
-                    + huskys_dist_reward \
                     + huskys_box_dist_reward \
                     + goal_box_dist_reward \
                     + huskys_move_heading_reward \
-                    + huskys_right_align_reward \
                     + box_linear_vel_reward \
                     + goal_box_cos_dist_reward
                     #+ goal_box_cos_dist_reward \
