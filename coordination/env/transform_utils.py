@@ -170,6 +170,9 @@ def cos_dist(a, b):
 
     return angle_rad / np.pi
 
+
+
+
 # given two forward vector at two time steps
 # return > 0 if rotate right
 # return < 0 if rotate left
@@ -215,8 +218,30 @@ def movement_heading_difference(ob_pos, car_pos, car_forward_vec, f_or_b="forwar
 
     dot_product = np.dot(suggested_vec_normalized, car_vec_normalized)
     
+    
     angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
     return (1 - (angle_rad / np.pi))
+
+
+def calculate_rotation_direction(car_pos, car_forward_vec, box_pos):
+    car_pos = car_pos[0:2]
+    box_pos = box_pos[0:2]
+    car_forward_vec = car_forward_vec[0:2]
+    
+    direction_vec = box_pos - car_pos
+    norm_direction_vec = direction_vec / np.linalg.norm(direction_vec)
+    norm_car_forward_vec = car_forward_vec / np.linalg.norm(car_forward_vec)
+    
+    #dot_product = np.dot(norm_car_forward_vec, norm_direction_vec)
+    cross = np.cross(norm_car_forward_vec, norm_direction_vec)
+
+    if cross > 0:
+        return -1
+    else:
+        return 1
+    
+
+
 
 # Given forward vector of the object and the vehicle, check if their headings are parallel to each one
 # Only consider the heading faces toward the object. We don't want the tailing towards the object.

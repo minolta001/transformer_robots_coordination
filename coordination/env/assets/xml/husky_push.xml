@@ -176,7 +176,7 @@
         <body name="box" pos = "0 0 0.3" euler="0 0 0">
             <geom name="box_geom1" pos="0 1.0 0" rgba="0.8 1 0.2 0.5" size="0.3 1.0 0.3" type="box" mass="10.0" friction="0.2 0.5 0.5"/>
             <geom name="box_geom2" pos="0 -1.0 0" rgba="0.8 0.2 0.2 0.5" size="0.3 1.0 0.3" type="box" mass="10.0" friction="0.2 0.5 0.5"/>
-            <joint type="free" armature="0" damping="0" limited="false" stiffness="0"/>
+            <joint name="box_body" type="free" armature="0" damping="0" limited="false" stiffness="0"/>
         </body>
 
         <!-- Goal -->

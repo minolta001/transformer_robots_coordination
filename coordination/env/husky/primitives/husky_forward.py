@@ -44,7 +44,7 @@ class HuskyForwardEnv(HuskyEnv):
             'husky': 1,
             'skill': 'approach',
             'init_randomness': 0.1,
-            'diayn_reward': 30,    # was 0.1
+            'diayn_reward': 5,    # was 0.1
             "prob_perturb_action": 0.1,    #0.1
             "perturb_action": 0.01,
             "alignment_reward": 10,
@@ -77,8 +77,8 @@ class HuskyForwardEnv(HuskyEnv):
         '''
         2023/12/08 Current size of observation
         '''
-        self.ob_shape = OrderedDict([(self.husky, 14),
-                                     (self.box, 9)])
+        self.ob_shape = OrderedDict([(self.husky, 15),
+                                     (self.box, 15)])
 
 
         '''
@@ -176,7 +176,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         # reward components, for later use
         # TODO: these three are Unused!
-        husky_linear_vel_reward = self._env_config["linear_vel_reward"] * husky_linear_vel
+        husky_linear_vel_reward = self._env_config["linear_vel_reward"] * husky_linear_vel * 10
         husky_angular_vel_reward = self._env_config["angular_vel_reward"] * husky_angular_vel
         box_angular_vel_reward = self._env_config["box_angular_vel_reward"] * (1- box_angular_vel)
 
@@ -273,7 +273,7 @@ class HuskyForwardEnv(HuskyEnv):
                     #+ quat_dist_box_goal_reward \
                     #+ box_angular_vel_reward
         
-        elif(skill == "slow"):  # encourage the robot push slowly when the object is near the goal
+        elif(skill == "approach"):  # encourage the robot push slowly when the object is near the goal
             reward = reward + self._env_config['bonus_reward']
             
             if dist_box_goal > 2.06:   # box is far away from the goal. Fail.
@@ -284,12 +284,13 @@ class HuskyForwardEnv(HuskyEnv):
                                                      pos_after, 
                                                      husky_forward_vector_after, 
                                                      "forward")
-            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff * 5
-            
+            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff * 2
+            dist_husky_box_reward *= 2
             reward = reward \
                     + dist_husky_box_reward \
                     + movement_heading_reward \
-                    + box_linear_vel_reward
+                    + box_linear_vel_reward \
+                    - (husky_linear_vel_reward)
 
         elif(skill == "wait"): 
             reward += self._env_config["bonus_reward"]
@@ -364,12 +365,13 @@ class HuskyForwardEnv(HuskyEnv):
                 "success": self._success
             }
 
-        if (skill == "slow"):
+        if (skill == "approach"):
             info = {"Current Skill": skill,
                     "Total Reward": reward,
                     "reward: dist_husky_box": dist_husky_box_reward,
                     "reward: box_linear_vel": box_linear_vel_reward,
                     "reward: moving heading": movement_heading_reward,
+                    "reward: husky_linear_vel": husky_linear_vel_reward,
                     "----------": 0,
                     "husky_movement_heading_coeff": move_coeff,
                     "----------": 0,
@@ -379,46 +381,7 @@ class HuskyForwardEnv(HuskyEnv):
                     "box_pos": box_after,
                     "box_ob": ob[self.box], 
                     "success": self._success
-            
             }
-
-
-    
-        if (skill == "align"):
-            info = {"Current Skill": skill,
-                    "Total reward: ": reward,
-                    "reward: ready_pos_dist_reward": ready_dist_husky_box_reward,
-                    "reward: alignment reward": align_coeff * self._env_config['alignment_reward'],
-                    "reward: moving heading reward": movement_heading_reward,
-                    "reward: box_linear_vel_reward": -box_linear_vel_reward,
-                    "----------": 0,
-                    "husky_movement_heading_coeff": move_coeff,
-                    "husky_alignment_coeff": align_coeff,
-                    "align_and_ready 0.95": get_ready,
-                    "------------": 0,
-                    "dist_husky_box": dist_husky_box,
-                    "husky_pos": pos_after,
-                    "box_pos": box_after,
-                    "box_ob": ob[self.box], 
-                    "success": self._success
-            }
-        
-        if (skill == "wait"):
-            info = {"Current Skill": skill,
-                    "Total reward: ": reward,
-                    "reward: moving heading reward": movement_heading_reward,
-                    "----------": 0,
-                    "husky_movement_heading_coeff": move_coeff,
-                    "------------": 0,
-                    "dist_husky_box": dist_husky_box,
-                    "husky_linear_vel": husky_linear_vel,
-                    "box_linear_vel": box_linear_vel,
-                    "husky_pos": pos_after,
-                    "box_pos": box_after,
-                    "box_ob": ob[self.box], 
-                    "success": self._success
-            }
-
 
         return ob, reward, done, info
 
@@ -464,12 +427,13 @@ class HuskyForwardEnv(HuskyEnv):
         husky_quat = self._get_quat("husky_robot")
         husky_vel = self._get_vel("husky_body")
 
+        box_vel = self._get_vel("box_body")
+
         obs = OrderedDict([
-            (self.husky, np.concatenate([husky_pos[2:3], husky_quat, husky_vel, husky_forward_vec])), # 14
-            (self.box, np.concatenate([box_pos - husky_pos, goal_pos - box_pos, box_forward]))      # 9
+            (self.husky, np.concatenate([husky_pos[2:3], husky_quat, husky_vel, husky_forward_vec, [move_coeff]])), # 15
+            (self.box, np.concatenate([box_pos - husky_pos, goal_pos - box_pos, box_forward, box_vel]))      # 15
         ])
-
-
+        
         def ravel(x):
             obs[x] = obs[x].ravel()
         map(ravel, obs.keys())
@@ -529,7 +493,7 @@ class HuskyForwardEnv(HuskyEnv):
         qvel = self.data.qvel.ravel().copy()
 
         # Initialized Husky
-        x = np.random.uniform(low=-2, high=-0.5)
+        x = np.random.uniform(low=-2, high=-0.8)
         y = np.random.uniform(low=-0.5, high=0.5)
         
 
@@ -546,7 +510,7 @@ class HuskyForwardEnv(HuskyEnv):
         elif(self._env_config["skill"] == "push"):
             qpos[0] = x
             qpos[1] = y
-            self._set_quat('husky_robot', sample_quat(low=-np.pi/9, high=np.pi/9))
+            self._set_quat('husky_robot', sample_quat(low=-np.pi/6, high=np.pi/6))
 
             # reset the rotation of goal
             
@@ -562,10 +526,10 @@ class HuskyForwardEnv(HuskyEnv):
             qpos[11:14] = init_box_pos
             qpos[14:18] = init_box_quat
 
-        elif(self._env_config["skill"] == "slow"):
+        elif(self._env_config["skill"] == "approach"):
             qpos[0] = x
             qpos[1] = y
-            self._set_quat('husky_robot', sample_quat(low=-np.pi/9, high=np.pi/9))
+            self._set_quat('husky_robot', sample_quat(low=-np.pi/6, high=np.pi/6))
 
             # reset goal pose
             goal_pos = np.asarray([np.random.uniform(low=-0.5, high=0.5), np.random.uniform(low=-2, high=2), 0.3])

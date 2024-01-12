@@ -5,7 +5,9 @@ import numpy as np
 from env.husky.husky import HuskyEnv
 from env.transform_utils import up_vector_from_quat, Y_vector_from_quat, \
     l2_dist, cos_dist, sample_quat, X_vector_from_quat, alignment_heading_difference, \
-    Y_vector_overlapping, movement_heading_difference
+    Y_vector_overlapping, movement_heading_difference, calculate_rotation_direction
+
+
 
 
 class HuskyPushEnv(HuskyEnv):
@@ -14,10 +16,9 @@ class HuskyPushEnv(HuskyEnv):
         super().__init__('husky_push.xml', **kwargs)
 
         # Env info
-        self.ob_shape = OrderedDict([("husky_1", 14), ("husky_2", 14),
-                                     ("box_1", 9), ("box_2", 9),
-                                     ("relative_info_1", 4),
-                                     ("relative_info_2", 4)])
+        self.ob_shape = OrderedDict([("husky_1", 15), ("husky_2", 15),
+                                     ("box_1", 15), ("box_2", 15),
+                                     ("relative_info", )])
         
         
         self.action_space.decompose(OrderedDict([("husky_1", 2), ("husky_2", 2)]))
@@ -47,13 +48,26 @@ class HuskyPushEnv(HuskyEnv):
             'sparse_reward': 0,
             'init_randomness': 0.01,
             #'max_episode_steps': 400,
-            'max_episode_steps': 300, # was 1000
+            'max_episode_steps': 250,
         }) 
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
         self._husky1_push = False
         self._husky2_push = False
         self._success_count = 0
+
+
+    def _vector_field_rad(self, robot_control_pos, robot_control_forward_vec, robot_rotate_pos, target_pos, suggested_dist):
+        k = 0.05
+        dist_rr_t = (l2_dist(robot_control_pos, robot_rotate_pos) - suggested_dist) * k
+        gamma_rc_rr = np.arctan2((robot_control_pos[1] - robot_rotate_pos[1]) / (robot_control_pos[0] - robot_rotate_pos[0]))
+        sign = calculate_rotation_direction(robot_control_pos, robot_control_forward_vec, target_pos) 
+
+        desire_rad = gamma_rc_rr + (sign * np.pi/2) + (sign * np.arctan(dist_rr_t))
+        cur_rad = np.arctan2(robot_control_forward_vec[1], robot_control_forward_vec[0])
+
+        return desire_rad, cur_rad
+
 
     def _step(self, a):
         husky1_pos_before = self._get_pos('husky_1_geom')
@@ -192,8 +206,19 @@ class HuskyPushEnv(HuskyEnv):
         goal_box_cos_dist_reward = goal_box_cos_dist_coeff * self._env_config["quat_reward"]
 
 
+        # PART 9: vector field
+        # NOTE: this is a experiment feature!
+        husky1_desire_rad, husky1_cur_rad = self._vector_field_rad_diff(husky1_pos, husky1_forward_vec, husky2_pos, box1_pos, suggested_dist)
+        husky2_desire_rad, husky2_cur_rad = self._vector_field_rad_diff(husky2_pos, husky2_forward_vec, husky1_pos, box2_pos, suggested_dist)
+        
+        husky1_rad_diff = abs(husky1_desire_rad - husky1_cur_rad)
+        husky2_rad_diff = abs(husky2_desire_rad - husky2_cur_rad)
+
+        husky1_rad_reward = -husky1_rad_diff * 100
+        husky2_rad_reward = -husky2_rad_diff * 100
+        huskys_rad_reward = husky1_rad_reward + husky2_rad_reward
+
         reward = 0
-        alive_reward = self._env_config["alive_reward"] 
 
         '''
             Bonus
@@ -259,7 +284,8 @@ class HuskyPushEnv(HuskyEnv):
                     + huskys_move_heading_reward \
                     + huskys_right_align_reward \
                     + box_linear_vel_reward \
-                    + goal_box_cos_dist_reward
+                    + goal_box_cos_dist_reward \
+                    + huskys_rad_reward
                     #+ goal_box_cos_dist_reward \
                     #+ huskys_linear_vel_reward
             self._reward = reward
@@ -275,6 +301,15 @@ class HuskyPushEnv(HuskyEnv):
                 "reward: move heading reward": huskys_move_heading_reward,
                 "reward: box velocity reward": box_linear_vel_reward,
                 "reward: goal-to-box cos dist reward": goal_box_cos_dist_reward,
+                "----------": 0,
+                "husky1 desire rad": husky1_desire_rad,
+                "husky1 cur rad": husky1_cur_rad,
+                "husky1 rad diff": husky1_rad_diff,
+                "reward: husky1 rad reward": husky1_rad_reward,
+                "husky2 desire rad": husky2_desire_rad,
+                "husky2 cur rad": husky2_cur_rad,
+                "husky2 rad diff": husky2_rad_diff,
+                "reward: husky2 rad reward": husky2_rad_reward,
                 "----------": 0,
                 "coeff: huskys forward align coeff": huskys_forward_align_coeff,
                 "coeff: huskys right align coeff": huskys_right_align_coeff,
@@ -304,10 +339,12 @@ class HuskyPushEnv(HuskyEnv):
         husky2_quat = self._get_quat('husky_robot_2')
         husky1_vel = self._get_vel('husky_1_body')
         husky2_vel = self._get_vel('husky_2_body')
-        huskys_dist = l2_dist(husky1_pos, husky2_pos)
 
         husky1_forward_vec = X_vector_from_quat(husky1_quat)
         husky2_forward_vec = X_vector_from_quat(husky2_quat)
+
+        husky1_right_vec = Y_vector_from_quat(husky1_quat)
+        husky2_right_vec = Y_vector_from_quat(husky2_quat)
         
         
 
@@ -323,6 +360,7 @@ class HuskyPushEnv(HuskyEnv):
     
         box1_forward = self._get_right_vector('box_geom1')
         box2_forward = self._get_right_vector('box_geom2')
+        box_vel = self._get_vel("box_body")
 
         # goal
         goal_quat = self._get_quat('goal')
@@ -334,19 +372,19 @@ class HuskyPushEnv(HuskyEnv):
         # relative info
         husky1_move_coeff = movement_heading_difference(box1_pos, husky1_pos, husky1_forward_vec, "forward") 
         husky2_move_coeff = movement_heading_difference(box2_pos, husky2_pos, husky2_forward_vec, "forward")
-        husky1_align_coeff, direction1 = alignment_heading_difference(box1_forward, husky1_forward_vec)
-        husky2_align_coeff, direction2 = alignment_heading_difference(box2_forward, husky2_forward_vec)
+        huskys_dist = l2_dist(husky1_pos, husky2_pos)
+        huskys_forward_align_coeff, dir = alignment_heading_difference(husky1_forward_vec, husky2_forward_vec)
+        huskys_right_align_coeff = Y_vector_overlapping(husky1_right_vec, husky2_right_vec, husky1_pos, husky2_pos)
 
         goal_box_cos_dist_coeff = 1 - cos_dist(box_forward, goal_forward)
 
 
         obs = OrderedDict([
-            ('husky_1', np.concatenate([husky1_pos[2:3], husky1_quat, husky1_vel, husky1_forward_vec])),
-            ('husky_2', np.concatenate([husky2_pos[2:3], husky2_quat, husky2_vel, husky2_forward_vec])),
-            ('box_1', np.concatenate([box1_pos - husky1_pos, goal1_pos - box1_pos, box1_forward])),
-            ('box_2', np.concatenate([box2_pos - husky2_pos, goal2_pos - box2_pos, box2_forward])),
-            ('relative_info_1', [husky1_move_coeff, husky1_align_coeff, huskys_dist, goal_box_cos_dist_coeff]),
-            ('relative_info_2', [husky2_move_coeff, husky2_align_coeff, huskys_dist, goal_box_cos_dist_coeff])
+            ('husky_1', np.concatenate([husky1_pos[2:3], husky1_quat, husky1_vel, husky1_forward_vec, [husky1_move_coeff]])), 
+            ('husky_2', np.concatenate([husky2_pos[2:3], husky2_quat, husky2_vel, husky2_forward_vec, [husky2_move_coeff]])),
+            ('box_1', np.concatenate([box1_pos - husky1_pos, goal1_pos - box1_pos, box1_forward, box_vel])),
+            ('box_2', np.concatenate([box2_pos - husky2_pos, goal2_pos - box2_pos, box2_forward, box_vel])),
+            ('relative_info', [huskys_forward_align_coeff, huskys_right_align_coeff, huskys_dist, goal_box_cos_dist_coeff])
         ])
 
 

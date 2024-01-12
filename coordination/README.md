@@ -132,14 +132,14 @@ python3 -m rl.main --env ant-forward-v0 --gpu 0 --prefix ant-2-right-n --env_arg
 python3 -m rl.main --env ant-forward-v0 --gpu 0 --prefix ant-2-left-n --env_args ant-2/direction-left --seed 1 --diayn False --max_global_step 500000
 ```
 
- - Husky Push
+ - Husky Primitive Skills
 ```bash
 # With SBD
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-1-push --env_args husky-1/skill-push --z_dim 5 --seed 1 --max_global_step 1000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-2-push --env_args husky-2/skill-push --z_dim 5 --seed 1 --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix push-1-dim5-epi200 --env_args husky-1/skill-push --z_dim 5 --seed 1 --max_global_step 500000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix push-2-dim5-epi200 --env_args husky-2/skill-push --z_dim 5 --seed 1 --max_global_step 500000
 
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-1-align --env_args husky-1/skill-align --z_dim 5 --seed 1 --max_global_step 1000000
-python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix h-2-align --env_args husky-2/skill-align --z_dim 5 --seed 1 --max_global_step 1000000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix approach-1-dim5-epi200 --env_args husky-1/skill-approach --z_dim 5 --seed 1 --max_global_step 500000
+python3.6 -m rl.main --env husky-forward-v0 --gpu 0 --prefix approach-2-dim5-epi200 --env_args husky-2/skill-approach --z_dim 5 --seed 1 --max_global_step 500000
 
 
 ```
@@ -209,13 +209,14 @@ python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix Modular --seed 1 --meta ha
 python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard --subdiv ant_1,box_1-ant_1/ant_2,box_2-ant_2 --subdiv_skills rl.ant-forward-v0.ant-1-right-d.1,rl.ant-forward-v0.ant-1-left-d.1,rl.ant-forward-v0.ant-1-up-d.1,rl.ant-forward-v0.ant-1-down-d.1/rl.ant-forward-v0.ant-2-right-d.1,rl.ant-forward-v0.ant-2-left-d.1,rl.ant-forward-v0.ant-2-up-d.1,rl.ant-forward-v0.ant-2-down-d.1 --max_meta_len 5 --max_global_step 1000000
 ```
 
+
 # Husky composite push
 ```bash
 # baseline
 python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-baseline --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,relative_info_1,husky_2,box_2,relative_info_2-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000
 
 # complete collab push, episode length 300
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim_5-300 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim_5-200.1,rl.husky-forward-v0.slow-1-dim_5-200.1/rl.husky-forward-v0.push-2-dim_5-200.1,rl.husky-forward-v0.slow-2-dim_5-200.1 --max_meta_len 5 --max_global_step 2000000 
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim_5-300 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim_5-200.1,rl.husky-forward-v0.approach-1-dim_5-200.1/rl.husky-forward-v0.push-2-dim_5-200.1,rl.husky-forward-v0.approach-2-dim_5-200.1 --max_meta_len 5 --max_global_step 2000000 
 
 ```
 
