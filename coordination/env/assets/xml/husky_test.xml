@@ -115,7 +115,7 @@
         </body>
 
         <!-- Husky No.2 -->
-        <body name="husky_robot_2" pos="-2 -0.8 0.5" euler="0 0 -0.51">
+        <body name="husky_robot_2" pos="1 -0.8 0.5" euler="0 0 -0.51">
             <geom name="base_link_visual_2" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_link" class="husky_body" />
             <geom name="husky_2_geom" size="0.4937 0.28545 0.061875" pos="0 0 0.061875" rgba="0 0 0 0" type="box"/>
 

@@ -215,10 +215,13 @@ python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard 
 python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-baseline-no_hierarchy-naive_vector --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,husky_2,box_2,relative_info-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000
 
 # baseline 3: Yes hierarchy, no relative spatial reward shaping (only consider some basic distance factors)  # NOTE: You need to modify the parameter in husky_push.py file to run different baselines and experiments!
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-baseline-hierarchy-non_spatia --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-hierarchical-non_spatial --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
 
 # complete collab push, naive vector field, episode length 300
 python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-naive_vector --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000 
+
+# complete collab push, uniform vector field  # Note: need to modify the parameter in husky_push.py file to run correspond experiment
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-hierarchical_uniform_vector-ver2 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200-ver2.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200-ver2.1 --max_meta_len 5 --max_global_step 2000000
 
 ```
 

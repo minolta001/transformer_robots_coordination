@@ -55,13 +55,13 @@ class HuskyPushEnv(HuskyEnv):
         self._husky1_push = False
         self._husky2_push = False
         self._success_count = 0
+        self._experiment_type = None
 
 
     def _vector_field_rad(self, robot_control_pos, robot_control_forward_vec, robot_rotate_pos, target_pos, robot_rotate_box_dist, boxes_dist):
         k = 0.5     # the larger k is, the more abrupt transition of the field
 
         suggested_dist = (robot_rotate_box_dist + boxes_dist) / 2
-        
 
         dist_rr_t = (l2_dist(robot_control_pos, robot_rotate_pos) - suggested_dist) * k
         gamma_rc_rr = np.arctan2((robot_control_pos[1] - robot_rotate_pos[1]), (robot_control_pos[0] - robot_rotate_pos[0]))
@@ -74,9 +74,21 @@ class HuskyPushEnv(HuskyEnv):
 
 
     def _step(self, a):
-
         hierarchical_NoSpatial_Baseline = True      # set this to True will evaluate the reward without relative spatial info
+        hierarchical_Uniform_Vector = False          # set this to True will evaluate the reward based on our uniform vector field approach
+        nonhierarchical_with_spatial_baseline = False
+        nonhierarchical_nospatial_baseline = False
 
+        if hierarchical_NoSpatial_Baseline:
+            self._experiment_type = "Hierarchical without relative-spatial info" 
+        elif hierarchical_Uniform_Vector:
+            self._experiment_type = "Hierarchical Uniform VectorField"
+        elif nonhierarchical_with_spatial_baseline:
+            self._experiment_type = "Non-hierarchical with relative spatial info"
+        elif nonhierarchical_nospatial_baseline:
+            self._experiment_type = "Non-hierarchical without relative spatial info"
+        else:
+            self._experiment_type = "Hierarchical with relative spatial info"
 
         husky1_pos_before = self._get_pos('husky_1_geom')
         husky2_pos_before = self._get_pos('husky_2_geom')
@@ -141,6 +153,7 @@ class HuskyPushEnv(HuskyEnv):
         huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config["alignment_reward"]
 
 
+#husky_1_id = model.body('
 
         # PART 2: Right vector overlapping between two Huskys (checking if two vectors are on the same line and same direction)
         # if Part 2 is gauranteed, then Part 1 is gauranteed 
@@ -214,7 +227,7 @@ class HuskyPushEnv(HuskyEnv):
         goal_box_cos_dist_reward = goal_box_cos_dist_coeff * self._env_config["quat_reward"]
 
 
-        # PART 9: vector field
+        # PART 9: vector fielpython3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-hierarchical_uniform_vector-ver2 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200-ver2.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200-ver2.1 --max_meta_len 5 --max_global_step 2000000d
         # NOTE: this is a experiment feature!
         husky1_desire_rad, husky1_cur_rad = self._vector_field_rad(husky1_pos, husky1_forward_vec, husky2_pos, box1_pos, l2_dist(husky2_pos, box1_pos), boxes_dist)
         husky2_desire_rad, husky2_cur_rad = self._vector_field_rad(husky2_pos, husky2_forward_vec, husky1_pos, box2_pos, l2_dist(husky1_pos, box2_pos), boxes_dist) 
@@ -222,11 +235,12 @@ class HuskyPushEnv(HuskyEnv):
         husky1_rad_diff = abs(husky1_desire_rad - husky1_cur_rad)
         husky2_rad_diff = abs(husky2_desire_rad - husky2_cur_rad)
 
-        husky1_rad_reward = -husky1_rad_diff * 100
-        husky2_rad_reward = -husky2_rad_diff * 100
+        husky1_rad_reward = -husky1_rad_diff * 50
+        husky2_rad_reward = -husky2_rad_diff * 50
         huskys_rad_reward = husky1_rad_reward + husky2_rad_reward
 
         reward = 0
+
 
         '''
             Bonus
@@ -244,15 +258,19 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.75)  or huskys_dist > boxes_dist + 1.5:   # huskys are too close or too far away 
+        if huskys_dist < (boxes_dist * 0.5)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
             done = True
-        if husky1_box_dist > 6.0 or husky2_box_dist > 6.0: # husky is too far away from box 
+        if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
         die_penalty = -self._env_config["die_penalty"] if done else 0
+        if done:    # something fail
+            reward += die_penalty
+
 
         # give some bonus if pass all failure check
         if done != True:
             reward += self._env_config["alive_reward"]
+
 
         '''
             Success Check
@@ -284,7 +302,11 @@ class HuskyPushEnv(HuskyEnv):
         if self._env_config['sparse_reward']:
             self._reward = reward = self._success == 1
         else:
-            if(hierarchical_NoSpatial_Baseline == False):
+            if(hierarchical_NoSpatial_Baseline == True):      # No relative spatial info used for reward function
+                reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+            elif(hierarchical_Uniform_Vector == True):
+                reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+            else:
                 reward = reward \
                     + huskys_forward_align_reward \
                     + huskys_dist_reward \
@@ -297,14 +319,12 @@ class HuskyPushEnv(HuskyEnv):
                     #+ huskys_rad_reward
                     #+ goal_box_cos_dist_reward \
                     #+ huskys_linear_vel_reward
-            elif(hierarchical_NoSpatial_Baseline == True):      # No relative spatial info used for reward function
-                reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
-
-
+           
             self._reward = reward
 
 
-        info = {"success": self._success,
+        info = {"Experiment type": self._experiment_type,
+                "success": self._success,
                 "Total reward": self._reward,
                 "reward: huskys forward align reward": huskys_forward_align_reward,
                 "reward: huskys right align reward": huskys_right_align_reward,
