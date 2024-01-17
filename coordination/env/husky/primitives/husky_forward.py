@@ -284,35 +284,10 @@ class HuskyForwardEnv(HuskyEnv):
                                                      pos_after, 
                                                      husky_forward_vector_after, 
                                                      "forward")
-            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff * 2
-            dist_husky_box_reward *= 2
+            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff * 3
             reward = reward \
                     + dist_husky_box_reward \
                     + movement_heading_reward \
-                    + box_linear_vel_reward \
-                    - (husky_linear_vel_reward)
-
-        elif(skill == "wait"): 
-            reward += self._env_config["bonus_reward"]
-            if dist_box_goal > 0.1:
-                reward = reward - self._env_config['box_goal_reward']
-            
-            reward = reward - box_linear_vel_reward
-
-            if(dist_box_goal < 0.1 and husky_linear_vel >= 0.005):
-                reward = reward - 2000
-                if(husky_linear_vel >= 0.01):
-                    reward = reward - 2000
-
-            # will husky rotate but not moving around? 
-            move_coeff = movement_heading_difference(box_after, 
-                                                     pos_after, 
-                                                     husky_forward_vector_after, 
-                                                     "forward")
-            movement_heading_reward = self._env_config['move_heading_reward'] * move_coeff * 2
-
-            reward = reward + movement_heading_reward
-
 
 
         self._reward = reward
@@ -369,9 +344,9 @@ class HuskyForwardEnv(HuskyEnv):
             info = {"Current Skill": skill,
                     "Total Reward": reward,
                     "reward: dist_husky_box": dist_husky_box_reward,
-                    "reward: box_linear_vel": box_linear_vel_reward,
+                    #"reward: box_linear_vel": box_linear_vel_reward,
                     "reward: moving heading": movement_heading_reward,
-                    "reward: husky_linear_vel": husky_linear_vel_reward,
+                    #"reward: husky_linear_vel": husky_linear_vel_reward,
                     "----------": 0,
                     "husky_movement_heading_coeff": move_coeff,
                     "----------": 0,
