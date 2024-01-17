@@ -171,8 +171,8 @@ class HuskyPushEnv(HuskyEnv):
         '''
             vector field based reward shaping
         '''
-        goal1_box_dist_reward = 4 / goal1_box_dist * self._env_config["dist_reward"]
-        goal2_box_dist_reward = 4 / goal2_box_dist * self._env_config["dist_reward"]
+        goal1_box_dist_reward = 10 / goal1_box_dist * self._env_config["dist_reward"]
+        goal2_box_dist_reward = 10 / goal2_box_dist * self._env_config["dist_reward"]
         goal_box_dist_reward = goal1_box_dist_reward + goal2_box_dist_reward
 
 

@@ -236,9 +236,9 @@ def calculate_rotation_direction(car_pos, car_forward_vec, box_pos):
     cross = np.cross(norm_car_forward_vec, norm_direction_vec)
 
     if cross > 0:
-        return -1
-    else:
         return 1
+    else:
+        return -1
     
 
 

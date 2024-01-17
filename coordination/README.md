@@ -212,11 +212,11 @@ python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard 
 
 # Husky composite push
 ```bash
-# baseline
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-baseline --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,relative_info_1,husky_2,box_2,relative_info_2-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000
+# baseline 2: No hierarchy, Yes reward shaping (naive vector field)
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-baseline-no_hierarchy-naive_vector --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,husky_2,box_2,relative_info-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000
 
-# complete collab push, episode length 300
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim_5-300 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim_5-200.1,rl.husky-forward-v0.approach-1-dim_5-200.1/rl.husky-forward-v0.push-2-dim_5-200.1,rl.husky-forward-v0.approach-2-dim_5-200.1 --max_meta_len 5 --max_global_step 2000000 
+# complete collab push, naive vector field, episode length 300
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-naive_vector --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000 
 
 ```
 

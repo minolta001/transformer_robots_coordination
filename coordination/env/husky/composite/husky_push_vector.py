@@ -148,10 +148,10 @@ class HuskyPushEnv(HuskyEnv):
 
 
         # PART 3: Distance between two Huskys (to avoid huskys collision)
-        boxes_dist = l2_dist(box1_pos, box2_pos)        # desired distance
+        suggested_dist = l2_dist(box1_pos, box2_pos)        # desired distance
         huskys_dist = l2_dist(husky1_pos, husky2_pos)
         
-        diff = abs(boxes_dist - huskys_dist)
+        diff = abs(suggested_dist - huskys_dist)
         huskys_dist_reward = -self._env_config["dist_reward"] * (diff ** 2) * 10
 
 
@@ -212,8 +212,8 @@ class HuskyPushEnv(HuskyEnv):
 
         # PART 9: vector field
         # NOTE: this is a experiment feature!
-        husky1_desire_rad, husky1_cur_rad = self._vector_field_rad(husky1_pos, husky1_forward_vec, husky2_pos, box1_pos, l2_dist(husky2_pos, box1_pos), boxes_dist)
-        husky2_desire_rad, husky2_cur_rad = self._vector_field_rad(husky2_pos, husky2_forward_vec, husky1_pos, box2_pos, l2_dist(husky1_pos, box2_pos), boxes_dist) 
+        husky1_desire_rad, husky1_cur_rad = self._vector_field_rad(husky1_pos, husky1_forward_vec, husky2_pos, box1_pos, suggested_dist)
+        husky2_desire_rad, husky2_cur_rad = self._vector_field_rad(husky2_pos, husky2_forward_vec, husky1_pos, box2_pos, suggested_dist)
         
         husky1_rad_diff = abs(husky1_desire_rad - husky1_cur_rad)
         husky2_rad_diff = abs(husky2_desire_rad - husky2_cur_rad)
@@ -240,7 +240,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.75)  or huskys_dist > boxes_dist + 1.5:   # huskys are too close or too far away 
+        if huskys_dist < (suggested_dist * 0.75)  or huskys_dist > suggested_dist + 1.5:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 6.0 or husky2_box_dist > 6.0: # husky is too far away from box 
             done = True
@@ -306,7 +306,6 @@ class HuskyPushEnv(HuskyEnv):
                 "reward: box velocity reward": box_linear_vel_reward,
                 "reward: goal-to-box cos dist reward": goal_box_cos_dist_reward,
                 "----------": 0,
-                "huskys rad reward": huskys_rad_reward,
                 "husky1 desire rad": husky1_desire_rad,
                 "husky1 cur rad": husky1_cur_rad,
                 "husky1 rad diff": husky1_rad_diff,
