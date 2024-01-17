@@ -74,6 +74,10 @@ class HuskyPushEnv(HuskyEnv):
 
 
     def _step(self, a):
+
+        hierarchical_NoSpatial_Baseline = True      # set this to True will evaluate the reward without relative spatial info
+
+
         husky1_pos_before = self._get_pos('husky_1_geom')
         husky2_pos_before = self._get_pos('husky_2_geom')
 
@@ -280,7 +284,8 @@ class HuskyPushEnv(HuskyEnv):
         if self._env_config['sparse_reward']:
             self._reward = reward = self._success == 1
         else:
-            reward = reward \
+            if(hierarchical_NoSpatial_Baseline == False):
+                reward = reward \
                     + huskys_forward_align_reward \
                     + huskys_dist_reward \
                     + huskys_box_dist_reward \
@@ -292,11 +297,15 @@ class HuskyPushEnv(HuskyEnv):
                     #+ huskys_rad_reward
                     #+ goal_box_cos_dist_reward \
                     #+ huskys_linear_vel_reward
+            elif(hierarchical_NoSpatial_Baseline == True):      # No relative spatial info used for reward function
+                reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+
+
             self._reward = reward
 
 
         info = {"success": self._success,
-                "Total reward": reward,
+                "Total reward": self._reward,
                 "reward: huskys forward align reward": huskys_forward_align_reward,
                 "reward: huskys right align reward": huskys_right_align_reward,
                 "reward: husky-to-husky dist reward": huskys_dist_reward,
@@ -350,7 +359,6 @@ class HuskyPushEnv(HuskyEnv):
 
         husky1_right_vec = Y_vector_from_quat(husky1_quat)
         husky2_right_vec = Y_vector_from_quat(husky2_quat)
-        
         
 
         # box
