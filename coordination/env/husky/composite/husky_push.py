@@ -241,8 +241,8 @@ class HuskyPushEnv(HuskyEnv):
         husky1_rad_diff = abs(husky1_desire_rad - husky1_cur_rad)
         husky2_rad_diff = abs(husky2_desire_rad - husky2_cur_rad)
 
-        husky1_rad_reward = -husky1_rad_diff * 20
-        husky2_rad_reward = -husky2_rad_diff * 20
+        husky1_rad_reward = -husky1_rad_diff * 30
+        husky2_rad_reward = -husky2_rad_diff * 30
         huskys_rad_reward = husky1_rad_reward + husky2_rad_reward
 
         reward = 0
@@ -311,7 +311,7 @@ class HuskyPushEnv(HuskyEnv):
             if(hierarchical_NoSpatial_Baseline == True):      # No relative spatial info used for reward function
                 reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
             elif(hierarchical_Uniform_Vector == True):
-                reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+                reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward + huskys_dist_reward
             else:
                 reward = reward \
                     + huskys_forward_align_reward \
