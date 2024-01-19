@@ -3,11 +3,11 @@ import rospy
 from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Odometry
 from math import pow,atan2,sqrt,sin,cos
-from tf.transformations import euler_from_quaternion
 import numpy as np
 import threading
 import time
 from rl.config import argparser
+from scipy.spatial.transform import Rotation
 
 import torch
 from rl.policies import get_actor_critic_by_name
@@ -15,6 +15,8 @@ from rl.low_level_agent import LowLevelAgent
 import gym
 from rl.trainer import get_subdiv_space, get_agent_by_name, Trainer
 from rl.main import make_log_files
+from env.transform_utils import Y_vector_from_quat, X_vector_from_quat, l2_dist, alignment_heading_difference, \
+    cos_dist, movement_heading_difference
 from mpi4py import MPI
 import numpy as np
 from collections import OrderedDict
@@ -29,53 +31,91 @@ import math
 def husky_forward_kinematic(ac_L, ac_R):
         linear_vel = (ac_L + ac_R)
         angular_vel = (ac_R - ac_L) / 1.667     # the coefficient is tested on real robot
-        return linear_vel, angular_vel
+        return linear_vel, angular_vel 
+
+def euler_from_quaternion(x, y, z, w):
+        """
+        Convert a quaternion into euler angles (roll, pitch, yaw)
+        roll is rotation around x in radians (counterclockwise)
+        pitch is rotation around y in radians (counterclockwise)
+        yaw is rotation around z in radians (counterclockwise)
+        """
+        t0 = +2.0 * (w * x + y * z)
+        t1 = +1.0 - 2.0 * (x * x + y * y)
+        roll_x = math.atan2(t0, t1)
+     
+        t2 = +2.0 * (w * y - z * x)
+        t2 = +1.0 if t2 > +1.0 else t2
+        t2 = -1.0 if t2 < -1.0 else t2
+        pitch_y = math.asin(t2)
+     
+        t3 = +2.0 * (w * z + x * y)
+        t4 = +1.0 - 2.0 * (y * y + z * z)
+        yaw_z = math.atan2(t3, t4)
+     
+        return roll_x, pitch_y, yaw_z # in radians
 
 
 class collab_push():
     def __init__(self, args):
-        rospy.init_node('husky_controller')
+        rospy.init_node('collab_robots_controller')
 
-        self.last_time = None
-        self.time_gap = 0
+        # Husky: pose, linear veloctiy, yaw velocity, quat, forward vector
+        self.husky_last_time = None
+        self.husky_yaw_velocity = 0
+        self.husky_linear_velocity = [0, 0, 0]
+        self.husky_last_pose = None
+        self.husky_cur_pose = Pose()
+        self.husky_quat = [1, 0, 0, 0]      # w, x, y, z
+        self.husky_forward_vec = [0, 0, 0]  # forwar vector
+        self.husky_right_vec = [0, 0, 0]
+        self.husky_pose_vel_subscriber = rospy.Subscriber('/mocap_node/Husky/Odom', Odometry, self.husky_pose_vel_callback)
 
-
-
-
-
-        # Husky
-        # Bunker
-        self.bunker_yaw_velocity = None
-        self.bunker_linear_velocity = None
+        # Bunker: pose, linear veloctiy, yaw velocity, quat, forward vector
+        self.bunker_last_time = None
+        self.bunker_yaw_velocity = 0
+        self.bunker_linear_velocity = [0, 0, 0]
         self.bunker_last_pose = None
         self.bunker_cur_pose = Pose()
+        self.bunker_quat = [1, 0, 0, 0]    # w, x, y, z
+        self.bunker_forward_vec = [0, 0, 0] # forward vector
+        self.bunker_right_vec = [0, 0, 0]
         self.bunker_pose_vel_subscriber = rospy.Subscriber('/mocap_node/Bunker/Odom', Odometry, self.bunker_pose_vel_callback)
 
-        # get Box1 pose
-        # get Box2 pose
+        # get Box1 pose, quat, forward vector
+        self.box1_pose = Pose()
+        self.box1_quat = [1, 0, 0, 0]
+        self.box1_forward_vec = [0, 0, 0]
+        self.box_1_pose_subscriber = rospy.Subscriber('/mocap_node/Box1/Odom', Odometry, self.box1_pose_callback)
+
+        # get Box2 pose, quat, forward vector
+        self.box2_pose = Pose()
+        self.box2_quat = [1, 0, 0, 0]
+        self.box2_forward_vec = [0, 0, 0]
+        self.box_2_pose_subscriber = rospy.Subscriber('/mocap_node/Box2/Odom', Odometry, self.box2_pose_callback)
+
         # get Box pose
+        self.box_last_time = None
+        self.box_pose = Pose()
+        self.box_last_pose = None
+        self.box_quat = [1, 0, 0, 0]
+        self.box_forward_vec = [0, 0, 0]
+        self.box_linear_velocity = [0, 0, 0] # [x, y, z] z is always in 0 in our 2D plane
+        self.box_yaw_velocity = 0   # rad
 
 
+        # huskys velocity publisher 
+        self.bunker_velocity_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
 
-        # robot_1       Husky
-        '''
-        self.robot_1_pose = Pose()
-        self.robot_1_pose_subscriber = rospy.Subscriber('/mocap_node/Robot_1/Odom', Odometry, self.robot_1_pose_callback)   # receive husky pose data from tracking system 
-        self.box_1_pose = Pose()
-        self.box_1_pose_subscriber = rospy.Subscriber('/mocap_node/Box1/Odom', Odometry, self.box_1_pose_callback)
-        '''
-        #self.robot_1_velocity_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
-
-        # robot_2       Bunker
-        #self.robot_2_velocity_publisher = rospy.Publisher('/smoother_cmd_vel', Twist, queue_size=10) # publish Twist message to Bunker
+        # bunker velocity publisher
+        self.robot_2_velocity_publisher = rospy.Publisher('/smoother_cmd_vel', Twist, queue_size=10) # publish Twist message to Bunker
 
 
-         
 
         self.rate = rospy.Rate(20)
 
         #self.trainer = self.load_trainer(args)
-        self.vel_test()
+        self._test()
 
 
     def load_trainer(self, config):         # load meta agent and lower-level agent model
@@ -91,7 +131,7 @@ class collab_push():
             """
             Sets up log directories and saves git diff and command line.
             """
-            config.run_name = 'rl.{}.{}.{}'.format(config.env, config.prefix, config.seed)
+            config.run_name = 'rl.{}.{}.{}'.format(config.env, confhuskyig.prefix, config.seed)
 
             config.log_dir = os.path.join(config.log_root_dir, config.run_name)
             logger.info('Create log directory: %s', config.log_dir)
@@ -150,61 +190,161 @@ class collab_push():
     def bunker_pose_vel_callback(self, data):
         cur_time = data.header.stamp.secs + (data.header.stamp.nsecs / 1000000000)
         self.bunker_cur_pose = data.pose.pose
-
+        self.bunker_quat = [self.bunker_cur_pose.orientation.w,
+                            self.bunker_cur_pose.orientation.x,
+                            self.bunker_cur_pose.orientation.y,
+                            self.bunker_cur_pose.orientation.z]
+        
+        self.bunker_forward_vec = X_vector_from_quat(self.bunker_quat)
+        self.bunker_right_vec = Y_vector_from_quat(self.bunker_quat)
 
         if self.bunker_last_pose != None and self.last_time != None:
             delta_linear_x = self.bunker_cur_pose.position.x - self.bunker_last_pose.position.x
             delta_linear_y = self.bunker_cur_pose.position.y - self.bunker_last_pose.position.y
 
-            bunker_cur_quat = np.array([self.bunker_cur_pose.orientation.w,
-                                        self.bunker_cur_pose.orientation.x,
-                                        self.bunker_cur_pose.orientation.y,
-                                        self.bunker_cur_pose.orientation.z])
+            _, _, cur_yaw_z = euler_from_quaternion(self.bunker_cur_pose.orientation.x,
+                                                        self.bunker_cur_pose.orientation.y,
+                                                        self.bunker_cur_pose.orientation.z,
+                                                        self.bunker_cur_pose.orientation.w)
 
-            bunker_last_quat = np.array([self.bunker_last_pose.orientation.w,
-                                         self.bunker_last_pose.orientation.x,
-                                         self.bunker_last_pose.orientation.y,
-                                         self.bunker_last_pose.orientation.z])
+            _, _, last_yaw_z = euler_from_quaternion(self.bunker_last_pose.orientation.x,
+                                                        self.bunker_last_pose.orientation.y,
+                                                        self.bunker_last_pose.orientation.z,
+                                                        self.bunker_last_pose.orientation.w)
 
-            last_yaw = math.atan2(2.0 * (self.bunker_cur_pose.orientation.z * self.bunker_cur_pose.orientation.w + self.bunker_cur_pose.orientation.x * self.bunker_cur_pose.orientation.y),
-                                 (-1.0 + 2.0 * (self.bunker_cur_pose.orientation.w ** 2 + self.bunker_cur_pose.orientation.x ** 2)))
-            
-            cur_yaw = math.atan2(2.0 * (self.bunker_cur_pose.orientation.z * self.bunker_cur_pose.orientation.w + self.bunker_cur_pose.orientation.x * self.bunker_cur_pose.orientation.y),
-                                 (-1.0 + 2.0 * (self.bunker_cur_pose.orientation.w ** 2 + self.bunker_cur_pose.orientation.x ** 2)))
-            
-            delta_yaw = cur_yaw - last_yaw
-            
 
-            time_gap = cur_time - self.last_time
-            self.time_gap = time_gap
+            delta_yaw = cur_yaw_z - last_yaw_z
+
+            time_gap = cur_time - self.bunker_last_time
 
             if time_gap != 0:
                 # linear velocity
-                linear_x_velocity = delta_linear_x / self.time_gap
-                linear_y_velocity = delta_linear_y / self.time_gap
+                linear_x_velocity = delta_linear_x / time_gap
+                linear_y_velocity = delta_linear_y / time_gap
 
                 self.bunker_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
 
                 # z-axis angular velocity
-                self.bunker_yaw_velocity = delta_yaw / self.time_gap
-                print("{0:.8f}".format(self.bunker_yaw_velocity))
-
+                self.bunker_yaw_velocity = delta_yaw / time_gap
 
         self.last_time = cur_time
         self.bunker_last_pose = self.bunker_cur_pose
 
     
-        
+    def husky_pose_vel_callback(self, data):
+        cur_time = data.header.stamp.secs + (data.header.stamp.nsecs / 1000000000)
+        self.husky_cur_pose = data.pose.pose
+
+        self.husky_quat = [self.husky_cur_pose.orientation.w,
+                            self.husky_cur_pose.orientation.x,
+                            self.husky_cur_pose.orientation.y,
+                            self.husky_cur_pose.orientation.z]
+        self.husky_forward_vec = X_vector_from_quat(self.husky_quat)
+        self.husky_right_vec = Y_vector_from_quat(self.bunker_quat)
+
+        if self.husky_last_pose != None and self.husky_last_time != None:
+            delta_linear_x = self.husky_cur_pose.position.x - self.husky_last_pose.position.x
+            delta_linear_y = self.husky_cur_pose.position.y - self.husky_last_pose.position.y
+
+            _, _, cur_yaw_z = euler_from_quaternion(self.husky_cur_pose.orientation.x,
+                                                        self.husky_cur_pose.orientation.y,
+                                                        self.husky_cur_pose.orientation.z,
+                                                        self.husky_cur_pose.orientation.w)
+
+            _, _, last_yaw_z = euler_from_quaternion(self.husky_last_pose.orientation.x,
+                                                        self.husky_last_pose.orientation.y,
+                                                        self.husky_last_pose.orientation.z,
+                                                        self.husky_last_pose.orientation.w)
 
 
-    # receive husky pose data from tracking system (posistion & orientation)        Husky
-    def robot_1_pose_callback(self, data):
-        self.robot_1_pose = data.pose.pose 
+            delta_yaw = cur_yaw_z - last_yaw_z
 
-    def box_1_pose_callback(self, data):
-        self.box_1_pose = data.pose.pose
+            time_gap = cur_time - self.husky_last_time
 
-    def vel_test(self):
+            if time_gap != 0:
+                # linear velocity
+                linear_x_velocity = delta_linear_x / time_gap
+                linear_y_velocity = delta_linear_y / time_gap
+
+                self.husky_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
+
+                # z-axis angular velocity
+                self.husky_yaw_velocity = delta_yaw / time_gap
+                print("{0:.8f}".format(self.husky_yaw_velocity))
+
+
+        self.husky_last_time = cur_time
+        self.husky_last_pose = self.husky_cur_pose
+
+
+    def box_pose_vel_callback(self, data):
+        cur_time = data.header.stamp.secs + (data.header.stamp.nsecs / 1000000000)
+        self.box_cur_pose = data.pose.pose
+
+        self.box_quat = [self.box_cur_pose.orientation.w,
+                            self.box_cur_pose.orientation.x,
+                            self.box_cur_pose.orientation.y,
+                            self.box_cur_pose.orientation.z]
+        self.box_forward_vec = X_vector_from_quat(self.box_quat)
+
+        if self.box_last_pose != None and self.box_last_time != None:
+            delta_linear_x = self.box_cur_pose.position.x - self.box_last_pose.position.x
+            delta_linear_y = self.box_cur_pose.position.y - self.box_last_pose.position.y
+
+            _, _, cur_yaw_z = euler_from_quaternion(self.box_cur_pose.orientation.x,
+                                                        self.box_cur_pose.orientation.y,
+                                                        self.box_cur_pose.orientation.z,
+                                                        self.box_cur_pose.orientation.w)
+
+            _, _, last_yaw_z = euler_from_quaternion(self.box_last_pose.orientation.x,
+                                                        self.box_last_pose.orientation.y,
+                                                        self.box_last_pose.orientation.z,
+                                                        self.box_last_pose.orientation.w)
+
+
+            delta_yaw = cur_yaw_z - last_yaw_z
+
+            time_gap = cur_time - self.box_last_time
+
+            if time_gap != 0:
+                # linear velocity
+                linear_x_velocity = delta_linear_x / time_gap
+                linear_y_velocity = delta_linear_y / time_gap
+
+                self.box_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
+
+                # z-axis angular velocity
+                self.box_yaw_velocity = delta_yaw / time_gap
+         
+        self.box_last_time = cur_time
+        self.box_last_pose = self.box_cur_pose
+
+
+    def box1_pose_callback(self, data):
+        self.box1_pose = data.pose.pose
+        self.box1_quat = [self.box1_pose.orientation.w,
+                          self.box1_pose.orientation.x,
+                          self.box1_pose.orientation.y,
+                          self.box1_pose.orientation.z]
+        self.box1_forward_vec = X_vector_from_quat(self.box1_quat)
+
+    
+    def box2_pose_callback(self, data):
+        self.box2_pose = data.pose.pose
+        self.box2_quat = [self.box2_pose.orientation.w,
+                          self.box2_pose.orientation.x,
+                          self.box2_pose.orientation.y,
+                          self.box2_pose.orientation.z]
+        self.box2_forward_vec = X_vector_from_quat(self.box2_quat)
+
+
+    def box_goal_rela_info(self):
+        raise ValueError
+
+    def robots_rela_info(self):
+        raise ValueError
+
+    def _test(self):
         while not rospy.is_shutdown():
             continue
     
