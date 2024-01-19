@@ -165,12 +165,15 @@ class collab_push():
                                          self.bunker_last_pose.orientation.x,
                                          self.bunker_last_pose.orientation.y,
                                          self.bunker_last_pose.orientation.z])
+
+            last_yaw = math.atan2(2.0 * (self.bunker_cur_pose.orientation.z * self.bunker_cur_pose.orientation.w + self.bunker_cur_pose.orientation.x * self.bunker_cur_pose.orientation.y),
+                                 (-1.0 + 2.0 * (self.bunker_cur_pose.orientation.w ** 2 + self.bunker_cur_pose.orientation.x ** 2)))
             
-            last_quat_conjugate = np.array([bunker_last_quat[0], -bunker_last_quat[1], -bunker_last_quat[2], -bunker_last_quat[3]])
+            cur_yaw = math.atan2(2.0 * (self.bunker_cur_pose.orientation.z * self.bunker_cur_pose.orientation.w + self.bunker_cur_pose.orientation.x * self.bunker_cur_pose.orientation.y),
+                                 (-1.0 + 2.0 * (self.bunker_cur_pose.orientation.w ** 2 + self.bunker_cur_pose.orientation.x ** 2)))
             
-            delta_quat = np.dot(bunker_cur_quat,last_quat_conjugate)
-            print(delta_quat)
-            angle = 2 * math.acos(delta_quat[0])
+            delta_yaw = cur_yaw - last_yaw
+            
 
             time_gap = cur_time - self.last_time
             self.time_gap = time_gap
@@ -182,10 +185,9 @@ class collab_push():
 
                 self.bunker_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
 
-                # angular velocity
-                self.bunker_yaw_velocity = angle / time_gap
+                # z-axis angular velocity
+                self.bunker_yaw_velocity = delta_yaw / self.time_gap
                 print("{0:.8f}".format(self.bunker_yaw_velocity))
-                
 
 
         self.last_time = cur_time
