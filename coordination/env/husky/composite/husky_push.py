@@ -61,7 +61,8 @@ class HuskyPushEnv(HuskyEnv):
     def _vector_field_rad(self, robot_control_pos, robot_control_forward_vec, robot_rotate_pos, target_pos, robot_rotate_box_dist, boxes_dist):
         k = 0.5     # the larger k is, the more abrupt transition of the field
 
-        suggested_dist = (robot_rotate_box_dist + boxes_dist) / 2
+        #suggested_dist = (robot_rotate_box_dist + boxes_dist) / 2
+        suggested_dist = boxes_dist
 
         dist_rr_t = (l2_dist(robot_control_pos, robot_rotate_pos) - suggested_dist) * k
         gamma_rc_rr = np.arctan2((robot_control_pos[1] - robot_rotate_pos[1]), (robot_control_pos[0] - robot_rotate_pos[0]))
@@ -70,12 +71,17 @@ class HuskyPushEnv(HuskyEnv):
         desire_rad = gamma_rc_rr + (sign * np.pi/2) + (sign * np.arctan(dist_rr_t))
         cur_rad = -np.arctan2(robot_control_forward_vec[1], robot_control_forward_vec[0])
 
+        if(desire_rad > np.pi):
+            desire_rad = -(2 * np.pi - desire_rad)
+        if(desire_rad < -np.pi):
+            desire_rad = (2 * np.pi + desire_rad)
+
         return desire_rad, cur_rad
 
 
     def _step(self, a):
-        hierarchical_NoSpatial_Baseline = True      # set this to True will evaluate the reward without relative spatial info
-        hierarchical_Uniform_Vector = False          # set this to True will evaluate the reward based on our uniform vector field approach
+        hierarchical_NoSpatial_Baseline = False      # set this to True will evaluate the reward without relative spatial info
+        hierarchical_Uniform_Vector = True           # set this to True will evaluate the reward based on our uniform vector field approach
         nonhierarchical_with_spatial_baseline = False
         nonhierarchical_nospatial_baseline = False
 
@@ -235,8 +241,8 @@ class HuskyPushEnv(HuskyEnv):
         husky1_rad_diff = abs(husky1_desire_rad - husky1_cur_rad)
         husky2_rad_diff = abs(husky2_desire_rad - husky2_cur_rad)
 
-        husky1_rad_reward = -husky1_rad_diff * 50
-        husky2_rad_reward = -husky2_rad_diff * 50
+        husky1_rad_reward = -husky1_rad_diff * 20
+        husky2_rad_reward = -husky2_rad_diff * 20
         huskys_rad_reward = husky1_rad_reward + husky2_rad_reward
 
         reward = 0

@@ -23,6 +23,7 @@ import os
 from util.logger import logger
 from util.pytorch import get_ckpt_path
 import sys
+import math
 
 
 def husky_forward_kinematic(ac_L, ac_R):
@@ -35,6 +36,27 @@ class collab_push():
     def __init__(self, args):
         rospy.init_node('husky_controller')
 
+        self.last_time = None
+        self.time_gap = 0
+
+
+
+
+
+        # Husky
+        # Bunker
+        self.bunker_yaw_velocity = None
+        self.bunker_linear_velocity = None
+        self.bunker_last_pose = None
+        self.bunker_cur_pose = Pose()
+        self.bunker_pose_vel_subscriber = rospy.Subscriber('/mocap_node/Bunker/Odom', Odometry, self.bunker_pose_vel_callback)
+
+        # get Box1 pose
+        # get Box2 pose
+        # get Box pose
+
+
+
         # robot_1       Husky
         '''
         self.robot_1_pose = Pose()
@@ -42,18 +64,18 @@ class collab_push():
         self.box_1_pose = Pose()
         self.box_1_pose_subscriber = rospy.Subscriber('/mocap_node/Box1/Odom', Odometry, self.box_1_pose_callback)
         '''
-        self.robot_1_velocity_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
+        #self.robot_1_velocity_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
 
         # robot_2       Bunker
-        self.robot_2_velocity_publisher = rospy.Publisher('/smoother_cmd_vel', Twist, queue_size=10) # publish Twist message to Bunker
+        #self.robot_2_velocity_publisher = rospy.Publisher('/smoother_cmd_vel', Twist, queue_size=10) # publish Twist message to Bunker
 
-        
+
+         
 
         self.rate = rospy.Rate(20)
 
         #self.trainer = self.load_trainer(args)
-
-        self.bunker_push()
+        self.vel_test()
 
 
     def load_trainer(self, config):         # load meta agent and lower-level agent model
@@ -89,7 +111,8 @@ class collab_push():
 
         def shutdown(signal, frame):
             logger.warn('Received signal %s: exiting', signal)
-            sys.exit(128+signal)
+            sys.exit(128+signal
+)
     
         signal.signal(signal.SIGHUP, shutdown)
         signal.signal(signal.SIGINT, shutdown)
@@ -103,9 +126,9 @@ class collab_push():
         if config.virtual_display is not None:
             os.environ["DISPLAY"] = config.virtual_display
 
+
         if config.gpu is not None:
-            os.environ["CUDA_VISIBLE_DE
-VICES"] = "{}".format(config.gpu)
+            os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(config.gpu)
             assert torch.cuda.is_available()
             config.device = torch.device("cuda")
         else:
@@ -123,15 +146,65 @@ VICES"] = "{}".format(config.gpu)
             trainer._agent.load_state_dict(ckpt['agent'])
 
         return trainer
-     
+
+    def bunker_pose_vel_callback(self, data):
+        cur_time = data.header.stamp.secs + (data.header.stamp.nsecs / 1000000000)
+        self.bunker_cur_pose = data.pose.pose
+
+
+        if self.bunker_last_pose != None and self.last_time != None:
+            delta_linear_x = self.bunker_cur_pose.position.x - self.bunker_last_pose.position.x
+            delta_linear_y = self.bunker_cur_pose.position.y - self.bunker_last_pose.position.y
+
+            bunker_cur_quat = np.array([self.bunker_cur_pose.orientation.w,
+                                        self.bunker_cur_pose.orientation.x,
+                                        self.bunker_cur_pose.orientation.y,
+                                        self.bunker_cur_pose.orientation.z])
+
+            bunker_last_quat = np.array([self.bunker_last_pose.orientation.w,
+                                         self.bunker_last_pose.orientation.x,
+                                         self.bunker_last_pose.orientation.y,
+                                         self.bunker_last_pose.orientation.z])
+            
+            last_quat_conjugate = np.array([bunker_last_quat[0], -bunker_last_quat[1], -bunker_last_quat[2], -bunker_last_quat[3]])
+            
+            delta_quat = np.dot(bunker_cur_quat,last_quat_conjugate)
+            print(delta_quat)
+            angle = 2 * math.acos(delta_quat[0])
+
+            time_gap = cur_time - self.last_time
+            self.time_gap = time_gap
+
+            if time_gap != 0:
+                # linear velocity
+                linear_x_velocity = delta_linear_x / self.time_gap
+                linear_y_velocity = delta_linear_y / self.time_gap
+
+                self.bunker_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
+
+                # angular velocity
+                self.bunker_yaw_velocity = angle / time_gap
+                print("{0:.8f}".format(self.bunker_yaw_velocity))
+                
+
+
+        self.last_time = cur_time
+        self.bunker_last_pose = self.bunker_cur_pose
+
+    
+        
+
 
     # receive husky pose data from tracking system (posistion & orientation)        Husky
     def robot_1_pose_callback(self, data):
-        self.robot_1_pose = data.pose.pose
+        self.robot_1_pose = data.pose.pose 
 
     def box_1_pose_callback(self, data):
         self.box_1_pose = data.pose.pose
 
+    def vel_test(self):
+        while not rospy.is_shutdown():
+            continue
     
     def bunker_push(self):
         time.sleep(5)
