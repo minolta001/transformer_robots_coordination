@@ -83,13 +83,18 @@ def multi_agent_run(config):
     env = trainer._env
 
     ob = env.reset()
-    print(ob)
-    input()
+    print("ob:", ob)
 
     meta_ac, meta_ac_before_activation, meta_log_prob = trainer._meta_agent.act(ob, is_train=False)
 
+    print("meta_ac:", meta_ac)
+    print("meta_ac_before_activation:", meta_ac_before_activation)
+
     ll_ob = ob.copy() 
     ac, ac_before_activation = trainer._agent.act(ll_ob, meta_ac, is_train=False)
+    print("ac:", ac)
+    print("ac_before_activaion:", ac_before_activation)
+    input()
 
 def basic_single_agent_run(config):
 

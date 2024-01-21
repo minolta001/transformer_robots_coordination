@@ -16,7 +16,7 @@ import gym
 from rl.trainer import get_subdiv_space, get_agent_by_name, Trainer
 from rl.main import make_log_files
 from env.transform_utils import Y_vector_from_quat, X_vector_from_quat, l2_dist, alignment_heading_difference, \
-    cos_dist, movement_heading_difference
+    cos_dist, movement_heading_difference, Y_vector_overlapping
 from mpi4py import MPI
 import numpy as np
 from collections import OrderedDict
@@ -27,10 +27,17 @@ from util.pytorch import get_ckpt_path
 import sys
 import math
 
+goal1_pos = np.array([4, 1, 0.30996])
+goal2_pos = np.array([4, -1, 0.30996])
+goal_pos = np.array([4, 0, 0.30996])
+goal_quat = np.array([1, 0, 0, 0])
+box_height = 0.30996
+robot_height = 0.15486868
 
-def husky_forward_kinematic(ac_L, ac_R):
+def forward_kinematic(ac_L, ac_R):
         linear_vel = (ac_L + ac_R)
-        angular_vel = (ac_R - ac_L) / 1.667     # the coefficient is tested on real robot
+        angular_vel = (ac_R - ac_L) / 3.63636363     # the coefficient is tested on mujoco. We want to reduce the gap between
+                                                     # simulation and reality, so let reality yield to the simulation
         return linear_vel, angular_vel 
 
 def euler_from_quaternion(x, y, z, w):
@@ -58,11 +65,14 @@ def euler_from_quaternion(x, y, z, w):
 
 class collab_push():
     def __init__(self, args):
+
+        self.config = args
+
         rospy.init_node('collab_robots_controller')
 
         # Husky: pose, linear veloctiy, yaw velocity, quat, forward vector
         self.husky_last_time = None
-        self.husky_yaw_velocity = 0
+        self.husky_angular_velocity = [0, 0, 0]
         self.husky_linear_velocity = [0, 0, 0]
         self.husky_last_pose = None
         self.husky_cur_pose = Pose()
@@ -73,7 +83,7 @@ class collab_push():
 
         # Bunker: pose, linear veloctiy, yaw velocity, quat, forward vector
         self.bunker_last_time = None
-        self.bunker_yaw_velocity = 0
+        self.bunker_angular_velocity = [0, 0, 0]
         self.bunker_linear_velocity = [0, 0, 0]
         self.bunker_last_pose = None
         self.bunker_cur_pose = Pose()
@@ -101,7 +111,7 @@ class collab_push():
         self.box_quat = [1, 0, 0, 0]
         self.box_forward_vec = [0, 0, 0]
         self.box_linear_velocity = [0, 0, 0] # [x, y, z] z is always in 0 in our 2D plane
-        self.box_yaw_velocity = 0   # rad
+        self.box_angular_velocity = [0, 0, 0]   # rad
 
 
         # huskys velocity publisher 
@@ -131,7 +141,7 @@ class collab_push():
             """
             Sets up log directories and saves git diff and command line.
             """
-            config.run_name = 'rl.{}.{}.{}'.format(config.env, confhuskyig.prefix, config.seed)
+            config.run_name = 'rl.{}.{}.{}'.format(config.env, config.prefix, config.seed)
 
             config.log_dir = os.path.join(config.log_root_dir, config.run_name)
             logger.info('Create log directory: %s', config.log_dir)
@@ -151,8 +161,7 @@ class collab_push():
 
         def shutdown(signal, frame):
             logger.warn('Received signal %s: exiting', signal)
-            sys.exit(128+signal
-)
+            sys.exit(128+signal)
     
         signal.signal(signal.SIGHUP, shutdown)
         signal.signal(signal.SIGINT, shutdown)
@@ -224,8 +233,8 @@ class collab_push():
 
                 self.bunker_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
 
-                # z-axis angular velocity
-                self.bunker_yaw_velocity = delta_yaw / time_gap
+                # angular velocity
+                self.bunker_angular_velocity = [0, 0, delta_yaw / time_gap]
 
         self.last_time = cur_time
         self.bunker_last_pose = self.bunker_cur_pose
@@ -268,9 +277,9 @@ class collab_push():
 
                 self.husky_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
 
-                # z-axis angular velocity
-                self.husky_yaw_velocity = delta_yaw / time_gap
-                print("{0:.8f}".format(self.husky_yaw_velocity))
+                # angular velocity
+                self.husky_angular_velocity = [0, 0, delta_yaw / time_gap]
+                #print("{0:.8f}".format(self.husky_yaw_velocity))
 
 
         self.husky_last_time = cur_time
@@ -314,7 +323,7 @@ class collab_push():
                 self.box_linear_velocity = [linear_x_velocity, linear_y_velocity, 0]
 
                 # z-axis angular velocity
-                self.box_yaw_velocity = delta_yaw / time_gap
+                self.box_angular_velocity = [0, 0, delta_yaw / time_gap]
          
         self.box_last_time = cur_time
         self.box_last_pose = self.box_cur_pose
@@ -337,16 +346,112 @@ class collab_push():
                           self.box2_pose.orientation.z]
         self.box2_forward_vec = X_vector_from_quat(self.box2_quat)
 
+    # relative info of box1-husky, box1-goal1
+    def box1_rela_info(self):
+        box_pos = np.array([self.box1_pose.position.x, self.box1_pose.position.y, box_height])
+        husky_pos = np.array([self.husky_cur_pose.position.x, self.husky_cur_pose.position.y, robot_height])
+        
+        box1_husky_rela_pos = box_pos - husky_pos
+        box1_goal_rela_pos = goal1_pos - box_pos
+        husky_move_coeff = movement_heading_difference(box_pos, husky_pos, self.husky_forward_vec, "forward")
+        
+        rela_info = OrderedDict([
+            ('box1_husky_rela_pos', box1_husky_rela_pos),
+            ('box1_goal_rela_pos', box1_goal_rela_pos),
+            ('box1_husky_move_coeff', husky_move_coeff)
+        ])
 
-    def box_goal_rela_info(self):
-        raise ValueError
+        return rela_info
 
-    def robots_rela_info(self):
-        raise ValueError
+    # relative info of box2-bunker, box2-goal2
+    def box2_rela_info(self):
+        box_pos = np.array([self.box2_pose.position.x, self.box2_pose.position.y, box_height])
+        bunker_pos = np.array([self.bunker_cur_pose.position.x, self.bunker_cur_pose.position.y, robot_height])
+        
+        box2_bunker_rela_pos = box_pos - bunker_pos
+        box2_goal_rela_pos = goal2_pos - box_pos
+        bunker_move_coeff = movement_heading_difference(box_pos, bunker_pos, self.bunker_forward_vec, "forward")
+        
+        rela_info = OrderedDict([
+            ('box2_bunker_rela_pos', box2_bunker_rela_pos),
+            ('box2_goal_rela_pos', box2_goal_rela_pos),
+            ('box2_bunker_move_coeff', bunker_move_coeff)
+        ])
+
+        return rela_info
+    
+
+    # relative info of robots, and box-goal
+    def global_rela_info(self):
+        husky_pos = np.array([self.husky_cur_pose.position.x, self.husky_cur_pose.position.y, robot_height])
+        bunker_pos = np.array([self.bunker_cur_pose.position.x, self.bunker_cur_pose.position.y, robot_height])
+                
+        goal_forward_vec = X_vector_from_quat(goal_quat)
+    
+        robots_forward_align_coeff = alignment_heading_difference(self.husky_forward_vec, self.bunker_forward_vec)
+        robots_right_align_coeff = Y_vector_overlapping(self.husky_right_vec, self.bunker_right_vec, husky_pos, bunker_pos)
+        robots_dist = l2_dist(husky_pos, bunker_pos)
+        goal_box_cos_dist = 1 - cos_dist(self.box_forward_vec, goal_forward_vec)
+        
+        rela_info = OrderedDict([
+            ('robots_forward_align_coeff', robots_forward_align_coeff),
+            ('robots_right_align_coeff', robots_right_align_coeff),
+            ('robots_dist', robots_dist),
+            ('goal_box_cos_dist', goal_box_cos_dist)
+        ])
+         
+        return rela_info
+    
+    # generate observation that could fit the model format
+    def make_obs(self):
+        box1_rela_info = self.box1_rela_info()
+        box2_rela_info = self.box2_rela_info()
+        global_rela_info = self.global_rela_info()
+
+        husky_vel = self.husky_linear_velocity + self.husky_angular_velocity
+        bunker_vel = self.bunker_linear_velocity + self.bunker_angular_velocity
+        box_vel = self.box_linear_velocity + self.box_angular_velocity
+
+        obs = OrderedDict([
+            ('husky_1', np.concatenate([[robot_height], self.husky_quat, husky_vel, self.husky_forward_vec, [box1_rela_info['box1_husky_move_coeff']]])),   # husky
+            ('husky_2', np.concatenate([[robot_height], self.bunker_quat, bunker_vel, self.bunker_forward_vec, [box2_rela_info['box2_bunker_move_coeff']]])),   # actually bunker!
+            ('box_1', np.concatenate([box1_rela_info['box1_husky_rela_pos'], box1_rela_info['box1_goal_rela_pos'], self.box1_forward_vec, box_vel])),
+            ('box_2', np.concatenate([box2_rela_info['box2_bunker_rela_pos'], box2_rela_info['box2_goal_rela_pos'], self.box2_forward_vec ,box_vel])),
+            ('relative_info', [global_rela_info['robots_forward_align_coeff'], global_rela_info['robots_right_align_coeff'], global_rela_info['robots_dist'], global_rela_info['goal_box_cos_dist']])
+        ])
+
+        return obs
+
 
     def _test(self):
+        print("!!The test is going to start, be careful!!")
+        input("Press Enter to start")
+
+        robots_pushing_model = self.load_trainer(self.config)
+        
         while not rospy.is_shutdown():
-            continue
+            husky_vel_msg = Twist()
+            bunker_vel_msg = Twist()
+            obs = self.make_obs()
+
+            meta_ac, meta_ac_before_activation, meta_log_prob = robots_pushing_model._meta_agent.act(obs, is_train=False)
+
+            ll_ob = obs.copy()
+
+            ac, ac_before_activation = robots_pushing_model._agent.act(ll_ob, meta_ac, is_train=False)
+
+            husky_action = ac['husky_1']
+            bunker_action = ac['husky_2']
+
+            # husky: transfer action to linear and angular command
+            husky_linear_vel, husky_angular_vel = forward_kinematic(husky_action[0], husky_action[1])
+
+            # bunker: transfer action to linear and angular command
+            bunker_linear_vel, bunker_angular_vel = forward_kinematic(bunker_action[0], bunker_action[1])
+
+            
+
+
     
     def bunker_push(self):
         time.sleep(5)
