@@ -159,8 +159,6 @@ class HuskyPushEnv(HuskyEnv):
         huskys_forward_align_reward = huskys_forward_align_coeff * self._env_config["alignment_reward"]
 
 
-#husky_1_id = model.body('
-
         # PART 2: Right vector overlapping between two Huskys (checking if two vectors are on the same line and same direction)
         # if Part 2 is gauranteed, then Part 1 is gauranteed 
         husky1_right_vec = Y_vector_from_quat(husky1_quat)

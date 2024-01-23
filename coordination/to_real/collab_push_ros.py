@@ -27,9 +27,9 @@ from util.pytorch import get_ckpt_path
 import sys
 import math
 
-goal1_pos = np.array([4, 1, 0.30996])
-goal2_pos = np.array([4, -1, 0.30996])
-goal_pos = np.array([4, 0, 0.30996])
+goal1_pos = np.array([2.6, 1, 0.30996])
+goal2_pos = np.array([2.6, -1, 0.30996])
+goal_pos = np.array([2.6, 0, 0.30996])
 goal_quat = np.array([1, 0, 0, 0])
 box_height = 0.30996
 robot_height = 0.15486868
@@ -115,12 +115,10 @@ class collab_push():
 
 
         # huskys velocity publisher 
-        self.bunker_velocity_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
+        self.husky_vel_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=10) # publish Twist message to Husky
 
         # bunker velocity publisher
-        self.robot_2_velocity_publisher = rospy.Publisher('/smoother_cmd_vel', Twist, queue_size=10) # publish Twist message to Bunker
-
-
+        self.bunker_vel_publisher = rospy.Publisher('/smoother_cmd_vel', Twist, queue_size=10) # publish Twist message to Bunker
 
         self.rate = rospy.Rate(20)
 
@@ -420,16 +418,34 @@ class collab_push():
             ('relative_info', [global_rela_info['robots_forward_align_coeff'], global_rela_info['robots_right_align_coeff'], global_rela_info['robots_dist'], global_rela_info['goal_box_cos_dist']])
         ])
 
+        assert(len(obs['husky_1']) == 15)
+        assert(len(obs['husky_2']) == 15)
+        assert(len(obs['box_1']) == 15)
+        assert(len(obs['box_2']) == 15)
+        assert(len(obs['relative_info']) == 4)
+
         return obs
 
 
     def _test(self):
-        print("!!The test is going to start, be careful!!")
-        input("Press Enter to start")
+
+        print("Loading collaborative robtos pushing model")
 
         robots_pushing_model = self.load_trainer(self.config)
+
+        print("!!The test is going to start, be careful!!")
+        input("Press Enter to start")
         
         while not rospy.is_shutdown():
+            husky_pos = np.array([self.husky_cur_pose.position.x, self.husky_cur_pose.position.y, robot_height])
+            bunker_pos = np.array([self.bunker_cur_pose.position.x, self.bunker_cur_pose.position.y, robot_height])
+            husky_x = husky_pos[0]
+            husky_y = husky_pos[1]
+            bunker_x = bunker_pos[0]
+            bunker_y = bunker_pos[1]
+            
+            robots_dist = l2_dist(husky_pos, bunker_pos)
+
             husky_vel_msg = Twist()
             bunker_vel_msg = Twist()
             obs = self.make_obs()
@@ -449,7 +465,33 @@ class collab_push():
             # bunker: transfer action to linear and angular command
             bunker_linear_vel, bunker_angular_vel = forward_kinematic(bunker_action[0], bunker_action[1])
 
-            
+            # make sure robots within safety zone, and won't collide together
+            if(-2 <= husky_x and husky_x <= 2.5 and -2 <= husky_y and husky_y <= 2 \
+               and -2 <= bunker_x and bunker_x <= 2.5 and -2 <= bunker_y and bunker_y <= 2 \
+                and 1 <= robots_dist):
+                    print("Husky linear vel: ", husky_linear_vel, " | Husky angular vel: ", husky_angular_vel)
+                    print("Bunker linear vel: ", bunker_linear_vel, " | Bunker angular vel: ", bunker_angular_vel)
+
+                    husky_vel_msg.linear.x = husky_linear_vel
+                    husky_vel_msg.angular.z = husky_angular_vel
+                    bunker_vel_msg.linear.x = bunker_linear_vel
+                    bunker_vel_msg.angular.z = bunker_angular_vel
+                    self.husky_vel_publisher.publish(husky_vel_msg)
+                    self.bunker_vel_publisher.publish(bunker_vel_msg)
+            else:
+                husky_vel_msg.linear.x = 0
+                husky_vel_msg.angular.z = 0 
+                bunker_vel_msg.linear.x = 0 
+                bunker_vel_msg.angular.z = 0 
+                self.husky_vel_publisher.publish(husky_vel_msg)
+                self.bunker_vel_publisher.publish(bunker_vel_msg)
+
+                print("Some safety distancing is violated!")
+                print("Shut down the ros node now.")
+                
+                rospy.on_shutdown()
+                    
+
 
 
     
