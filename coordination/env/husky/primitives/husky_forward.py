@@ -78,7 +78,7 @@ class HuskyForwardEnv(HuskyEnv):
         2023/12/08 Current size of observation
         '''
         self.ob_shape = OrderedDict([(self.husky, 15),
-                                     (self.box, 15)])
+                                     (self.box, 12)])
 
 
         '''
@@ -279,9 +279,10 @@ class HuskyForwardEnv(HuskyEnv):
                                                      husky_forward_vector_after, 
                                                      "forward")
         
-            husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward']
-            box_linear_vel_reward = box_linear_vel * self._env_config['box_linear_vel_reward']
+            husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward'] * 10
+            box_linear_vel_reward = box_linear_vel * self._env_config['box_linear_vel_reward'] * 10
             dist_reward = l2_dist(box_after, np.array([0, 0, 0.3])) * self._env_config['dist_reward']
+            dist_husky_box_reward = dist_husky_box_reward / 10
             reward = reward + husky_linear_vel_reward + box_linear_vel_reward + dist_reward + dist_husky_box_reward 
         
         elif(skill == "approach"):  # encourage the robot push slowly when the object is near the goal
@@ -431,10 +432,18 @@ class HuskyForwardEnv(HuskyEnv):
 
         box_vel = self._get_vel("box_body")
 
+        '''
         obs = OrderedDict([
             (self.husky, np.concatenate([husky_pos[2:3], husky_quat, husky_vel, husky_forward_vec, [move_coeff]])), # 15
             (self.box, np.concatenate([box_pos - husky_pos, goal_pos - box_pos, box_forward, box_vel]))      # 15
         ])
+        '''
+
+        obs = OrderedDict([
+            (self.husky, np.concatenate([husky_pos[2:3], husky_quat, husky_vel, husky_forward_vec, [move_coeff]])), # 15
+            (self.box, np.concatenate([box_pos - husky_pos, box_forward, box_vel]))      # 12
+        ])
+
         
         def ravel(x):
             obs[x] = obs[x].ravel()
