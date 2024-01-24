@@ -509,7 +509,7 @@ class HuskyForwardEnv(HuskyEnv):
             #init_box_quat = sample_quat()
             qpos[3:7] = sample_quat()
         
-        elif(self._env_config["skill"] == "push"):
+        elif(self._env_config["skill"] == "push" or self._env_config["skill"] == "move"):
             qpos[0] = x
             qpos[1] = y
             self._set_quat('husky_robot', sample_quat(low=-np.pi/6, high=np.pi/6))
