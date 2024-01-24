@@ -33,7 +33,7 @@ class HuskyForwardEnv(HuskyEnv):
             'linear_vel_reward': 50, #50 TODO
             'angular_vel_reward': 20,   # TODO
             #'box_linear_vel_reward': 5000,
-            'box_linear_vel_reward': 1000,
+            'box_linear_vel_reward': 100,
             'box_angular_vel_reward': 20,
             'box_goal_reward': 500,
             'alive_reward': 0.,
@@ -272,6 +272,17 @@ class HuskyForwardEnv(HuskyEnv):
                     + box_linear_vel_reward \
                     #+ quat_dist_box_goal_reward \
                     #+ box_angular_vel_reward
+
+        if (skill == "move"):
+            move_coeff = movement_heading_difference(box_after, 
+                                                     pos_after, 
+                                                     husky_forward_vector_after, 
+                                                     "forward")
+        
+            husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward']
+            box_linear_vel_reward = box_linear_vel * self._env_config['box_linear_vel_reward']
+            dist_reward = l2_dist(box_after, np.array([0, 0, 0.3])) * self._env_config['dist_reward']
+            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + dist_reward
         
         elif(skill == "approach"):  # encourage the robot push slowly when the object is near the goal
             reward = reward + self._env_config['bonus_reward']
@@ -340,6 +351,22 @@ class HuskyForwardEnv(HuskyEnv):
                 "success": self._success
             }
 
+        if (skill == "move"):
+            info = {"Current Skill": skill,
+                    "Total Reward": reward,
+                    "reward: box_linear_vel": box_linear_vel_reward,
+                    "reward: husky_linear_vel": husky_linear_vel_reward,
+                    "reward: box move distance reward": dist_reward,
+                    "----------": 0,
+                    "husky_movement_heading_coeff": move_coeff,
+                    "----------": 0,
+                    "dist_husky_box": dist_husky_box,
+                    "dist_box_goal": dist_box_goal,
+                    "husky_pos": pos_after,
+                    "box_pos": box_after,
+                    "box_ob": ob[self.box], 
+                    "success": self._success
+            }
         if (skill == "approach"):
             info = {"Current Skill": skill,
                     "Total Reward": reward,
