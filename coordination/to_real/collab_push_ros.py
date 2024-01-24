@@ -27,16 +27,20 @@ from util.pytorch import get_ckpt_path
 import sys
 import math
 
-goal1_pos = np.array([2.6, 1, 0.30996])
-goal2_pos = np.array([2.6, -1, 0.30996])
-goal_pos = np.array([2.6, 0, 0.30996])
+goal1_pos = np.array([2, 1, 0.30996])
+goal2_pos = np.array([2, -1, 0.30996])
+goal_pos = np.array([2, 0, 0.30996])
 goal_quat = np.array([1, 0, 0, 0])
 box_height = 0.30996
 robot_height = 0.15486868
 
+control_linear_slowdown_coeff = 8
+control_angular_slowdown_coeff = 1
+
+
 def forward_kinematic(ac_L, ac_R):
-        linear_vel = (ac_L + ac_R)
-        angular_vel = (ac_R - ac_L) / 3.63636363     # the coefficient is tested on mujoco. We want to reduce the gap between
+        linear_vel = (ac_L + ac_R) / 2 / control_linear_slowdown_coeff
+        angular_vel = (ac_R - ac_L) / 3.63636363 / control_angular_slowdown_coeff   # the coefficient is tested on mujoco. We want to reduce the gap between
                                                      # simulation and reality, so let reality yield to the simulation
         return linear_vel, angular_vel 
 
@@ -96,12 +100,14 @@ class collab_push():
         self.box1_pose = Pose()
         self.box1_quat = [1, 0, 0, 0]
         self.box1_forward_vec = [0, 0, 0]
+        self.box1_goal_dist = math.inf
         self.box_1_pose_subscriber = rospy.Subscriber('/mocap_node/Box1/Odom', Odometry, self.box1_pose_callback)
 
         # get Box2 pose, quat, forward vector
         self.box2_pose = Pose()
         self.box2_quat = [1, 0, 0, 0]
         self.box2_forward_vec = [0, 0, 0]
+        self.box2_goal_dist = math.inf
         self.box_2_pose_subscriber = rospy.Subscriber('/mocap_node/Box2/Odom', Odometry, self.box2_pose_callback)
 
         # get Box pose
@@ -123,7 +129,7 @@ class collab_push():
         self.rate = rospy.Rate(20)
 
         #self.trainer = self.load_trainer(args)
-        self._test()
+        #self._test()
 
 
     def load_trainer(self, config):         # load meta agent and lower-level agent model
@@ -205,7 +211,7 @@ class collab_push():
         self.bunker_forward_vec = X_vector_from_quat(self.bunker_quat)
         self.bunker_right_vec = Y_vector_from_quat(self.bunker_quat)
 
-        if self.bunker_last_pose != None and self.last_time != None:
+        if self.bunker_last_pose != None and self.bunker_last_time != None:
             delta_linear_x = self.bunker_cur_pose.position.x - self.bunker_last_pose.position.x
             delta_linear_y = self.bunker_cur_pose.position.y - self.bunker_last_pose.position.y
 
@@ -352,6 +358,8 @@ class collab_push():
         box1_husky_rela_pos = box_pos - husky_pos
         box1_goal_rela_pos = goal1_pos - box_pos
         husky_move_coeff = movement_heading_difference(box_pos, husky_pos, self.husky_forward_vec, "forward")
+
+        self.box1_goal_dist = l2_dist(box_pos, goal1_pos)
         
         rela_info = OrderedDict([
             ('box1_husky_rela_pos', box1_husky_rela_pos),
@@ -368,7 +376,9 @@ class collab_push():
         
         box2_bunker_rela_pos = box_pos - bunker_pos
         box2_goal_rela_pos = goal2_pos - box_pos
-        bunker_move_coeff = movement_heading_difference(box_pos, bunker_pos, self.bunker_forward_vec, "forward")
+        bunker_move_coeff = movement_heading_difference(box_pos, bunker_pos, self.bunker_forward_vec, "forward") 
+    
+        self.box2_goal_dist = l2_dist(box_pos, goal2_pos)
         
         rela_info = OrderedDict([
             ('box2_bunker_rela_pos', box2_bunker_rela_pos),
@@ -438,12 +448,12 @@ class collab_push():
         
         while not rospy.is_shutdown():
             husky_pos = np.array([self.husky_cur_pose.position.x, self.husky_cur_pose.position.y, robot_height])
-            bunker_pos = np.array([self.bunker_cur_pose.position.x, self.bunker_cur_pose.position.y, robot_height])
+            bunker_pos = np.array([self.bunker_cur_pose.position.x, self.bunker_cur_pose.position.y, robot_height]) 
             husky_x = husky_pos[0]
             husky_y = husky_pos[1]
             bunker_x = bunker_pos[0]
             bunker_y = bunker_pos[1]
-            
+
             robots_dist = l2_dist(husky_pos, bunker_pos)
 
             husky_vel_msg = Twist()
@@ -465,13 +475,11 @@ class collab_push():
             # bunker: transfer action to linear and angular command
             bunker_linear_vel, bunker_angular_vel = forward_kinematic(bunker_action[0], bunker_action[1])
 
+            print("goal1 dist: ", self.box1_goal_dist, "goal2 dist: ", self.box2_goal_dist)            
             # make sure robots within safety zone, and won't collide together
-            if(-2 <= husky_x and husky_x <= 2.5 and -2 <= husky_y and husky_y <= 2 \
-               and -2 <= bunker_x and bunker_x <= 2.5 and -2 <= bunker_y and bunker_y <= 2 \
-                and 1 <= robots_dist):
-                    print("Husky linear vel: ", husky_linear_vel, " | Husky angular vel: ", husky_angular_vel)
-                    print("Bunker linear vel: ", bunker_linear_vel, " | Bunker angular vel: ", bunker_angular_vel)
-
+            if(-2.5 <= husky_x and husky_x <= 2.5 and -2 <= husky_y and husky_y <= 1.9 \
+               and -2.5 <= bunker_x and bunker_x <= 2.5 and -2 <= bunker_y and bunker_y <= 1.9 \
+                and 1 <= robots_dist and self.box1_goal_dist > 0.4 and self.box2_goal_dist > 0.4):
                     husky_vel_msg.linear.x = husky_linear_vel
                     husky_vel_msg.angular.z = husky_angular_vel
                     bunker_vel_msg.linear.x = bunker_linear_vel
@@ -486,12 +494,18 @@ class collab_push():
                 self.husky_vel_publisher.publish(husky_vel_msg)
                 self.bunker_vel_publisher.publish(bunker_vel_msg)
 
-                print("Some safety distancing is violated!")
-                print("Shut down the ros node now.")
+                if(self.box1_goal_dist <= 0.4 and self.box2_goal_dist <= 0.4):
+                    print("Goal achieve!")
+                else:
+                    print("Some safety distancing is violated!")
+                    print("Shut down the ros node now.")
                 
                 rospy.on_shutdown()
-                    
-
+                
+            print("goal1 dist: ", self.box1_goal_dist, "goal2 dist: ", self.box2_goal_dist)
+            
+            
+            
 
 
     
@@ -559,4 +573,5 @@ class collab_push():
     
 if __name__ == '__main__':
     args, unparsed = argparser()
-    collab_push_team = collab_push(args) 
+    collab_push_team = collab_push(args)
+    collab_push_team._test()

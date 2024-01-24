@@ -211,19 +211,27 @@ python3 -m rl.main --env ant-push-v0 --gpu 0 --prefix ours --seed 1 --meta hard 
 
 # Husky composite push
 ```bash
+# baseline 1: No hierarchy, no relative spatial info reward shaping
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-baseline-no_hierarchy-no-spatial --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,husky_2,box_2,relative_info-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000
+
 # baseline 2: No hierarchy, Yes reward shaping (naive vector field)
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-baseline-no_hierarchy-naive_vector --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,husky_2,box_2,relative_info-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-baseline-no_hierarchy-with_sptial --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,husky_2,box_2,relative_info-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000
 
 # baseline 3: Yes hierarchy, no relative spatial reward shaping (only consider some basic distance factors)  # NOTE: You need to modify the parameter in husky_push.py file to run different baselines and experiments!
 python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-hierarchical-non_spatial --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
 
-# complete collab push, naive vector field, episode length 300
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-naive_vector --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000 
+# 4 complete collab push, naive vector field, episode length 400, both
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-Hierarchica-NaiveVector-ver3 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 1000000
+# 4 complete navie vector field, only push
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-Hierarchica-NaiveVector-ver3-pushonly --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1/rl.husky-forward-v0.push-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 1000000
+
 
 # complete collab push, uniform vector field  # Note: need to modify the parameter in husky_push.py file to run correspond experiment
 python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-hierarchical_uniform_vector-ver2 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200-ver2.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200-ver2.1 --max_meta_len 5 --max_global_step 2000000
-
 ```
+
+
+
 
 ## Directories
 The structure of the repository:

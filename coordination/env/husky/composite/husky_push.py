@@ -29,7 +29,7 @@ class HuskyPushEnv(HuskyEnv):
             'random_goal_pos': 0.01,
             #'random_goal_pos': 0.5,
             'dist_threshold': 0.1,
-            'loose_dist_threshold': 0.8,
+            'loose_dist_threshold': 0.5,
             'goal_box_cos_dist_coeff_threshold': 0.95,
 
             'dist_reward': 10,
@@ -48,7 +48,7 @@ class HuskyPushEnv(HuskyEnv):
             'sparse_reward': 0,
             'init_randomness': 0.01,
             #'max_episode_steps': 400,
-            'max_episode_steps': 200,
+            'max_episode_steps': 400,
         }) 
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -81,9 +81,9 @@ class HuskyPushEnv(HuskyEnv):
 
     def _step(self, a):
         hierarchical_NoSpatial_Baseline = False      # set this to True will evaluate the reward without relative spatial info
-        hierarchical_Uniform_Vector = True           # set this to True will evaluate the reward based on our uniform vector field approach
-        nonhierarchical_with_spatial_baseline = False
-        nonhierarchical_nospatial_baseline = False
+        hierarchical_Uniform_Vector = False           # set this to True will evaluate the reward based on our uniform vector field approach
+        nonhierarchical_with_spatial_baseline = False   # no hierarchy, with relative spatial info
+        nonhierarchical_nospatial_baseline = False   # no hierarchy, no relative spatial info
 
         if hierarchical_NoSpatial_Baseline:
             self._experiment_type = "Hierarchical without relative-spatial info" 
@@ -310,6 +310,19 @@ class HuskyPushEnv(HuskyEnv):
                 reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
             elif(hierarchical_Uniform_Vector == True):
                 reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward + huskys_dist_reward
+            elif(nonhierarchical_nospatial_baseline == True):
+                reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+            elif(nonhierarchical_with_spatial_baseline == True):
+                reward = reward \
+                    + huskys_forward_align_reward \
+                    + huskys_dist_reward \
+                    + huskys_box_dist_reward \
+                    + goal_box_dist_reward \
+                    + huskys_move_heading_reward \
+                    + huskys_right_align_reward \
+                    + box_linear_vel_reward \
+                    + goal_box_cos_dist_reward \
+                 
             else:
                 reward = reward \
                     + huskys_forward_align_reward \
@@ -494,8 +507,8 @@ class HuskyPushEnv(HuskyEnv):
         qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * 0.2
         qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * 0.2
 
-        self._set_quat('husky_robot_1', sample_quat(low=-np.pi/6, high=np.pi/6))
-        self._set_quat('husky_robot_2', sample_quat(low=-np.pi/6, high=np.pi/6))
+        self._set_quat('husky_robot_1', sample_quat(low=-np.pi/9, high=np.pi/9))
+        self._set_quat('husky_robot_2', sample_quat(low=-np.pi/9, high=np.pi/9))
 
 
         # Initialize goal
@@ -505,8 +518,8 @@ class HuskyPushEnv(HuskyEnv):
         #z = 0.3
         #goal_pos = np.asarray([x, y, z])
 
-        goal_pos = np.asarray([np.random.uniform(low=1, high=3), np.random.uniform(low=-0.8, high=0.8), 0.3])
-        goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
+        goal_pos = np.asarray([np.random.uniform(low=1, high=2), np.random.uniform(low=-0.5, high=0.5), 0.3])
+        goal_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
 
         self._set_pos('goal', goal_pos)
         self._set_quat('goal', goal_quat)
