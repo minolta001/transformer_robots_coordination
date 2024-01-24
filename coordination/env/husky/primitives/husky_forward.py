@@ -282,7 +282,7 @@ class HuskyForwardEnv(HuskyEnv):
             husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward']
             box_linear_vel_reward = box_linear_vel * self._env_config['box_linear_vel_reward']
             dist_reward = l2_dist(box_after, np.array([0, 0, 0.3])) * self._env_config['dist_reward']
-            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + dist_reward
+            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + dist_reward + dist_husky_box_reward 
         
         elif(skill == "approach"):  # encourage the robot push slowly when the object is near the goal
             reward = reward + self._env_config['bonus_reward']
@@ -357,10 +357,10 @@ class HuskyForwardEnv(HuskyEnv):
                     "reward: box_linear_vel": box_linear_vel_reward,
                     "reward: husky_linear_vel": husky_linear_vel_reward,
                     "reward: box move distance reward": dist_reward,
+                    "reward: husky box distance reward": dist_husky_box_reward,
                     "----------": 0,
                     "husky_movement_heading_coeff": move_coeff,
                     "----------": 0,
-                    "dist_husky_box": dist_husky_box,
                     "dist_box_goal": dist_box_goal,
                     "husky_pos": pos_after,
                     "box_pos": box_after,
