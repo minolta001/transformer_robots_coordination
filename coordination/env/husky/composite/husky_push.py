@@ -31,7 +31,7 @@ class HuskyPushEnv(HuskyEnv):
             'dist_threshold': 0.1,
             'loose_dist_threshold': 0.6,
             'goal_box_cos_dist_coeff_threshold': 0.95,
-            'box_linear_reward': 200,
+            'box_linear_vel_reward': 200,
             'dist_reward': 10,
             'alignment_reward': 80,
             'goal_dist_reward': 30,
