@@ -17,8 +17,8 @@ class HuskyPushEnv(HuskyEnv):
 
         # Env info
         self.ob_shape = OrderedDict([("husky_1", 15), ("husky_2", 15),
-                                     ("box_1", 15), ("box_2", 15),
-                                     ("relative_info", 4)])
+                                     ("box_1", 12), ("box_2", 12),
+                                     ("relative_info", 10)])
         
         
         self.action_space.decompose(OrderedDict([("husky_1", 2), ("husky_2", 2)]))
@@ -449,9 +449,9 @@ class HuskyPushEnv(HuskyEnv):
         obs = OrderedDict([
             ('husky_1', np.concatenate([husky1_pos[2:3], husky1_quat, husky1_vel, husky1_forward_vec, [husky1_move_coeff]])), 
             ('husky_2', np.concatenate([husky2_pos[2:3], husky2_quat, husky2_vel, husky2_forward_vec, [husky2_move_coeff]])),
-            ('box_1', np.concatenate([box1_pos - husky1_pos, goal1_pos - box1_pos, box1_forward, box_vel])),
-            ('box_2', np.concatenate([box2_pos - husky2_pos, goal2_pos - box2_pos, box2_forward, box_vel])),
-            ('relative_info', [huskys_forward_align_coeff, huskys_right_align_coeff, huskys_dist, goal_box_cos_dist_coeff])
+            ('box_1', np.concatenate([box1_pos - husky1_pos, box1_forward, box_vel])),
+            ('box_2', np.concatenate([box2_pos - husky2_pos, box2_forward, box_vel])),
+            ('relative_info', np.concatenate([goal1_pos - box1_pos, goal2_pos - box2_pos, [huskys_forward_align_coeff, huskys_right_align_coeff, huskys_dist, goal_box_cos_dist_coeff]]))
         ])
 
 
