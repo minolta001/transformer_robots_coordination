@@ -85,16 +85,19 @@ class HuskyPushEnv(HuskyEnv):
         nonhierarchical_with_spatial_baseline = False   # no hierarchy, with relative spatial info
         nonhierarchical_nospatial_baseline = False   # no hierarchy, no relative spatial info
 
-        if hierarchical_NoSpatial_Baseline:
-            self._experiment_type = "Hierarchical without relative-spatial info" 
-        elif hierarchical_Uniform_Vector:
-            self._experiment_type = "Hierarchical Uniform VectorField"
-        elif nonhierarchical_with_spatial_baseline:
-            self._experiment_type = "Non-hierarchical with relative spatial info"
-        elif nonhierarchical_nospatial_baseline:
-            self._experiment_type = "Non-hierarchical without relative spatial info"
-        else:
-            self._experiment_type = "Hierarchical with relative spatial info"
+        use_move = False
+
+        if(use_move == False):
+            if hierarchical_NoSpatial_Baseline:
+                self._experiment_type = "Hierarchical without relative-spatial info" 
+            elif hierarchical_Uniform_Vector:
+                self._experiment_type = "Hierarchical Uniform VectorField"
+            elif nonhierarchical_with_spatial_baseline:
+                self._experiment_type = "Non-hierarchical with relative spatial info"
+            elif nonhierarchical_nospatial_baseline:
+                self._experiment_type = "Non-hierarchical without relative spatial info"
+            else:
+                self._experiment_type = "Hierarchical with relative spatial info"
 
         husky1_pos_before = self._get_pos('husky_1_geom')
         husky2_pos_before = self._get_pos('husky_2_geom')
@@ -306,36 +309,59 @@ class HuskyPushEnv(HuskyEnv):
         if self._env_config['sparse_reward']:
             self._reward = reward = self._success == 1
         else:
-            if(hierarchical_NoSpatial_Baseline == True):      # No relative spatial info used for reward function
-                reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
-            elif(hierarchical_Uniform_Vector == True):
-                reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward + huskys_dist_reward
-            elif(nonhierarchical_nospatial_baseline == True):
-                reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
-            elif(nonhierarchical_with_spatial_baseline == True):
-                reward = reward \
-                    + huskys_forward_align_reward \
-                    + huskys_dist_reward \
-                    + huskys_box_dist_reward \
-                    + goal_box_dist_reward \
-                    + huskys_move_heading_reward \
-                    + huskys_right_align_reward \
-                    + box_linear_vel_reward \
-                    + goal_box_cos_dist_reward \
-                 
+            if(use_move == False):
+                if(hierarchical_NoSpatial_Baseline == True):      # No relative spatial info used for reward function
+                    reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+                elif(hierarchical_Uniform_Vector == True):
+                    reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward + huskys_dist_reward
+                elif(nonhierarchical_nospatial_baseline == True):
+                    reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+                elif(nonhierarchical_with_spatial_baseline == True):
+                    reward = reward \
+                        + huskys_forward_align_reward \
+                        + huskys_dist_reward \
+                        + huskys_box_dist_reward \
+                        + goal_box_dist_reward \
+                        + huskys_move_heading_reward \
+                        + huskys_right_align_reward \
+                        + box_linear_vel_reward \
+                        + goal_box_cos_dist_reward \
+                    
+                else:
+                    reward = reward \
+                        + huskys_forward_align_reward \
+                        + huskys_dist_reward \
+                        + huskys_box_dist_reward \
+                        + goal_box_dist_reward \
+                        + huskys_move_heading_reward \
+                        + huskys_right_align_reward \
+                        + box_linear_vel_reward \
+                        + goal_box_cos_dist_reward \
+                        #+ huskys_rad_reward
+                        #+ goal_box_cos_dist_reward \
+                        #+ huskys_linear_vel_reward
             else:
                 reward = reward \
-                    + huskys_forward_align_reward \
-                    + huskys_dist_reward \
-                    + huskys_box_dist_reward \
-                    + goal_box_dist_reward \
-                    + huskys_move_heading_reward \
-                    + huskys_right_align_reward \
-                    + box_linear_vel_reward \
-                    + goal_box_cos_dist_reward \
-                    #+ huskys_rad_reward
-                    #+ goal_box_cos_dist_reward \
-                    #+ huskys_linear_vel_reward
+                        + huskys_forward_align_reward \
+                        + huskys_dist_reward \
+                        + huskys_box_dist_reward \
+                        + goal_box_dist_reward \
+                        + huskys_move_heading_reward \
+                        + huskys_right_align_reward \
+                        + box_linear_vel_reward \
+                        + goal_box_cos_dist_reward \
+                        #+ huskys_rad_reward
+                        #+ goal_box_cos_dist_reward \
+                        #+ huskys_linear_vel_reward
+                
+
+            
+            
+
+
+
+
+
            
             self._reward = reward
 
@@ -507,8 +533,8 @@ class HuskyPushEnv(HuskyEnv):
         qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * 0.2
         qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * 0.2
 
-        self._set_quat('husky_robot_1', sample_quat(low=-np.pi/9, high=np.pi/9))
-        self._set_quat('husky_robot_2', sample_quat(low=-np.pi/9, high=np.pi/9))
+        self._set_quat('husky_robot_1', sample_quat(low=-np.pi/6, high=np.pi/6))
+        self._set_quat('husky_robot_2', sample_quat(low=-np.pi/6, high=np.pi/6))
 
 
         # Initialize goal

@@ -278,8 +278,13 @@ class HuskyForwardEnv(HuskyEnv):
                                                      pos_after, 
                                                      husky_forward_vector_after, 
                                                      "forward")
+            
+            dist_husky_box_before = l2_dist(box_before, pos_before)
+            dist_husky_box_after = l2_dist(box_after, pos_after)
+            dist_diff = dist_husky_box_before - dist_husky_box_after
+            move_direction = np.sign(dist_diff)     # if robot move toward box, the sign is positive, so we reward the robot's moving
         
-            husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward'] * 10
+            husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward'] * 5 * move_direction
             box_linear_vel_reward = box_linear_vel * self._env_config['box_linear_vel_reward'] * 10
             dist_reward = l2_dist(box_after, np.array([0, 0, 0.3])) * self._env_config['dist_reward']
             dist_husky_box_reward = dist_husky_box_reward / 10
@@ -364,6 +369,7 @@ class HuskyForwardEnv(HuskyEnv):
                     "----------": 0,
                     "dist_box_goal": dist_box_goal,
                     "husky_pos": pos_after,
+                    "husky_quat": husky_quat_after,
                     "box_pos": box_after,
                     "box_ob": ob[self.box], 
                     "success": self._success
@@ -459,7 +465,7 @@ class HuskyForwardEnv(HuskyEnv):
                          20., -1., 0.8, 1., 0., 0., 0.])
         '''
 
-        return np.array([-2., 0., 0.2, 0., 0., 0., 0., 0., 0., 0., 0., 
+        return np.array([-2., 0., 0.218, 0., 0., 0., 0., 0., 0., 0., 0., 
                          0., 0., 0., 0., 0., 0., 0.])
 
     @property 
@@ -487,12 +493,12 @@ class HuskyForwardEnv(HuskyEnv):
         qvel = self._init_qvel
 
         # DON'T PUT HUSKY TOO HIGH!
-        qpos[2] = 0.19
+        qpos[2] = 0.218
         qpos[3] = 0
         qpos[4] = 0
         qpos[5] = 0
         
-        self.set_state(qpos, qvel)
+        #self.set_state(qpos, qvel)
 
         self._reset_husky_box()
 
@@ -512,30 +518,29 @@ class HuskyForwardEnv(HuskyEnv):
         init_box_pos = np.asarray([0, 0, 0.3])
         init_box_quat = np.array([0, 0, 0, 0])
 
-        if(self._env_config["skill"] == "align"):
+        if(self._env_config["skill"] == "push" or self._env_config["skill"] == "move"):
             qpos[0] = x
             qpos[1] = y
-            #init_box_quat = sample_quat()
-            qpos[3:7] = sample_quat()
-        
-        elif(self._env_config["skill"] == "push" or self._env_config["skill"] == "move"):
-            qpos[0] = x
-            qpos[1] = y
-            self._set_quat('husky_robot', sample_quat(low=-np.pi/6, high=np.pi/6))
+
+            husky_quat = sample_quat(low=-np.pi/3, high=np.pi/3)
+            self._set_quat('husky_robot', husky_quat)
 
             # reset the rotation of goal
             
             #goal_pos = np.asarray([1, 0, 0.3])
 
             goal_pos = np.asarray([np.random.uniform(low=0.5, high=3), np.random.uniform(low=-2, high=2), 0.3])
-
             goal_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
             self._set_pos('goal', goal_pos)
             self._set_quat('goal', goal_quat)
 
             # reset the box, reset pos and quat respectively
+            init_box_quat = sample_quat(low=-np.pi/6, high=np.pi/6)
             qpos[11:14] = init_box_pos
             qpos[14:18] = init_box_quat
+            self._set_pos('box', init_box_pos)
+            self._set_quat('box', init_box_quat)
+            self.set_state(qpos, qvel)
 
         elif(self._env_config["skill"] == "approach"):
             qpos[0] = x
@@ -574,7 +579,7 @@ class HuskyForwardEnv(HuskyEnv):
 
         self._husky_pos = (qpos[0], qpos[1])
 
-        self.set_state(qpos, qvel)
+        #self.set_state(qpos, qvel)
 
 
 
