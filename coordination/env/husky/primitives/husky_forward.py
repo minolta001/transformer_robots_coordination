@@ -133,8 +133,8 @@ class HuskyForwardEnv(HuskyEnv):
         alive_reward = 0
         #ctrl_reward = self._ctrl_reward(a)
         ctrl_reward = self._ctrl_reward(a) * 10
+        box_dist_reward = 0 
         
-
         '''
             Distance Calculation
         '''
@@ -288,7 +288,24 @@ class HuskyForwardEnv(HuskyEnv):
             box_linear_vel_reward = box_linear_vel * self._env_config['box_linear_vel_reward'] * 10
             dist_reward = l2_dist(box_after, np.array([0, 0, 0.3])) * self._env_config['dist_reward']
             dist_husky_box_reward = dist_husky_box_reward / 10
-            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + dist_reward + dist_husky_box_reward 
+            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + dist_reward + dist_husky_box_reward
+
+        elif (skill == "tune"):
+            move_coeff = movement_heading_difference(box_after, 
+                                                     pos_after, 
+                                                     husky_forward_vector_after, 
+                                                     "forward")
+            dist_husky_box_before = l2_dist(box_before, pos_before)
+            dist_husky_box_after = l2_dist(box_after, pos_after)
+            dist_diff = dist_husky_box_before - dist_husky_box_after
+            move_direction = np.sign(dist_diff)     # if robot move toward box, the sign is positive, so we reward the robot's moving
+        
+            husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward'] * 5 * move_direction
+            husky_dist_reward = l2_dist(pos_after, np.array([-2, 0, 0.218])) * self._env_config['dist_reward'] / 10
+            box_linear_vel_reward = -box_linear_vel * self._env_config['box_linear_vel_reward'] * 20
+            box_dist_reward = -l2_dist(box_after, np.array([0, 0, 0.3])) * self._env_config['dist_reward']
+            dist_husky_box_reward = dist_husky_box_reward / 10
+            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + box_dist_reward + dist_husky_box_reward + husky_dist_reward
         
         elif(skill == "approach"):  # encourage the robot push slowly when the object is near the goal
             reward = reward + self._env_config['bonus_reward']
@@ -306,7 +323,7 @@ class HuskyForwardEnv(HuskyEnv):
                     + dist_husky_box_reward \
                     + movement_heading_reward \
 
-
+ 
         self._reward = reward
 
         env_config = self._env_config 
@@ -340,7 +357,6 @@ class HuskyForwardEnv(HuskyEnv):
             info = {"Current Skill": skill,
                 "Total Reward": reward,
                 "reward: dist_husky_box": dist_husky_box_reward,
-                "reward: dist_box_goal": dist_box_goal_reward,
                 "reward: box_linear_vel": box_linear_vel_reward,
                 "reward: control reward": ctrl_reward,
                 #"reward: heading_alignment": alignment_heading_reward,
@@ -355,6 +371,21 @@ class HuskyForwardEnv(HuskyEnv):
                 "box_pos": box_after,
                 "box_ob": ob[self.box], 
                 "success": self._success
+            }
+        
+        if (skill == "tune"):
+            info = {"Current Skill": skill,
+                    "Total Reward": reward,
+                    "husky_linear_vel_reward": husky_linear_vel_reward,
+                    "husky box distance reward": dist_husky_box_reward,
+                    "husky move distance reward": husky_dist_reward,
+                    "box linear vel penalty": box_linear_vel_reward,
+                    "box move distance penalty": box_dist_reward,
+                    "husky_movement_heading_coeff": move_coeff,
+                    "husky_pos": pos_after,
+                    "husky_quat": husky_quat_after,
+                    "box_pos": box_after,
+                    "box_ob": ob[self.box]
             }
 
         if (skill == "move"):
@@ -518,7 +549,7 @@ class HuskyForwardEnv(HuskyEnv):
         init_box_pos = np.asarray([0, 0, 0.3])
         init_box_quat = np.array([0, 0, 0, 0])
 
-        if(self._env_config["skill"] == "push" or self._env_config["skill"] == "move"):
+        if(self._env_config["skill"] == "push" or self._env_config["skill"] == "move" or self._env_config["skill"] == "tune"):
             qpos[0] = x
             qpos[1] = y
 

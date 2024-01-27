@@ -27,10 +27,16 @@ from util.pytorch import get_ckpt_path
 import sys
 import math
 
-goal1_pos = np.array([2, 1, 0.30996])
-goal2_pos = np.array([2, -1, 0.30996])
-goal_pos = np.array([2, 0, 0.30996])
-goal_quat = np.array([1, 0, 0, 0])
+# straight
+#goal1_pos = np.array([2.5, 1, 0.30996])
+#goal2_pos = np.array([2.5, -1, 0.30996])
+#goal_pos = np.array([2.5, 0, 0.30996])
+#goal_quat = np.array([1, 0, 0, 0])
+# curve
+goal1_pos = np.array([1.2328, 1.1607, 0.30996])
+goal2_pos = np.array([1.9134, -0.7330, 0.30996])
+goal_pos = np.array([1.5453, 0.2903, 0.30996])
+goal_quat = np.array([0.9847, 0, 0, 0.1737])
 box_height = 0.30996
 robot_height = 0.15486868
 
@@ -112,12 +118,13 @@ class collab_push():
 
         # get Box pose
         self.box_last_time = None
-        self.box_pose = Pose()
+        self.box_cur_pose = Pose()
         self.box_last_pose = None
         self.box_quat = [1, 0, 0, 0]
         self.box_forward_vec = [0, 0, 0]
         self.box_linear_velocity = [0, 0, 0] # [x, y, z] z is always in 0 in our 2D plane
         self.box_angular_velocity = [0, 0, 0]   # rad
+        self.box_pose_vel_subscriber = rospy.Subscriber('/mocap_node/Box/Odom', Odometry, self.box_pose_vel_callback)
 
 
         # huskys velocity publisher 
@@ -423,16 +430,16 @@ class collab_push():
         obs = OrderedDict([
             ('husky_1', np.concatenate([[robot_height], self.husky_quat, husky_vel, self.husky_forward_vec, [box1_rela_info['box1_husky_move_coeff']]])),   # husky
             ('husky_2', np.concatenate([[robot_height], self.bunker_quat, bunker_vel, self.bunker_forward_vec, [box2_rela_info['box2_bunker_move_coeff']]])),   # actually bunker!
-            ('box_1', np.concatenate([box1_rela_info['box1_husky_rela_pos'], box1_rela_info['box1_goal_rela_pos'], self.box1_forward_vec, box_vel])),
-            ('box_2', np.concatenate([box2_rela_info['box2_bunker_rela_pos'], box2_rela_info['box2_goal_rela_pos'], self.box2_forward_vec ,box_vel])),
-            ('relative_info', [global_rela_info['robots_forward_align_coeff'], global_rela_info['robots_right_align_coeff'], global_rela_info['robots_dist'], global_rela_info['goal_box_cos_dist']])
+            ('box_1', np.concatenate([box1_rela_info['box1_husky_rela_pos'], self.box1_forward_vec, box_vel])),
+            ('box_2', np.concatenate([box2_rela_info['box2_bunker_rela_pos'],self.box2_forward_vec ,box_vel])),
+            ('relative_info', np.concatenate([box1_rela_info['box1_goal_rela_pos'],box2_rela_info['box2_goal_rela_pos'] ,[global_rela_info['robots_forward_align_coeff'], global_rela_info['robots_right_align_coeff'], global_rela_info['robots_dist'], global_rela_info['goal_box_cos_dist']]]))
         ])
 
         assert(len(obs['husky_1']) == 15)
         assert(len(obs['husky_2']) == 15)
-        assert(len(obs['box_1']) == 15)
-        assert(len(obs['box_2']) == 15)
-        assert(len(obs['relative_info']) == 4)
+        assert(len(obs['box_1']) == 12)
+        assert(len(obs['box_2']) == 12)
+        assert(len(obs['relative_info']) == 10)
 
         return obs
 
@@ -445,7 +452,8 @@ class collab_push():
 
         print("!!The test is going to start, be careful!!")
         input("Press Enter to start")
-        
+        time.sleep(5)
+
         while not rospy.is_shutdown():
             husky_pos = np.array([self.husky_cur_pose.position.x, self.husky_cur_pose.position.y, robot_height])
             bunker_pos = np.array([self.bunker_cur_pose.position.x, self.bunker_cur_pose.position.y, robot_height]) 
@@ -453,6 +461,10 @@ class collab_push():
             husky_y = husky_pos[1]
             bunker_x = bunker_pos[0]
             bunker_y = bunker_pos[1]
+
+            box1_pos = self.box1_pose.position
+            box2_pos = self.box2_pose.position
+
 
             robots_dist = l2_dist(husky_pos, bunker_pos)
 
@@ -474,12 +486,16 @@ class collab_push():
 
             # bunker: transfer action to linear and angular command
             bunker_linear_vel, bunker_angular_vel = forward_kinematic(bunker_action[0], bunker_action[1])
-
+            print(self.box_cur_pose.position)
             print("goal1 dist: ", self.box1_goal_dist, "goal2 dist: ", self.box2_goal_dist)            
             # make sure robots within safety zone, and won't collide together
+            # also make sure box won't crash anything
             if(-2.5 <= husky_x and husky_x <= 2.5 and -2 <= husky_y and husky_y <= 1.9 \
                and -2.5 <= bunker_x and bunker_x <= 2.5 and -2 <= bunker_y and bunker_y <= 1.9 \
-                and 1 <= robots_dist and self.box1_goal_dist > 0.4 and self.box2_goal_dist > 0.4):
+                and 1 <= robots_dist and (self.box1_goal_dist > 0.4 or self.box2_goal_dist > 0.4) and
+                -2.5 <= box1_pos.x and box1_pos.x <= 2.5 and -2 <= box1_pos.y and box1_pos.y <= 1.9 \
+                and -2.5 <= box2_pos.x and box2_pos.x <= 2.5 and -2 <= box2_pos.y and box2_pos.y <= 1.9):
+
                     husky_vel_msg.linear.x = husky_linear_vel
                     husky_vel_msg.angular.z = husky_angular_vel
                     bunker_vel_msg.linear.x = bunker_linear_vel
@@ -494,11 +510,14 @@ class collab_push():
                 self.husky_vel_publisher.publish(husky_vel_msg)
                 self.bunker_vel_publisher.publish(bunker_vel_msg)
 
-                if(self.box1_goal_dist <= 0.4 and self.box2_goal_dist <= 0.4):
-                    print("Goal achieve!")
+                if(self.box1_goal_dist <= 0.5 and self.box2_goal_dist <= 0.5):
+                    print("Goal achieve: ", self.box_cur_pose.position)
                 else:
                     print("Some safety distancing is violated!")
-                    print("Shut down the ros node now.")
+                    print("husky:", self.husky_cur_pose.position)
+                    print("bunker:", self.bunker_cur_pose.position)
+                    print("box1", self.box1_pose.position)
+                    print("box2", self.box2_pose.position)
                 
                 rospy.on_shutdown()
                 
