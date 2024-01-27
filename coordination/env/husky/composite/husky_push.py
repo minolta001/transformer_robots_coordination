@@ -33,7 +33,7 @@ class HuskyPushEnv(HuskyEnv):
             'goal_box_cos_dist_coeff_threshold': 0.9,
             'box_linear_vel_reward': 200,
             'dist_reward': 10,
-            'alignment_reward': 80,
+            'alignment_reward': 30,
             'goal_dist_reward': 30,
             'goal1_dist_reward': 10,
             'goal2_dist_reward': 10,
@@ -354,7 +354,12 @@ class HuskyPushEnv(HuskyEnv):
                     + goal_box_cos_dist_reward \
                  
             else:       # hierarchical with spatial info   # NOTE: xxx_dist_reward focus on rewarding based on current distance, xx_linear_reward focus on rewarding the distance has passed through (which is velocity)
+                huskys_box_linear_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] * husky1_move_coeff+ \
+                                           (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] * husky2_move_coeff
+                
+
                 reward = reward \
+                    + huskys_box_linear_reward \
                     + huskys_forward_align_reward \
                     + huskys_dist_reward \
                     + huskys_box_dist_reward \
