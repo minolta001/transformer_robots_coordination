@@ -31,7 +31,7 @@ class HuskyPushEnv(HuskyEnv):
             'dist_threshold': 0.1,
             'loose_dist_threshold': 0.5,
             'goal_box_cos_dist_coeff_threshold': 0.9,
-            'box_linear_vel_reward': 200,
+            'box_linear_vel_reward': 2000,
             'dist_reward': 10,
             'alignment_reward': 30,
             'goal_dist_reward': 30,
@@ -81,7 +81,7 @@ class HuskyPushEnv(HuskyEnv):
 
     def _step(self, a):
 
-        hierarchical_NoSpatial_Baseline = True      # set this to True will evaluate the reward without relative spatial info
+        hierarchical_NoSpatial_Baseline = False      # set this to True will evaluate the reward without relative spatial info
         hierarchical_Uniform_Vector = False           # set this to True will evaluate the reward based on our uniform vector field approach
         nonhierarchical_with_spatial_baseline = False   # no hierarchy, with relative spatial info
         nonhierarchical_nospatial_baseline = False   # no hierarchy, no relative spatial info
@@ -235,10 +235,10 @@ class HuskyPushEnv(HuskyEnv):
         #box1_move_direction = np.sign(goal1_box_dist_diff)
         #box2_move_direction = np.sign(goal2_box_dist_diff)
 
-        box1_move_coeff = movement_heading_difference(box1_pos, goal1_pos, box1_forward_vec)
-        box2_move_coeff = movement_heading_difference(box2_pos, goal2_pos, box2_forward_vec)
-        box1_linear_vel_reward = goal1_box_dist_diff * self._env_config["box_linear_vel_reward"] * 5
-        box2_linear_vel_reward = goal2_box_dist_diff * self._env_config["box_linear_vel_reward"] * 5
+        box1_move_coeff = movement_heading_difference(goal1_pos, box1_pos, box1_forward_vec)
+        box2_move_coeff = movement_heading_difference(goal2_pos, box2_pos, box2_forward_vec)
+        box1_linear_vel_reward = goal1_box_dist_diff * self._env_config["box_linear_vel_reward"]
+        box2_linear_vel_reward = goal2_box_dist_diff * self._env_config["box_linear_vel_reward"]
 
         box_linear_vel_reward = (box1_linear_vel_reward * box1_move_coeff) + (box2_linear_vel_reward * box2_move_coeff)
         
@@ -279,7 +279,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.5)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
+        if huskys_dist < (boxes_dist * 0.8)  or huskys_dist > boxes_dist * 1.2:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
@@ -515,8 +515,8 @@ class HuskyPushEnv(HuskyEnv):
         qpos[2] = 0.2
         qpos[13] = 0.2
 
-        init_quat1 = sample_quat(low=-np.pi/9, high=np.pi/9)
-        init_quat2 = sample_quat(low=-np.pi/9, high=np.pi/9)
+        init_quat1 = sample_quat(low=-np.pi/18, high=np.pi/18)
+        init_quat2 = sample_quat(low=-np.pi/18, high=np.pi/18)
 
         # randomized robot initial quaternions 
         #qpos[3:7] = [1, 0, 0, 0]
