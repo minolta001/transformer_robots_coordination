@@ -81,7 +81,7 @@ class HuskyPushEnv(HuskyEnv):
 
     def _step(self, a):
 
-        hierarchical_NoSpatial_Baseline = False      # set this to True will evaluate the reward without relative spatial info
+        hierarchical_NoSpatial_Baseline = True      # set this to True will evaluate the reward without relative spatial info
         hierarchical_Uniform_Vector = False           # set this to True will evaluate the reward based on our uniform vector field approach
         nonhierarchical_with_spatial_baseline = False   # no hierarchy, with relative spatial info
         nonhierarchical_nospatial_baseline = False   # no hierarchy, no relative spatial info
@@ -279,7 +279,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.8)  or huskys_dist > boxes_dist * 1.2:   # huskys are too close or too far away 
+        if huskys_dist < (boxes_dist * 0.8)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
@@ -341,32 +341,47 @@ class HuskyPushEnv(HuskyEnv):
             elif(hierarchical_Uniform_Vector == True):
                 reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward + huskys_dist_reward
             elif(nonhierarchical_nospatial_baseline == True):
-                reward = reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward
+                goal1_dist_reward = self._env_config["goal1_dist_reward"] if goal1_dist < self._env_config["loose_dist_threshold"] else 0
+                goal2_dist_reward = self._env_config["goal2_dist_reward"] if goal2_dist < self._env_config["loose_dist_threshold"] else 0
+                box_goal_linear_reward = (l2_dist(box_pos_before, goal_pos) - l2_dist(box_pos, goal_pos)) * self._env_config["goal_dist_reward"] + goal1_dist_reward + goal2_dist_reward
+
+                huskys_box_linear_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] + \
+                                           (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] 
+
+                reward = reward + huskys_box_linear_reward + box_goal_linear_reward + goal_box_cos_dist_reward
+
             elif(nonhierarchical_with_spatial_baseline == True):    # NOTE: xxx_dist_reward focus on rewarding based on current distance, xx_linear_reward focus on rewarding the distance has passed through (which is velocity)
+                huskys_box_linear_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] * husky1_move_coeff+ \
+                                           (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] * husky2_move_coeff
+                goal1_dist_reward = self._env_config["goal1_dist_reward"] if goal1_dist < self._env_config["loose_dist_threshold"] else 0
+                goal2_dist_reward = self._env_config["goal2_dist_reward"] if goal2_dist < self._env_config["loose_dist_threshold"] else 0
+
                 reward = reward \
-                    + huskys_forward_align_reward \
+                    + huskys_box_linear_reward \
                     + huskys_dist_reward \
                     + huskys_box_dist_reward \
                     + goal_box_dist_reward \
-                    + huskys_move_heading_reward \
                     + huskys_right_align_reward \
                     + box_linear_vel_reward \
                     + goal_box_cos_dist_reward \
+                    + goal1_dist_reward + goal2_dist_reward
                  
             else:       # hierarchical with spatial info   # NOTE: xxx_dist_reward focus on rewarding based on current distance, xx_linear_reward focus on rewarding the distance has passed through (which is velocity)
                 huskys_box_linear_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] * husky1_move_coeff+ \
                                            (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] * husky2_move_coeff
-                
+                goal1_dist_reward = self._env_config["goal1_dist_reward"] if goal1_dist < self._env_config["loose_dist_threshold"] else 0
+                goal2_dist_reward = self._env_config["goal2_dist_reward"] if goal2_dist < self._env_config["loose_dist_threshold"] else 0
 
                 reward = reward \
                     + huskys_box_linear_reward \
-                    + huskys_forward_align_reward \
                     + huskys_dist_reward \
                     + huskys_box_dist_reward \
                     + goal_box_dist_reward \
                     + huskys_right_align_reward \
                     + box_linear_vel_reward \
                     + goal_box_cos_dist_reward \
+                    + goal1_dist_reward + goal2_dist_reward
+
                     #+ huskys_rad_reward
                     #+ huskys_linear_vel_reward
                     #+ huskys_move_heading_reward \
