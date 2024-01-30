@@ -83,17 +83,26 @@ class HuskyPushEnv(HuskyEnv):
 
         hierarchical_NoSpatial_Baseline = False      # set this to True will evaluate the reward without relative spatial info
         hierarchical_Uniform_Vector = False           # set this to True will evaluate the reward based on our uniform vector field approach
-        nonhierarchical_with_spatial_baseline = False   # no hierarchy, with relative spatial info
-        nonhierarchical_nospatial_baseline = True  # no hierarchy, no relative spatial info
+
+        nonhierarchical_with_spatial_single = False   # no hierarchy, with relative spatial info, single policy
+        nonhierarchical_nospatial_single = False  # no hierarchy, no relative spatial info, single policy
+        nonhierarchical_with_spatial_multi = False  # non-hierarchical, with relative spatial info, multi policies
+        nonhierarchical_nospatial_multi = False  # non-hierarchical, without relative spatial info, multi policies 
+        
+
 
         if hierarchical_NoSpatial_Baseline:
             self._experiment_type = "Hierarchical without relative-spatial info" 
         elif hierarchical_Uniform_Vector:
             self._experiment_type = "Hierarchical Uniform VectorField"
-        elif nonhierarchical_with_spatial_baseline:
-            self._experiment_type = "Non-hierarchical with relative spatial info"
-        elif nonhierarchical_nospatial_baseline:
-            self._experiment_type = "Non-hierarchical without relative spatial info"
+        elif nonhierarchical_with_spatial_single:
+            self._experiment_type = "Non-hierarchical with relative spatial info, single policy" 
+        elif nonhierarchical_nospatial_single:
+            self._experiment_type = "Non-hierarchical without relative spatial info, single policy"
+        elif nonhierarchical_nospatial_multi:
+            self._experiment_type = "Non-hierarchical without relative spatial info, multi policies"
+        elif nonhierarchical_with_spatial_multi:
+            self._experiment_type = "Non-hierarchical with relative spatial info, multi policies"
         else:
             self._experiment_type = "Hierarchical with relative spatial info"
 
@@ -345,7 +354,10 @@ class HuskyPushEnv(HuskyEnv):
 
             elif(hierarchical_Uniform_Vector == True):
                 reward = reward + huskys_rad_reward + huskys_box_dist_reward + goal_box_dist_reward + box_linear_vel_reward + goal_box_cos_dist_reward + huskys_dist_reward
-            elif(nonhierarchical_nospatial_baseline == True):
+
+
+
+            elif(nonhierarchical_nospatial_single == True or nonhierarchical_nospatial_multi == True):
                 goal1_dist_reward = self._env_config["goal1_dist_reward"] if goal1_dist < self._env_config["loose_dist_threshold"] else 0
                 goal2_dist_reward = self._env_config["goal2_dist_reward"] if goal2_dist < self._env_config["loose_dist_threshold"] else 0
                 box_goal_linear_vel_reward = (l2_dist(box_pos_before, goal_pos) - l2_dist(box_pos, goal_pos)) * self._env_config["goal_dist_reward"] + goal1_dist_reward + goal2_dist_reward
@@ -355,7 +367,7 @@ class HuskyPushEnv(HuskyEnv):
 
                 reward = reward + huskys_box_linear_vel_reward + box_goal_linear_vel_reward + goal_box_cos_dist_reward
 
-            elif(nonhierarchical_with_spatial_baseline == True):    # NOTE: xxx_dist_reward focus on rewarding based on current distance, xx_linear_reward focus on rewarding the distance has passed through (which is velocity)
+            elif(nonhierarchical_with_spatial_single == True or nonhierarchical_with_spatial_multi == True):    # NOTE: xxx_dist_reward focus on rewarding based on current distance, xx_linear_reward focus on rewarding the distance has passed through (which is velocity)
                 huskys_box_linear_vel_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] * husky1_move_coeff+ \
                                            (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] * husky2_move_coeff
                 goal1_dist_reward = self._env_config["goal1_dist_reward"] if goal1_dist < self._env_config["loose_dist_threshold"] else 0
