@@ -87,7 +87,7 @@ class HuskyPushEnv(HuskyEnv):
         nonhierarchical_nospatial_multi = False  # non-hierarchical, without relative spatial info, multi policies 
 
         hierarchical_Uniform_Vector = False           # set this to True will evaluate the reward based on our uniform vector field approach
-        hierarchical_NoSpatial_Baseline = True     # set this to True will evaluate the reward without relative spatial info
+        hierarchical_NoSpatial_Baseline = False     # set this to True will evaluate the reward without relative spatial info
 
         if hierarchical_NoSpatial_Baseline:
             self._experiment_type = "Hierarchical without relative-spatial info" 
@@ -287,7 +287,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.8)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
+        if huskys_dist < (boxes_dist * 0.6)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
