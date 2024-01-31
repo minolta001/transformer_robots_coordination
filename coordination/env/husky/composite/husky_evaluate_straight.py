@@ -347,10 +347,35 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         wpt_x, wpt_y, wpt_next_x, wpt_next_y = 0, 0, 0, 0
         quaternion = np.zeros(4)
 
+        if(goal_wpt_dist > goal_box_dist):
+            planned_trajectory = path_planning(box_pos, box_quat, final_goal_pos, final_goal_quat)
 
-        if(len(planned_trajectory) > 1 and (box_wpt_dist < 1.8 or goal_wpt_dist > goal_box_dist)):
-            wpt_x, wpt_y = 
-        
+
+        if(len(planned_trajectory) > 1 and (box_wpt_dist < 1.8):
+            # update a waypoint, once
+            (wpt_x, wpt_y) = planned_trajectory.pop(0)
+            (wpt_next_x, wpt_next_y) = planned_trajectory[0]
+
+            while(box_wpt_dist < 1.8):                
+                if(len(planned_trajectory) > 1):
+                    (rx,ry) = checkpoints.pop(0)
+                    (nrx, nry) = checkpoints[0]
+                    cpt_pos = np.array([rx, ry, 0.3])
+                    box_pos = self._get_pos('box')
+
+                    cpt_box_dist = l2_dist(cpt_pos, box_pos)
+                    goal_cpt_dist = l2_dist(final_pos, np.array([rx, ry, 0.3]))
+
+                    pos_1 = np.array([rx, ry, 0])
+                    pos_2 = np.array([nrx, nry, 0])
+
+                    quaternion = get_quaternion_to_next_cpt(box_pos, pos_2)
+
+                    self._set_pos('cpt_1', np.array([rx, ry, 0.3]))     # update cpt pos
+                    self._set_quat('cpt_1', quaternion)   
+                            
+                else:
+                    break    
 
 
         goal1_dist_reward = 0

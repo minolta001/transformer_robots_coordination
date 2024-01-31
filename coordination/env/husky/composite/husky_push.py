@@ -287,7 +287,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.6)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
+        if huskys_dist < (boxes_dist * 0.7)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
@@ -348,7 +348,7 @@ class HuskyPushEnv(HuskyEnv):
                 huskys_box_linear_vel_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] + \
                                            (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] 
 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward + huskys_box_linear_vel_reward + box_goal_linear_vel_reward + goal_box_cos_dist_reward
 
@@ -366,7 +366,7 @@ class HuskyPushEnv(HuskyEnv):
                 huskys_box_linear_vel_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] + \
                                            (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] 
                 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward + huskys_box_linear_vel_reward + box_goal_linear_vel_reward + goal_box_cos_dist_reward
 
@@ -381,7 +381,7 @@ class HuskyPushEnv(HuskyEnv):
                 box_goal_linear_vel_reward = (l2_dist(box_pos_before, goal_pos) - l2_dist(box_pos, goal_pos)) * self._env_config["box_linear_vel_reward"] + goal1_dist_reward + goal2_dist_reward
 
                 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward \
                     + huskys_box_linear_vel_reward \
@@ -404,7 +404,7 @@ class HuskyPushEnv(HuskyEnv):
                 box_goal_linear_vel_reward = (l2_dist(box_pos_before, goal_pos) - l2_dist(box_pos, goal_pos)) * self._env_config["box_linear_vel_reward"] + goal1_dist_reward + goal2_dist_reward
 
                 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward \
                     + huskys_box_linear_vel_reward \
