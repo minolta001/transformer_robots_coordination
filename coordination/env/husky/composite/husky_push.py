@@ -287,7 +287,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.7)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
+        if huskys_dist < (boxes_dist * 0.7)  or huskys_dist > boxes_dist * 1.3:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
