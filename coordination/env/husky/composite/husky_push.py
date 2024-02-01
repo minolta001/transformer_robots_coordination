@@ -29,7 +29,7 @@ class HuskyPushEnv(HuskyEnv):
             'random_goal_pos': 0.01,
             #'random_goal_pos': 0.5,
             'dist_threshold': 0.1,
-            'loose_dist_threshold': 0.8,
+            'loose_dist_threshold': 0.5,
             'goal_box_cos_dist_coeff_threshold': 0.9,
             'box_linear_vel_reward': 500,
             'dist_reward': 10,
@@ -287,7 +287,7 @@ class HuskyPushEnv(HuskyEnv):
         '''
             Failure Check
         '''
-        if huskys_dist < (boxes_dist * 0.7)  or huskys_dist > boxes_dist * 1.3:   # huskys are too close or too far away 
+        if huskys_dist < (boxes_dist * 0.8)  or huskys_dist > boxes_dist * 1.5:   # huskys are too close or too far away 
             done = True
         if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
@@ -557,15 +557,15 @@ class HuskyPushEnv(HuskyEnv):
 
 
         # randomized robots initial positions
-        qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * 0.1
-        qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * 0.1
+        qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * 0.15
+        qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * 0.15
 
         # robot height fixed
         qpos[2] = 0.2
         qpos[13] = 0.2
 
-        init_quat1 = sample_quat(low=-np.pi/10, high=np.pi/10)
-        init_quat2 = sample_quat(low=-np.pi/10, high=np.pi/10)
+        init_quat1 = sample_quat(low=-np.pi/18, high=np.pi/18)
+        init_quat2 = sample_quat(low=-np.pi/18, high=np.pi/18)
 
         # randomized robot initial quaternions 
         #qpos[3:7] = [1, 0, 0, 0]
