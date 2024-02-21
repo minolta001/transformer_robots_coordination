@@ -218,10 +218,10 @@ python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-NonHierarchi
 python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-NonHierarchical-Spatial-Single-seed1 --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,husky_2,box_2,relative_info-husky_1,husky_2 --max_meta_len 5 --max_global_step 2000000 --ckpt_interval 500
 
 # baseline 3: No hierarchy, no relative spatial info reward shaping, multi policies
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-NonHierarchical-NonSpatial-Multi-seed1 --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,relative_info-husky_1/husky_2,box_2,relative_info-husky_2 --diayn False --max_global_step 2000000 --ckpt_interval 500
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-NonHierarchical-NonSpatial-Multi-seed1 --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,relative_info-husky_1/husky_2,box_2,relative_info-husky_2 --diayn False --max_global_step 1000000 --ckpt_interval 500
 
 # baseline 4: No hierarchy, yes relative spatial info reward shaping, multi policies
-python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-NonHierarchical-Spatial-Multi-seed1 --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,relative_info-husky_1/husky_2,box_2,relative_info-husky_2 --diayn False --max_global_step 2000000 --ckpt_interval 500
+python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-NonHierarchical-Spatial-Multi-seed1 --seed 1 --meta hard --meta_update_target LL --subdiv husky_1,box_1,relative_info-husky_1/husky_2,box_2,relative_info-husky_2 --diayn False --max_global_step 1000000 --ckpt_interval 500
 
 
 # baseline 5: Yes hierarchy, no relative spatial reward shaping (only consider some basic distance and velocity factors)  # NOTE: You need to modify the parameter in husky_push.py file to run different baselines and experiments!

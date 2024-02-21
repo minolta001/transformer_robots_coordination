@@ -83,7 +83,8 @@ class HuskyPushEnv(HuskyEnv):
 
         nonhierarchical_with_spatial_single = False   # no hierarchy, with relative spatial info, single policy
         nonhierarchical_nospatial_single = False  # no hierarchy, no relative spatial info, single policy
-        nonhierarchical_with_spatial_multi = False  # non-hierarchical, with relative spatial info, multi policies
+
+        nonhierarchical_with_spatial_multi = True  # non-hierarchical, with relative spatial info, multi policies
         nonhierarchical_nospatial_multi = False  # non-hierarchical, without relative spatial info, multi policies 
 
         hierarchical_Uniform_Vector = False           # set this to True will evaluate the reward based on our uniform vector field approach
