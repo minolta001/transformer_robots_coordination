@@ -239,6 +239,20 @@ python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-Hierarc
 python3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-hierarchical_uniform_vector-ver2 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200-ver2.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200-ver2.1 --max_meta_len 5 --max_global_step 2000000
 ```
 
+# Sim2Real, run Jackal, two sklls: move/tune
+```bash
+python3 -m to_real.collab_push_ros_jackal --num_eval 1  --is_train False --env husky-push-v0 --gpu 0 --prefix collab_push-Hierarchical-Spatial-seed1-Ver3 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.move-1-dim5-epi200.1,rl.husky-forward-v0.tune-1-dim5-epi200.1/rl.husky-forward-v0.move-2-dim5-epi200.1,rl.husky-forward-v0.tune-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
+
+python3 -m to_real.collab_push_ros_jackal --num_eval 1  --is_train False --env husky-push-v0 --gpu 0 --prefix collab_push-Hierarchical-Spatial-ver4-meta10 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.move-1-dim5-epi200.1,rl.husky-forward-v0.tune-1-dim5-epi200.1/rl.husky-forward-v0.move-2-dim5-epi200.1,rl.husky-forward-v0.tune-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
+```
+
+# Sim2Real, run Jackal, one skill: move
+```bash
+python3 -m to_real.collab_push_ros_jackal --num_eval 1  --is_train False --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-Hierarchica-NaiveVector-MoveOnly-ver2 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.move-1-dim5-epi200.1/rl.husky-forward-v0.move-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
+
+python3 -m to_real.collab_push_ros_jackal --num_eval 1  --is_train False --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-Hierarchica-NaiveVector-MoveOnly --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.move-1-dim5-epi200.1/rl.husky-forward-v0.move-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
+```
+
 
 
 

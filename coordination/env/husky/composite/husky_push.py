@@ -84,7 +84,7 @@ class HuskyPushEnv(HuskyEnv):
         nonhierarchical_with_spatial_single = False   # no hierarchy, with relative spatial info, single policy
         nonhierarchical_nospatial_single = False  # no hierarchy, no relative spatial info, single policy
 
-        nonhierarchical_with_spatial_multi = True  # non-hierarchical, with relative spatial info, multi policies
+        nonhierarchical_with_spatial_multi = False  # non-hierarchical, with relative spatial info, multi policies
         nonhierarchical_nospatial_multi = False  # non-hierarchical, without relative spatial info, multi policies 
 
         hierarchical_Uniform_Vector = False           # set this to True will evaluate the reward based on our uniform vector field approach
@@ -256,8 +256,7 @@ class HuskyPushEnv(HuskyEnv):
         goal_box_cos_dist_coeff = 1 - cos_dist(goal_forward, box_forward) 
         goal_box_cos_dist_reward = goal_box_cos_dist_coeff * self._env_config["quat_reward"]
 
-
-        # PART 9: vector fielpython3 -m rl.main --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-hierarchical_uniform_vector-ver2 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.push-1-dim5-epi200.1,rl.husky-forward-v0.approach-1-dim5-epi200-ver2.1/rl.husky-forward-v0.push-2-dim5-epi200.1,rl.husky-forward-v0.approach-2-dim5-epi200-ver2.1 --max_meta_len 5 --max_global_step 2000000d
+        # PART 9: vector field
         # NOTE: this is a experiment feature!
         husky1_desire_rad, husky1_cur_rad = self._vector_field_rad(husky1_pos, husky1_forward_vec, husky2_pos, box1_pos, l2_dist(husky2_pos, box1_pos), boxes_dist)
         husky2_desire_rad, husky2_cur_rad = self._vector_field_rad(husky2_pos, husky2_forward_vec, husky1_pos, box2_pos, l2_dist(husky1_pos, box2_pos), boxes_dist) 

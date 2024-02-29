@@ -48,7 +48,7 @@ class HuskyForwardEnv(HuskyEnv):
             "prob_perturb_action": 0.1,    #0.1
             "perturb_action": 0.01,
             "alignment_reward": 10,
-            "move_heading_reward": 50,
+            "move_heading_reward": 20,
             "bonus_reward": 5
         })
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
@@ -301,11 +301,19 @@ class HuskyForwardEnv(HuskyEnv):
             move_direction = np.sign(dist_diff)     # if robot move toward box, the sign is positive, so we reward the robot's moving
         
             husky_linear_vel_reward = husky_linear_vel * move_coeff * self._env_config['linear_vel_reward'] * 5 * move_direction
+
+
+            move_coeff_reward = move_coeff * self._env_config['move_heading_reward']
+
+
             husky_dist_reward = l2_dist(pos_after, np.array([-2, 0, 0.218])) * self._env_config['dist_reward'] / 10
             box_linear_vel_reward = -box_linear_vel * self._env_config['box_linear_vel_reward'] * 20
             box_dist_reward = -l2_dist(box_after, np.array([0, 0, 0.3])) * self._env_config['dist_reward']
             dist_husky_box_reward = dist_husky_box_reward / 10
-            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + box_dist_reward + dist_husky_box_reward + husky_dist_reward
+            reward = reward + husky_linear_vel_reward + box_linear_vel_reward + box_dist_reward + dist_husky_box_reward + husky_dist_reward + move_coeff_reward
+
+            if(dist_husky_box_after < 1.0):
+                reward += 20
         
         elif(skill == "approach"):  # encourage the robot push slowly when the object is near the goal
             reward = reward + self._env_config['bonus_reward']

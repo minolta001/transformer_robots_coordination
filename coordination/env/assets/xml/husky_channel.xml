@@ -312,8 +312,8 @@
 
         <motor name="husky_1_left_vel"  tendon="husky_1_left_wheels"  gear="9" />
         <motor name="husky_1_right_vel" tendon="husky_1_right_wheels"  gear="9" />
-        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="10" />
-        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="10" />
+        <motor name="husky_2_left_vel"  tendon="husky_2_left_wheels"  gear="9" />
+        <motor name="husky_2_right_vel" tendon="husky_2_right_wheels"  gear="9" />
     </actuator>
     
 </mujoco>

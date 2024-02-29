@@ -28,16 +28,16 @@ import math
 #goal_pos = np.array([2.5, 0, 0.30996])
 #goal_quat = np.array([1, 0, 0, 0])
 # curve
-goal1_pos = np.array([1.2328, 1.1607, 0.30996])
-goal2_pos = np.array([1.9134, -0.7330, 0.30996])
-goal_pos = np.array([1.5453, 0.2903, 0.30996])
-goal_quat = np.array([0.9847, 0, 0, 0.1737])
+goal1_pos = np.array([2.3705, 0.4061, 0.30996])
+goal2_pos = np.array([2.3705, -0.4861, 0.30996])
+goal_pos = np.array([2.3705, -0.0376, 0.30996])
+goal_quat = np.array([1, 0, 0, 0])
 box_height = 0.30996
 robot_height = 0.15486868
 
-control_linear_slowdown_coeff = 8
-control_angular_slowdown_coeff = 1
-
+control_linear_slowdown_coeff = 15
+control_angular_slowdown_coeff = 3
+CMD_DELAY_TIME = 20000
 
 def forward_kinematic(ac_L, ac_R):
         linear_vel = (ac_L + ac_R) / 2 / control_linear_slowdown_coeff
@@ -397,7 +397,7 @@ class collab_push():
     
         robots_forward_align_coeff = alignment_heading_difference(self.jackal_1_forward_vec, self.jackal_2_forward_vec)
         robots_right_align_coeff = Y_vector_overlapping(self.jackal_1_right_vec, self.jackal_2_right_vec, jackal_1_pos, jackal_2_pos)
-        robots_dist = l2_dist(jackal_1_pos, jackal_2_pos)
+        robots_dist = l2_dist(jackal_1_pos, jackal_2_pos) * 2.25
         goal_box_cos_dist = 1 - cos_dist(self.box_forward_vec, goal_forward_vec)
         
         rela_info = OrderedDict([
@@ -444,7 +444,7 @@ class collab_push():
 
         print("!!The test is going to start, be careful!!")
         input("Press Enter to start")
-        time.sleep(5)
+        time.sleep(3)
 
         while not rospy.is_shutdown():
             jackal_1_pos = np.array([self.jackal_1_cur_pose.position.x, self.jackal_1_cur_pose.position.y, robot_height])
@@ -456,7 +456,6 @@ class collab_push():
 
             box1_pos = self.box1_pose.position
             box2_pos = self.box2_pose.position
-
 
             robots_dist = l2_dist(jackal_1_pos, jackal_2_pos)
 
@@ -475,16 +474,17 @@ class collab_push():
 
             # jackal_1: transfer action to linear and angular command
             jackal_1_linear_vel, jackal_1_angular_vel = forward_kinematic(jackal_1_action[0], jackal_1_action[1])
-
             # jackal_2: transfer action to linear and angular command
             jackal_2_linear_vel, jackal_2_angular_vel = forward_kinematic(jackal_2_action[0], jackal_2_action[1])
-            print(self.box_cur_pose.position)
-            print("goal1 dist: ", self.box1_goal_dist, "goal2 dist: ", self.box2_goal_dist)            
+
+            print("Jackal 1 vel:", jackal_1_linear_vel, "Jackal 2 vel:", jackal_2_linear_vel)
+
+            #print("goal1 dist: ", self.box1_goal_dist, "goal2 dist: ", self.box2_goal_dist)            
             # make sure robots within safety zone, and won't collide together
             # also make sure box won't crash anything
             if(-2.5 <= jackal_1_x and jackal_1_x <= 2.5 and -2 <= jackal_1_y and jackal_1_y <= 1.9 \
                and -2.5 <= jackal_2_x and jackal_2_x <= 2.5 and -2 <= jackal_2_y and jackal_2_y <= 1.9 \
-                and 0.5 <= robots_dist and (self.box1_goal_dist > 0.4 or self.box2_goal_dist > 0.4) and
+                and 0.55 <= robots_dist and (self.box1_goal_dist > 0.4 or self.box2_goal_dist > 0.4) and
                 -2.5 <= box1_pos.x and box1_pos.x <= 2.5 and -2 <= box1_pos.y and box1_pos.y <= 1.9 \
                 and -2.5 <= box2_pos.x and box2_pos.x <= 2.5 and -2 <= box2_pos.y and box2_pos.y <= 1.9):
 
@@ -492,17 +492,23 @@ class collab_push():
                     jackal_1_vel_msg.angular.z = jackal_1_angular_vel
                     jackal_2_vel_msg.linear.x = jackal_2_linear_vel
                     jackal_2_vel_msg.angular.z = jackal_2_angular_vel
+                    i = 0
+                    while(i < CMD_DELAY_TIME):
+                        self.jackal_1_vel_publisher.publish(jackal_1_vel_msg)
+                        self.jackal_2_vel_publisher.publish(jackal_2_vel_msg)
+                        i += 1
+            else:
+                jackal_1_vel_msg.linear.x = 0.0
+                jackal_1_vel_msg.angular.z = 0.0
+                jackal_2_vel_msg.linear.x = 0.0
+                jackal_2_vel_msg.angular.z = 0.0
+                i = 0
+                while(i < 20):
                     self.jackal_1_vel_publisher.publish(jackal_1_vel_msg)
                     self.jackal_2_vel_publisher.publish(jackal_2_vel_msg)
-            else:
-                jackal_1_vel_msg.linear.x = 0
-                jackal_1_vel_msg.angular.z = 0 
-                jackal_2_vel_msg.linear.x = 0 
-                jackal_2_vel_msg.angular.z = 0 
-                self.jackal_1_vel_publisher.publish(jackal_1_vel_msg)
-                self.jackal_2_vel_publisher.publish(jackal_2_vel_msg)
+                    i+=1
 
-                if(self.box1_goal_dist <= 0.5 and self.box2_goal_dist <= 0.5):
+                if(self.box1_goal_dist <= 0.3 and self.box2_goal_dist <= 0.3):
                     print("Goal achieve: ", self.box_cur_pose.position)
                 else:
                     print("Some safety distancing is violated!")
@@ -513,7 +519,7 @@ class collab_push():
                 
                 rospy.on_shutdown()
                 
-            print("goal1 dist: ", self.box1_goal_dist, "goal2 dist: ", self.box2_goal_dist)
+            #print("goal1 dist: ", self.box1_goal_dist, "goal2 dist: ", self.box2_goal_dist)
             
     
 if __name__ == '__main__':
