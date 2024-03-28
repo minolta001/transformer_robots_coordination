@@ -20,7 +20,8 @@ class HuskyEnv(BaseEnv):
         body_id = self.sim.model.body_name2id('husky_robot')
         lookat = self.sim.data.body_xpos[body_id]
         lookat[2] += 0.3
-        cam_pos = lookat + np.array([0, -10, 3])
+
+        cam_pos = lookat + np.array([-4.5, -3, 3.5])
 
         cam_id = self._camera_id
         self._set_camera_position(cam_id, cam_pos)

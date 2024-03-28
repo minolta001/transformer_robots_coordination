@@ -1,22 +1,19 @@
 from collections import OrderedDict
+
 import numpy as np
-import math
+
 from env.husky.husky import HuskyEnv
 from env.transform_utils import up_vector_from_quat, Y_vector_from_quat, \
     l2_dist, cos_dist, sample_quat, X_vector_from_quat, alignment_heading_difference, \
-    Y_vector_overlapping, movement_heading_difference, calculate_rotation_direction, \
-    get_quaternion_to_next_cpt
-
-from PythonRobotics.PathPlanning.HybridAStar.collab_hybrid_a_star_planner import generate_hybrid_a_star_path
+    Y_vector_overlapping, movement_heading_difference, calculate_rotation_direction
 
 
-obstacle_list = [(0,0), (-15, 4), (-15, 7), (-6,4), (-6, 7), (-15, -4), (-15, -7),
-                 (-6, -4), (-6, -7)]
 
-class HuskyEvaluateStraightEnv(HuskyEnv):
+# testing environment: no planner, 0 degree, straight
+class Husky0NPEnv(HuskyEnv):
     def __init__(self, **kwargs):
-        self.name = 'husky_evaluate_straight'
-        super().__init__('husky_evaluate_straight.xml', **kwargs)
+        self.name = 'husky_0_np'
+        super().__init__('husky_push.xml', **kwargs)
 
         # Env info
         self.ob_shape = OrderedDict([("husky_1", 15), ("husky_2", 15),
@@ -32,7 +29,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
             'random_goal_pos': 0.01,
             #'random_goal_pos': 0.5,
             'dist_threshold': 0.1,
-            'loose_dist_threshold': 0.8,
+            'loose_dist_threshold': 0.5,
             'goal_box_cos_dist_coeff_threshold': 0.9,
             'box_linear_vel_reward': 500,
             'dist_reward': 10,
@@ -51,7 +48,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
             'sparse_reward': 0,
             'init_randomness': 0.01,
             #'max_episode_steps': 400,
-            'max_episode_steps': 400,
+            'max_episode_steps': 1000,
         }) 
         self._env_config.update({ k:v for k,v in kwargs.items() if k in self._env_config })
 
@@ -86,6 +83,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
 
         nonhierarchical_with_spatial_single = False   # no hierarchy, with relative spatial info, single policy
         nonhierarchical_nospatial_single = False  # no hierarchy, no relative spatial info, single policy
+
         nonhierarchical_with_spatial_multi = False  # non-hierarchical, with relative spatial info, multi policies
         nonhierarchical_nospatial_multi = False  # non-hierarchical, without relative spatial info, multi policies 
 
@@ -115,6 +113,10 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         box_pos_before = self._get_pos('box')
         box_quat_before = self._get_quat('box')
 
+        goal1_pos_before = self._get_pos('goal_geom1')
+        goal2_pos_before = self._get_pos('goal_geom2')
+
+
         self.do_simulation(a)
 
         husky1_pos = self._get_pos('husky_1_geom')
@@ -123,20 +125,10 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         box2_pos = self._get_pos('box_geom2')
         box_pos = self._get_pos('box')
         box_quat = self._get_quat('box')
-
-        final_goal_pos = self._get_pos('goal')      # the final goal
-        final_goal_quat = self._get_quat('goal')
-
-        goal1_pos = self._get_pos('cpt_1_geom1')     # waypoint 1
-        goal2_pos = self._get_pos('cpt_1_geom2')     # waypoint 2
-        goal_pos = self._get_pos('cpt_1')        # overall waypoint
-        goal_quat = self._get_quat('cpt_1')
-
-
-        # Generate a planned_trajectory
-        planned_trajectory = generate_hybrid_a_star_path(obstacle_list, box_pos, box_quat, final_goal_pos, final_goal_quat)
-
-
+        goal1_pos = self._get_pos('goal_geom1')
+        goal2_pos = self._get_pos('goal_geom2')
+        goal_pos = self._get_pos('goal')
+        goal_quat = self._get_quat('goal')
 
         ob = self._get_obs()
         done = False
@@ -160,7 +152,6 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         # goal 2
         goal2_dist = l2_dist(goal2_pos, box2_pos)
         goal2_dist_before = l2_dist(goal2_pos, box2_pos_before)
-
 
         husky1_quat = self._get_quat('husky_robot_1')
         husky2_quat = self._get_quat('husky_robot_2')
@@ -214,8 +205,8 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         huskys_box_dist_reward = husky1_box_dist_reward + husky2_box_dist_reward
         
         # PART 5: Linear distance between box and goal
-        goal1_box_dist_before = l2_dist(goal1_pos, box1_pos_before)
-        goal2_box_dist_before = l2_dist(goal2_pos, box2_pos_before)
+        goal1_box_dist_before = l2_dist(goal1_pos_before, box1_pos_before)
+        goal2_box_dist_before = l2_dist(goal2_pos_before, box2_pos_before)
         goal1_box_dist = l2_dist(goal1_pos, box1_pos)
         goal2_box_dist = l2_dist(goal2_pos, box2_pos)
         goal1_box_dist_diff = goal1_box_dist_before - goal1_box_dist
@@ -265,8 +256,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         goal_box_cos_dist_coeff = 1 - cos_dist(goal_forward, box_forward) 
         goal_box_cos_dist_reward = goal_box_cos_dist_coeff * self._env_config["quat_reward"]
 
-
-        # PART 9: vector fiel        
+        # PART 9: vector field
         # NOTE: this is a experiment feature!
         husky1_desire_rad, husky1_cur_rad = self._vector_field_rad(husky1_pos, husky1_forward_vec, husky2_pos, box1_pos, l2_dist(husky2_pos, box1_pos), boxes_dist)
         husky2_desire_rad, husky2_cur_rad = self._vector_field_rad(husky2_pos, husky2_forward_vec, husky1_pos, box2_pos, l2_dist(husky1_pos, box2_pos), boxes_dist) 
@@ -280,6 +270,20 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
 
         reward = 0
 
+
+        '''
+            Bonus
+        if husky1_box_dist < 1.5 and husky2_box_dist < 1.5:
+            reward += self._env_config['bonus_reward']
+        if husky1_move_coeff > 0.92 and husky2_move_coeff > 0.92:
+            reward += self._env_config['bonus_reward']
+        if huskys_right_align_coeff > 0.92:
+            reward += self._env_config['bonus_reward']
+        if goal_box_cos_dist_coeff > 0.9:
+            reward += (3 * self._env_config['bonus_reward'])
+        '''
+
+
         '''
             Failure Check
         '''
@@ -287,8 +291,8 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
             done = True
         if husky1_box_dist > 4.0 or husky2_box_dist > 4.0: # husky is too far away from box 
             done = True
-        #if goal1_box_dist > 4.5 and goal2_box_dist > 4.5:
-            #done = True
+        if goal1_box_dist > 4.5 and goal2_box_dist > 4.5:
+            done = True
         die_penalty = -self._env_config["die_penalty"] if done else 0
         if done:    # something fail
             reward += die_penalty
@@ -311,16 +315,10 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
              goal_box_cos_dist_coeff >= self._env_config["goal_box_cos_dist_coeff_threshold"]):
         '''
 
-        '''
+
         if (goal1_dist <= self._env_config["loose_dist_threshold"] and \
              goal2_dist <= self._env_config["loose_dist_threshold"] and \
              goal_box_cos_dist_coeff > self._env_config["goal_box_cos_dist_coeff_threshold"]):
-        '''
-
-
-        final_goal_box_dist = l2_dist(final_goal_pos, box_pos)
-
-        if (final_goal_box_dist <= 0.8):
                 # if both goal1 and goal2 suffice, then overall goal should suffice
                 #and goal_quat < self._env_config["quat_threshold"]:
             self._success_count += 1
@@ -333,72 +331,6 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
                 done = True
 
         reward += ctrl_reward
-
-
-
-        '''
-            Update waypoint
-        '''
-        goal_wpt_dist = l2_dist(final_goal_pos, goal_pos)       # final goal - waypoint distance
-        goal_box_dist = l2_dist(final_goal_pos, box_pos)        # final goal - box distance
-        box_wpt_dist = l2_dist(goal_pos, box_pos)               # waypoint - box distance
-
-        wpt_pos = goal_pos
-        wpt_x, wpt_y, wpt_next_x, wpt_next_y = 0, 0, 0, 0
-
-        quaternion = np.zeros(4)
-
-        '''
-        if(goal_wpt_dist > goal_box_dist):
-            planned_trajectory = path_planning(box_pos, box_quat, final_goal_pos, final_goal_quat)
-        
-        if(box_wpt_dist > 2.5):     # Box is too far away from the robots, which indicates a drifting
-            drift_away = True
-        '''
-            
-
-        #if (len(planned_trajectory) > 1 and (box_wpt_dist < 1.8)):
-        while (len(planned_trajectory) > 1) and box_wpt_dist < 1.8:
-            # update a waypoint, once
-            (wpt_x, wpt_y) = planned_trajectory.pop(0)
-            (wpt_next_x, wpt_next_y) = planned_trajectory[0]
-
-            wpt_pos = np.array([wpt_x, wpt_y, 0.3]) 
-            box_pos = self._get_pos('box')
-
-            box_wpt_dist = l2_dist(wpt_pos, box_pos)
-
-            wpt_next_pos = np.array([wpt_next_x, wpt_next_y, 0])
-            
-            quaternion = get_quaternion_to_next_cpt(box_pos, wpt_next_pos)
-
-            self._set_pos('cpt_1', np.array([wpt_x, wpt_y, 0.3]))
-            self._set_quat('cpt_1', quaternion)
-
-
-            '''
-            while(box_wpt_dist < 1.8):                
-                if(len(planned_trajectory) > 1):
-                    (rx,ry) = checkpoints.pop(0)
-                    (nrx, nry) = checkpoints[0]
-                    cpt_pos = np.array([rx, ry, 0.3])
-                    box_pos = self._get_pos('box')
-
-                    cpt_box_dist = l2_dist(cpt_pos, box_pos)
-                    goal_cpt_dist = l2_dist(final_pos, np.array([rx, ry, 0.3]))
-
-                    pos_1 = np.array([rx, ry, 0])
-                    pos_2 = np.array([nrx, nry, 0])
-
-                    quaternion = get_quaternion_to_next_cpt(box_pos, pos_2)
-
-                    self._set_pos('cpt_1', np.array([rx, ry, 0.3]))     # update cpt pos
-                    self._set_quat('cpt_1', quaternion)   
-                            
-                else:
-                    break
-            '''
-
 
         goal1_dist_reward = 0
         goal2_dist_reward = 0
@@ -416,7 +348,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
                 huskys_box_linear_vel_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] + \
                                            (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] 
 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward + huskys_box_linear_vel_reward + box_goal_linear_vel_reward + goal_box_cos_dist_reward
 
@@ -434,7 +366,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
                 huskys_box_linear_vel_reward = (l2_dist(husky1_pos_before, box1_pos_before) - l2_dist(husky1_pos, box1_pos)) * self._env_config["dist_reward"] + \
                                            (l2_dist(husky2_pos_before, box2_pos_before) - l2_dist(husky2_pos, box2_pos)) * self._env_config["dist_reward"] 
                 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward + huskys_box_linear_vel_reward + box_goal_linear_vel_reward + goal_box_cos_dist_reward
 
@@ -449,7 +381,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
                 box_goal_linear_vel_reward = (l2_dist(box_pos_before, goal_pos) - l2_dist(box_pos, goal_pos)) * self._env_config["box_linear_vel_reward"] + goal1_dist_reward + goal2_dist_reward
 
                 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward \
                     + huskys_box_linear_vel_reward \
@@ -472,7 +404,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
                 box_goal_linear_vel_reward = (l2_dist(box_pos_before, goal_pos) - l2_dist(box_pos, goal_pos)) * self._env_config["box_linear_vel_reward"] + goal1_dist_reward + goal2_dist_reward
 
                 
-                huskys_box_linear_vel_reward *= 10
+                huskys_box_linear_vel_reward *= 5
 
                 reward = reward \
                     + huskys_box_linear_vel_reward \
@@ -532,6 +464,7 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         # husky
         qpos = self.data.qpos
         qvel = self.data.qvel
+        qacc = self.data.qacc
 
         husky1_pos = self._get_pos('husky_robot_1')
         husky2_pos = self._get_pos('husky_robot_2')
@@ -561,19 +494,12 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         box2_forward = self._get_right_vector('box_geom2')
         box_vel = self._get_vel("box_body")
 
-        # goal --> waypoint
-        # NOTE: the goal here is actually the info of waypoint
-        goal_quat = self._get_quat('cpt_1')
+        # goal
+        goal_quat = self._get_quat('goal')
         goal_forward = X_vector_from_quat(goal_quat)
-        goal1_pos = self._get_pos('cpt_1_geom1')
-        goal2_pos = self._get_pos('cpt_1_geom2')
 
-        # check nan value, not sure what cause this issue
-        has_nan = any(math.isnan(value) for value in goal1_pos) or any(math.isnan(value) for value in goal2_pos) 
-        if has_nan:
-            goal1_pos = self._get_pos('cpt_1')
-            goal2_pos = self._get_pos('cpt_1')
-
+        goal1_pos = self._get_pos('goal_geom1')
+        goal2_pos = self._get_pos('goal_geom2')
 
         # relative info
         husky1_move_coeff = movement_heading_difference(box1_pos, husky1_pos, husky1_forward_vec, "forward") 
@@ -626,21 +552,20 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         return np.zeros(self.model.nv)
 
     def _reset(self):
-        '''
         qpos = self._init_qpos + self._init_random(self.model.nq)
         qvel = self._init_qvel + self._init_random(self.model.nv)
 
 
         # randomized robots initial positions
-        qpos[0:2] = [-2, 1] + np.random.uniform(-1, 1, size=(2,)) * 0.1
-        qpos[11:13] = [-2, -1] + np.random.uniform(-1, 1, size=(2,)) * 0.1
+        qpos[0:2] = [-1, 1]
+        qpos[11:13] = [-1, -1]
 
         # robot height fixed
-        qpos[2] = 0.2
-        qpos[13] = 0.2
+        qpos[2] = 0.19
+        qpos[13] = 0.19
 
-        init_quat1 = sample_quat(low=-np.pi/10, high=np.pi/10)
-        init_quat2 = sample_quat(low=-np.pi/10, high=np.pi/10)
+        init_quat1 = sample_quat(low=0, high=0)
+        init_quat2 = sample_quat(low=0, high=0)
 
         # randomized robot initial quaternions 
         #qpos[3:7] = [1, 0, 0, 0]
@@ -655,10 +580,6 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         self._husky1_push = False
         self._husky2_push = False
         self._success_count = 0
-        '''
-        self._reset_husky_box()
-
-        self._success_count = 0
 
         return self._get_obs()
 
@@ -667,39 +588,29 @@ class HuskyEvaluateStraightEnv(HuskyEnv):
         qvel = self.data.qvel.ravel().copy()
 
         # Initialize box
-        '''
         init_box_pos = np.asarray([0, 0, 0.3])
-        init_box_quat = sample_quat(low=-np.pi/9, high=np.pi/9)
+        init_box_quat = sample_quat(low=0, high=0)
         qpos[22:25] = init_box_pos
         qpos[25:29] = init_box_quat
-        '''
-        init_box_pos = np.asarray([-18.5, 0, 0.3])
-        init_box_quat = sample_quat(low=0, high=0)
-        self._set_pos('box', init_box_pos)
-        self._set_quat('box', init_box_quat)
 
-        # Initialize waypoint
-        self._set_pos('cpt_1', init_box_pos) 
-        self._set_quat('cpt_1', init_box_quat)
 
-        # Initialize robot positions
-        husky1_pos = [-20, 1, 0.217]
-        husky2_pos = [-20, 1, 0.217] 
-        self._set_pos('husky_robot_1', husky1_pos) 
-        self._set_pos('husky_robot_2', husky2_pos) 
+        # initialize the goal for testing
+        # add poisition noise
+        #goal_pos = np.asarray([np.random.uniform(low=1.5, high=3), np.random.uniform(low=-1, high=1), 0.3])
+        goal_pos = np.asarray([4, 0, 0.3])
 
-        # Initialize goal
-        #goal_pos = np.asarray([np.random.uniform(low=1.2, high=3), np.random.uniform(low=-1, high=1), 0.3])
-        #goal_pos = np.asarray([np.random.uniform(low=1, high=-1), np.random.uniform(low=-1, high=1), 0.3])
-        goal_pos = np.asarray([-8, 0, 0.3])
-        goal_quat = sample_quat(low=0, high=0)
+        # add orientation noise
+        goal_quat = sample_quat(low=-np.pi / 18, high=np.pi /  18)
+
+
         self._set_pos('goal', goal_pos)
         self._set_quat('goal', goal_quat)
 
+        self.set_state(qpos, qvel)
 
     def _render_callback(self):
         lookat = self._get_pos('box')
-        cam_pos = lookat + np.array([-4.5, -8, 15])
+        cam_pos = lookat + np.array([-4.5, -6, 10])
 
         cam_id = self._camera_id
         self._set_camera_position(cam_id, cam_pos)

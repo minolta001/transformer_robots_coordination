@@ -253,6 +253,12 @@ python3 -m to_real.collab_push_ros_jackal --num_eval 1  --is_train False --env h
 python3 -m to_real.collab_push_ros_jackal --num_eval 1  --is_train False --env husky-push-v0 --gpu 0 --prefix collab_push-dim5-Hierarchica-NaiveVector-MoveOnly --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.move-1-dim5-epi200.1/rl.husky-forward-v0.move-2-dim5-epi200.1 --max_meta_len 5 --max_global_step 2000000
 ```
 
+# Simulated Evaluation. Test 1, no planner, 0 degree, straight
+```bash 
+python3 -m rl.main --num_eval 10  --is_train False --env husky-test-no-planner-0-v0 --gpu 0 --prefix collab_push-Hierarchical-Spatial-meta3 --seed 1 --meta hard --subdiv husky_1,box_1-husky_1/husky_2,box_2-husky_2 --subdiv_skills rl.husky-forward-v0.move-1.1,rl.husky-forward-v0.tune-1.1/rl.husky-forward-v0.move-2.1,rl.husky-forward-v0.tune-2.1
+
+```
+
 
 
 

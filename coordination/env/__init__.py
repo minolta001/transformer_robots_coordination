@@ -5,6 +5,19 @@ from gym.envs.registration import register
 def register_environments():
     # register ant environments
 
+    # test 1: no planner, 0 degree, straight
+    register(
+        id='husky-test-no-planner-0-v0',
+        entry_point='env.husky.composite.husky_0_no_planner:Husky0NPEnv',
+        kwargs={},
+    )
+
+    register(
+        id='husky-evaluate-straight-v0',
+        entry_point='env.husky.composite.husky_evaluate_straight:HuskyEvaluateStraightEnv',
+        kwargs={},
+    )
+
     register(
         id='husky-channel-v0',
         entry_point='env.husky.composite.husky_channel:HuskyChannelEnv',
